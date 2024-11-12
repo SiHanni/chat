@@ -1,0 +1,61 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "lib": ["ES2020", "DOM"],
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": false,
+    "esModuleInterop": true, // import from 쓸수있게함
+    "strictNullChecks": false,
+    "resolveJsonModule": true, // Json파일을 모듈로 처리하게 한다.
+    "noImplicitAny": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "strict": true
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test"]
+}
+
+//{
+//  "compilerOptions": {
+//    "module": "commonjs",
+//    "moduleResolution": "node",
+//    "target": "ES2020",
+//    "lib": ["ES2020", "DOM"],
+//    "skipLibCheck": true,
+//    "esModuleInterop": true,
+//    "experimentalDecorators": true,
+//    "emitDecoratorMetadata": true,
+//    "strict": true,
+//    "forceConsistentCasingInFileNames": true,
+//    "noUnusedLocals": true,
+//    "noUnusedParameters": true,
+//    "noImplicitAny": false,
+//    "resolveJsonModule": true,
+//    "isolatedModules": true,
+//    "allowJs": true,
+//    "outDir": "./dist",
+//    "baseUrl": "./",
+//    "paths": {
+//      "@/*": ["src/*"]
+//    }
+//  },
+//  "include": ["src/**/*.ts"],
+//  "exclude": ["node_modules", "dist", "test"]
+//}
+
+
+//
