@@ -37,7 +37,7 @@ export class User {
   password: string;
 
   @Column({ nullable: true })
-  profileimg: string;
+  profile_img: string;
 
   @Column({ default: true })
   is_active: boolean;

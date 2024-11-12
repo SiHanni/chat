@@ -5,7 +5,7 @@ import {
   JoinColumn,
   Column,
 } from 'typeorm';
-import { User } from '../../user/entities/user.entity';
+import { User } from '../../users/entities/user.entity';
 import { Chatting } from './chatting.entity';
 
 @Entity('user_chatting')
@@ -28,5 +28,5 @@ export class UserChatting {
   joinedAt: Date; // 참가 일시
 
   @Column({ nullable: true })
-  leftAt: Date; // 나간 일시 (있다면)
+  leftAt: Date; // 나간 일시 (있다면) // 아니면 그냥 바로 로우삭제할지 고려
 }

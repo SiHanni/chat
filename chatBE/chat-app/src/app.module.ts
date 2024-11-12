@@ -4,7 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserModule } from './user/user.module';
+import { UsersModule } from './users/users.module';
 import { ChattingModule } from './chatting/chatting.module';
 
 // TODO: 로컬 개발 완료되면 환경변수 config 같은거 활용해서 외부로 빼기
@@ -40,9 +40,11 @@ import { ChattingModule } from './chatting/chatting.module';
       }),
     }),
 
-    UserModule,
+    UsersModule,
 
     ChattingModule,
+
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
