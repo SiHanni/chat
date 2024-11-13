@@ -24,14 +24,17 @@ export class UserFriend {
   })
   createdAt: Date;
 
-  @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'user_id' })
+  @ManyToOne(() => User, { eager: true, nullable: false })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: User;
 
-  @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'friend_id' })
+  @ManyToOne(() => User, { eager: true, nullable: false })
+  @JoinColumn({ name: 'friend_id', referencedColumnName: 'id' })
   friend: User;
 
   @Column({ default: false })
   is_accepted: boolean;
+
+  @Column({ default: false })
+  is_blacklist: boolean;
 }

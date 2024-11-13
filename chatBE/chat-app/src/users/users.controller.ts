@@ -1,11 +1,11 @@
 import {
   Controller,
-  //Get,
+  Get,
   Post,
   Put,
   Body,
   Req,
-  //Patch,
+  Patch,
   Param,
   //Delete,
   //HttpException,
@@ -21,6 +21,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SignInUserDto } from './dto/signIn-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { FriendDto } from './dto/friend.dto';
+import { UserFriend } from './entities/user-friend.entity';
 //import { User } from './entities/user.entity';
 import { Request } from 'express';
 
@@ -59,7 +61,28 @@ export class UsersController {
     }
     return await this.usersService.updateProfile(uid, updateUserDto);
   }
-
+  @Post(':uid/send/friend-request')
+  async sendFriendRequest(
+    @Param('uid') uid: number,
+    @Body() friendDto: FriendDto,
+  ): Promise<UserFriend> {
+    return this.usersService.sendFriendRequest(uid, friendDto);
+  }
+  @Patch(':userId/accept/friend-request')
+  async acceptFriendRequest(
+    @Param('uid') uid: number,
+    @Body() friendDto: FriendDto,
+  ): Promise<UserFriend> {
+    return this.usersService.acceptFriendRequest(uid, friendDto);
+  }
+  @Get(':uid/friends/lists')
+  async getFriends(@Param('uid') uid: number) {
+    return this.usersService.getFriendLists(uid);
+  }
+  @Get(':uid/friend-requests')
+  async getFriendRequests(@Param('uid') uid: number) {
+    return this.usersService.getFriendRequests(uid);
+  }
   // 가드 사용 예시
   // @UseGuards(AuthGuard)
   // @Get('profile')

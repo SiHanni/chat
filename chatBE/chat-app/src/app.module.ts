@@ -43,8 +43,6 @@ import { ChattingModule } from './chatting/chatting.module';
     UsersModule,
 
     ChattingModule,
-
-    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

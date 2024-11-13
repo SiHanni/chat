@@ -13,13 +13,13 @@ export class UserChatting {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User, { eager: true })
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
-  @ManyToOne(() => Chatting, { eager: true })
-  @JoinColumn({ name: 'chatting_id' })
+  @ManyToOne(() => Chatting, { eager: true, nullable: false })
+  @JoinColumn({ name: 'chatting_id', referencedColumnName: 'id' })
   chatting: Chatting;
+
+  @ManyToOne(() => User, { eager: true, nullable: false })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+  user: User;
 
   @Column({ default: true })
   is_active: boolean; // 채팅방에서 유효한 참가자인지 여부 (나간 참가자 처리 등)
