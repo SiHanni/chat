@@ -2,11 +2,10 @@ import {
   Controller,
   Get,
   Post,
-  Put,
+  //Put,
   Body,
   Req,
   Patch,
-  Param,
   //Delete,
   //HttpException,
   //HttpStatus,
@@ -48,39 +47,53 @@ export class UsersController {
     return await this.usersService.signIn(signInUserDto);
   }
 
-  @Put('update/:uid')
+  @Patch('update')
   @UseGuards(AuthGuard)
   async updateProfile(
-    @Param('uid') uid: number,
     @Body() updateUserDto: UpdateUserDto,
-    @Req() request: Request, // 인증된 사용자의 정보는 request.user에 저장
+    @Req() request: Request,
   ) {
     const userIdFromJwt = (request as CustomRequest).user?.subject;
-    if (userIdFromJwt !== uid) {
+    if (userIdFromJwt !== updateUserDto.id) {
       throw new UnauthorizedException('not allowed user request');
     }
-    return await this.usersService.updateProfile(uid, updateUserDto);
+    return await this.usersService.updateProfile(
+      updateUserDto.id,
+      updateUserDto,
+    );
   }
-  @Post(':uid/send/friend-request')
+
+  @Post('send/friend-request')
+  @UseGuards(AuthGuard)
   async sendFriendRequest(
-    @Param('uid') uid: number,
+    @Req() request: Request,
     @Body() friendDto: FriendDto,
-  ): Promise<UserFriend> {
+  ): Promise<UserFriend[]> {
+    const uid = (request as CustomRequest).user?.subject;
     return this.usersService.sendFriendRequest(uid, friendDto);
   }
-  @Patch(':userId/accept/friend-request')
+
+  @Patch('accept/friend-request')
+  @UseGuards(AuthGuard)
   async acceptFriendRequest(
-    @Param('uid') uid: number,
+    @Req() request: Request,
     @Body() friendDto: FriendDto,
-  ): Promise<UserFriend> {
+  ): Promise<UserFriend[]> {
+    const uid = (request as CustomRequest).user?.subject;
     return this.usersService.acceptFriendRequest(uid, friendDto);
   }
-  @Get(':uid/friends/lists')
-  async getFriends(@Param('uid') uid: number) {
+
+  @Get('friends/lists')
+  @UseGuards(AuthGuard)
+  async getFriends(@Req() request: Request) {
+    const uid = (request as CustomRequest).user?.subject;
     return this.usersService.getFriendLists(uid);
   }
-  @Get(':uid/friend-requests')
-  async getFriendRequests(@Param('uid') uid: number) {
+
+  @Get('friend/requests')
+  @UseGuards(AuthGuard)
+  async getFriendRequests(@Req() request: Request) {
+    const uid = (request as CustomRequest).user?.subject;
     return this.usersService.getFriendRequests(uid);
   }
   // 가드 사용 예시

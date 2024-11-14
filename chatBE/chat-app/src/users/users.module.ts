@@ -5,9 +5,11 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserFriend } from './entities/user-friend.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([User, UserFriend]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -19,7 +21,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         },
       }),
     }),
-    TypeOrmModule.forFeature([User]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

@@ -27,7 +27,7 @@ import { ChattingModule } from './chatting/chatting.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true, // 개발 중에는 true로 설정하고, 배포 시에는 false로 설정
         logging: true,
-        timezone: '+09:00',
+        timezone: 'Z',
       }),
     }),
 

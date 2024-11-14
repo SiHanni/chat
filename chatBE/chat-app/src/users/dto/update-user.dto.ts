@@ -1,6 +1,21 @@
-import { IsString, IsOptional, IsEmail } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsEmail,
+  IsEnum,
+  IsNumber,
+} from 'class-validator';
+
+export enum Gender {
+  MALE = 'male',
+  FEMALE = 'female',
+  ALIEN = 'alien',
+}
 
 export class UpdateUserDto {
+  @IsNumber()
+  id: number;
+
   @IsOptional()
   @IsString()
   username?: string;
@@ -18,6 +33,6 @@ export class UpdateUserDto {
   phone_number?: string;
 
   @IsOptional()
-  @IsString()
-  gender?: string;
+  @IsEnum(Gender)
+  gender?: Gender;
 }

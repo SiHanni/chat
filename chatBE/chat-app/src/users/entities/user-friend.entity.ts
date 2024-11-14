@@ -24,6 +24,9 @@ export class UserFriend {
   })
   createdAt: Date;
 
+  @Column({ default: false })
+  is_request: boolean;
+
   @ManyToOne(() => User, { eager: true, nullable: false })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: User;
@@ -37,4 +40,13 @@ export class UserFriend {
 
   @Column({ default: false })
   is_blacklist: boolean;
+
+  @Column({
+    name: 'accepted_at',
+    type: 'timestamp',
+    nullable: true,
+    default: null,
+    precision: 0,
+  })
+  acceptedAt: Date;
 }

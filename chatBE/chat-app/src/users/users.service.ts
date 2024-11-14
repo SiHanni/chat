@@ -17,14 +17,17 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { FriendDto } from './dto/friend.dto';
 import { User } from './entities/user.entity';
 import { UserFriend } from './entities/user-friend.entity';
-
+import { Gender } from './dto/update-user.dto';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(UserFriend)
     private readonly userFriendRepository: Repository<UserFriend>,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
   // 회원가입에는 이메일, 유저네임, 패스워드만 받고 프로필 이미지는 기본이미지, 폰 인증은 추후
   async signUp(createUserDto: CreateUserDto): Promise<User> {
@@ -63,7 +66,9 @@ export class UsersService {
       );
     }
   }
-  async signIn(signInUserDto: SignInUserDto): Promise<{ accessToken: string }> {
+  async signIn(
+    signInUserDto: SignInUserDto,
+  ): Promise<{ accessToken: string; last_login: Date }> {
     const { email, password } = signInUserDto;
 
     const user = await this.userRepository.findOne({
@@ -77,11 +82,16 @@ export class UsersService {
     if (!passwordCheck) {
       throw new UnauthorizedException('Invalid password');
     }
-
+    user.last_login = new Date();
+    await this.userRepository.save(user);
     // TODO: JWT 발행 , JWT 정책 필요
     const payload = { subject: user.id, username: user.username };
+    const secret = this.configService.get<string>('JWT_SECRET');
     try {
-      return { accessToken: await this.jwtService.signAsync(payload) };
+      return {
+        accessToken: await this.jwtService.signAsync(payload, { secret }),
+        last_login: user.last_login,
+      };
     } catch {
       throw new InternalServerErrorException('Failed to generate access token');
     }
@@ -91,7 +101,7 @@ export class UsersService {
     uid: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const { username, profile_img } = updateUserDto;
+    const { username, profile_img, gender } = updateUserDto;
 
     const user = await this.userRepository.findOne({
       where: { id: uid },
@@ -117,79 +127,199 @@ export class UsersService {
       }
       user.profile_img = profile_img;
     }
+
+    if (gender) {
+      console.log(gender, Gender.FEMALE);
+      if (![Gender.MALE, Gender.FEMALE, Gender.ALIEN].includes(gender)) {
+        throw new BadRequestException('Invalid gender value');
+      }
+      user.gender = gender;
+    }
     const updatedUser = await this.userRepository.save(user);
     return updatedUser;
   }
   // async signOut(): Promise<{ msg: string }> {}
+
+  /** 친구 요청 */
   async sendFriendRequest(
-    uid: number,
+    uid,
     { friend_id }: FriendDto,
-  ): Promise<UserFriend> {
+  ): Promise<UserFriend[]> {
     if (uid === friend_id) {
-      throw new NotFoundException(
-        'You cannot send a friend request to yourself.',
-      );
+      throw new BadRequestException('Inavalid request');
     }
     const user = await this.userRepository.findOne({ where: { id: uid } });
-    const friend = await this.userFriendRepository.findOne({
+    const friend = await this.userRepository.findOne({
       where: { id: friend_id },
     });
     if (!user || !friend) {
-      throw new NotFoundException('User or friend not found.');
+      throw new BadRequestException('Inavalid request:: No target');
     }
-    const existingRequest = await this.userFriendRepository.findOne({
+
+    //const existingRequest = await this.userFriendRepository
+    //  .createQueryBuilder('user_friends')
+    //  .where(
+    //    '(user_friends.user_id = :uid AND user_friends.friend_id = :friend_id AND user_friends.is_accepted = true)' +
+    //      'OR' +
+    //      '(user_friends.user_id = :friend_id AND user_friends.friend_id = :uid AND user_friends.is_accepted = true)',
+    //    { uid, friend_id },
+    //  ).getMany();
+    const alreadyFriend = await this.userFriendRepository.find({
       where: [
-        { user: { id: uid }, friend: { id: friend_id } },
-        { user: { id: friend_id }, friend: { id: uid } },
+        {
+          user: { id: uid },
+          friend: { id: friend_id },
+          is_accepted: true,
+        },
+        {
+          user: { id: friend_id },
+          friend: { id: uid },
+          is_accepted: true,
+        },
       ],
     });
-    if (existingRequest) {
-      throw new NotFoundException(
-        'Friend request already exists or friendship is established.',
-      );
+    if (alreadyFriend.length > 0) {
+      throw new BadRequestException('Inavalid request:: Already friend');
     }
-    const friendRequest = this.userFriendRepository.create({
-      user,
-      friend,
+
+    const existingRequest = await this.userFriendRepository.find({
+      where: [
+        {
+          user: { id: uid },
+          friend: { id: friend_id },
+          is_accepted: false,
+        },
+        //{
+        //  user: { id: friend_id },
+        //  friend: { id: user_id },
+        //  is_accepted: false,
+        //},
+      ],
+    });
+    if (existingRequest.length > 0) {
+      // 10초 제한
+      const lastRequestTime = existingRequest[0].createdAt;
+      const currentTime = new Date();
+      const timeDiff =
+        (currentTime.getTime() - lastRequestTime.getTime()) / 1000;
+      if (timeDiff < 10) {
+        throw new BadRequestException(
+          'Too many requests. Please try again later.',
+        );
+      }
+      await this.userFriendRepository.remove(existingRequest);
+      const userToFriend = this.userFriendRepository.create({
+        user: user,
+        friend: friend,
+        is_accepted: false,
+        is_request: true,
+      });
+      return await this.userFriendRepository.save([userToFriend]);
+    }
+    const userToFriend = this.userFriendRepository.create({
+      user: user,
+      friend: friend,
+      is_accepted: false,
+      is_request: true,
+    });
+    const friendToUser = this.userFriendRepository.create({
+      user: friend,
+      friend: user,
       is_accepted: false,
     });
 
-    return await this.userFriendRepository.save(friendRequest);
+    return await this.userFriendRepository.save([userToFriend, friendToUser]);
   }
+  /** 친구 수락 */
+  // 자기 자신이 보낸 요청에 대해선 수락이 되면 안됌
+  // 애초에 클라이언트는 나에게 요청이 들어온 것만 확인할 수 있을거라 괜찮긴 할 것
+  // 뭔가 리팩토링이 필요할 것 같긴함.
   async acceptFriendRequest(
-    uid: number,
+    uid,
     { friend_id }: FriendDto,
-  ): Promise<UserFriend> {
-    const friendRequest = await this.userFriendRepository.findOne({
-      where: [
-        { user: { id: uid }, friend: { id: friend_id }, is_accepted: false },
-        { user: { id: friend_id }, friend: { id: uid }, is_accepted: false },
-      ],
+  ): Promise<UserFriend[]> {
+    if (uid === friend_id) {
+      throw new BadRequestException('Inavalid request');
+    }
+    const reqProducer = await this.userFriendRepository.findOne({
+      where: {
+        user: { id: friend_id },
+        friend: { id: uid },
+        is_accepted: false,
+      },
     });
-    if (!friendRequest) {
-      throw new NotFoundException(
+    console.log('A', reqProducer);
+    const reqSubscriber = await this.userFriendRepository.findOne({
+      where: {
+        user: { id: uid },
+        friend: { id: friend_id },
+        is_accepted: false,
+      },
+    });
+    console.log('R', reqSubscriber);
+    if (!reqProducer || !reqSubscriber) {
+      throw new BadRequestException(
         'Friend request not found or already accepted.',
       );
     }
-    friendRequest.is_accepted = true;
-    return await this.userFriendRepository.save(friendRequest);
+    const currentTime = new Date();
+    reqProducer.is_accepted = true;
+    reqProducer.acceptedAt = currentTime;
+    reqSubscriber.is_accepted = true;
+    reqSubscriber.acceptedAt = currentTime;
+
+    return await this.userFriendRepository.save([reqProducer, reqSubscriber]);
   }
+  /** 테스트가 필요한 코드 EntityManager */
+  //async acceptFriendRequest(
+  //  uid: number,
+  //  { friend_id }: FriendDto,
+  //  manager: EntityManager, // 트랜잭션을 위한 EntityManager 추가
+  //): Promise<UserFriend[]> {
+  //  // 1. 친구 요청을 한 번에 확인
+  //  const friendRequest = await manager.findOne(UserFriend, {
+  //    where: [
+  //      { user: { id: friend_id }, friend: { id: uid }, is_accepted: false },
+  //      { user: { id: uid }, friend: { id: friend_id }, is_accepted: false },
+  //    ],
+  //  });
+  //
+  //  if (!friendRequest) {
+  //    throw new BadRequestException(
+  //      'Friend request not found or already accepted.',
+  //    );
+  //  }
+  //
+  //  // 2. 친구 요청 수락 처리
+  //  friendRequest.is_accepted = true;
+  //
+  //  // 3. 트랜잭션으로 저장
+  //  await manager.save(UserFriend, friendRequest);
+  //
+  //  return [friendRequest];
+  //}
+
   async getFriendLists(uid: number): Promise<User[]> {
+    console.log('i', uid);
     const userFriends = await this.userFriendRepository.find({
       where: [
         { user: { id: uid }, is_accepted: true, is_blacklist: false },
-        { friend: { id: uid }, is_accepted: true, is_blacklist: false },
+        //{ friend: { id: uid }, is_accepted: true, is_blacklist: false },
       ],
       relations: ['user', 'friend'],
     });
-    return userFriends.map((userFriend) =>
-      userFriend.user.id === uid ? userFriend.friend : userFriend.user,
-    );
+    return userFriends
+      .map((userFriend) => userFriend.friend)
+      .filter((friend) => friend.id !== uid);
+    //return userFriends.map((userFriend) =>
+    //  userFriend.user.id === uid ? userFriend.friend : userFriend.user,
+    //);
   }
+  /** 나에게 들어온 친구 추가 요청 목록 */
   async getFriendRequests(uid: number): Promise<UserFriend[]> {
     return this.userFriendRepository.find({
-      where: { friend: { id: uid }, is_accepted: false },
-      relations: ['user'],
+      where: { user: { id: uid }, is_accepted: false, is_request: false },
+      relations: ['friend'],
     });
   }
 }
