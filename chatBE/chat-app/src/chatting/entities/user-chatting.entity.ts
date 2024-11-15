@@ -4,11 +4,13 @@ import {
   ManyToOne,
   JoinColumn,
   Column,
+  Unique,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Chatting } from './chatting.entity';
 
 @Entity('user_chatting')
+@Unique(['user', 'chatting'])
 export class UserChatting {
   @PrimaryGeneratedColumn()
   id: number;
@@ -25,8 +27,8 @@ export class UserChatting {
   is_active: boolean; // 채팅방에서 유효한 참가자인지 여부 (나간 참가자 처리 등)
 
   @Column({ nullable: true })
-  joinedAt: Date; // 참가 일시
+  joined_at: Date; // 참가 일시
 
-  @Column({ nullable: true })
-  leftAt: Date; // 나간 일시 (있다면) // 아니면 그냥 바로 로우삭제할지 고려
+  @Column({ default: 0 })
+  unreadMessageCount: number;
 }
