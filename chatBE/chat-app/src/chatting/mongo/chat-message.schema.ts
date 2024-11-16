@@ -4,6 +4,9 @@ import { Document } from 'mongoose';
 @Schema()
 export class ChatMessage extends Document {
   @Prop({ required: true })
+  client_id: string;
+
+  @Prop({ required: true })
   message: string;
 
   @Prop({ required: true })
