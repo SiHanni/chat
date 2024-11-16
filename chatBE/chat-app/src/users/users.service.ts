@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import isImageUrl from 'image-url-validator';
+//import isImageURL from 'image-url-validator';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -96,6 +96,15 @@ export class UsersService {
       throw new InternalServerErrorException('Failed to generate access token');
     }
   }
+  async getMyProfile(uid: number): Promise<User> {
+    const user = await this.userRepository.findOne({
+      where: { id: uid },
+    });
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+    return user;
+  }
 
   async updateProfile(
     uid: number,
@@ -121,10 +130,11 @@ export class UsersService {
     }
 
     if (profile_img) {
-      const isValidImageUrl = await isImageUrl(profile_img);
-      if (!isValidImageUrl) {
-        throw new BadRequestException('Inavalid image Url');
-      }
+      // TODO: TypeError: (0 , image_url_validator_1.default) is not a function 에러 해결
+      //const isValidImageUrl = await isImageURL(profile_img);
+      //if (!isValidImageUrl) {
+      //  throw new BadRequestException('Inavalid image Url');
+      //}
       user.profile_img = profile_img;
     }
 
@@ -270,34 +280,6 @@ export class UsersService {
 
     return await this.userFriendRepository.save([reqProducer, reqSubscriber]);
   }
-  /** 테스트가 필요한 코드 EntityManager */
-  //async acceptFriendRequest(
-  //  uid: number,
-  //  { friend_id }: FriendDto,
-  //  manager: EntityManager, // 트랜잭션을 위한 EntityManager 추가
-  //): Promise<UserFriend[]> {
-  //  // 1. 친구 요청을 한 번에 확인
-  //  const friendRequest = await manager.findOne(UserFriend, {
-  //    where: [
-  //      { user: { id: friend_id }, friend: { id: uid }, is_accepted: false },
-  //      { user: { id: uid }, friend: { id: friend_id }, is_accepted: false },
-  //    ],
-  //  });
-  //
-  //  if (!friendRequest) {
-  //    throw new BadRequestException(
-  //      'Friend request not found or already accepted.',
-  //    );
-  //  }
-  //
-  //  // 2. 친구 요청 수락 처리
-  //  friendRequest.is_accepted = true;
-  //
-  //  // 3. 트랜잭션으로 저장
-  //  await manager.save(UserFriend, friendRequest);
-  //
-  //  return [friendRequest];
-  //}
 
   async getFriendLists(uid: number): Promise<User[]> {
     console.log('i', uid);

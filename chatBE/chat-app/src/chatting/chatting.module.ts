@@ -8,10 +8,16 @@ import { ChattingGateway } from './chatting.gateway';
 import { ChattingService } from './chatting.service';
 import { User } from '../users/entities/user.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ChatMessage, ChatMessageSchema } from './mongo/chat-message.schema';
 
+// TODO: Auth 모듈 분리
 @Module({
   imports: [
     TypeOrmModule.forFeature([Chatting, UserChatting, User]),
+    MongooseModule.forFeature([
+      { name: ChatMessage.name, schema: ChatMessageSchema },
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

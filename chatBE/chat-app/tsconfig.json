@@ -14,9 +14,9 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": false,
-    "esModuleInterop": true, // import from 쓸수있게함
+    "esModuleInterop": true,
     "strictNullChecks": false,
-    "resolveJsonModule": true, // Json파일을 모듈로 처리하게 한다.
+    "resolveJsonModule": true,
     "noImplicitAny": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

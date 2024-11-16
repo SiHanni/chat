@@ -8,7 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ChattingService } from './chatting.service';
+//import { ChattingService } from './chatting.service';
 import { ChatMessageDto } from './dto/talk-chatting.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -29,10 +29,14 @@ export class ChattingGateway
   server: Server;
 
   constructor(
-    private readonly chattingService: ChattingService,
+    //private readonly chattingService: ChattingService,
     @InjectModel(ChatMessage.name)
     private readonly chatMessageModel: Model<ChatMessage>,
   ) {}
+
+  onModuleInit() {
+    console.log('WebSocket server initialized');
+  }
 
   handleConnection(client: Socket) {
     console.log(`Client Connected: ${client.id}`);
@@ -42,27 +46,32 @@ export class ChattingGateway
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  @SubscribeMessage('sendMsg')
-  async handleMsg(
+  @SubscribeMessage('sendMessage')
+  async handleMessage(
     @MessageBody() chatMessageDto: ChatMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
     const { room_id, sender_id, message } = chatMessageDto;
 
-    const newMsg = new this.chatMessageModel({
+    console.log('Message received:', chatMessageDto);
+
+    const newMessage = new this.chatMessageModel({
       client_id: client.id,
       room_id: room_id,
       sender_id: sender_id,
       message: message,
       timestamp: new Date(),
     });
-    await newMsg.save();
-
-    this.server.to(`room-${room_id}`).emit('receiveMessage', {
-      sender_id: sender_id,
-      message: message,
-      timestamp: newMsg.timestamp,
-    });
+    await newMessage.save();
+    try {
+      this.server.to(`room-${room_id}`).emit('receiveMessage', {
+        sender_id: sender_id,
+        message: message,
+        timestamp: newMessage.timestamp,
+      });
+    } catch (error) {
+      console.log('err', error);
+    }
 
     console.log(`Message from ${sender_id}: ${message}`);
   }

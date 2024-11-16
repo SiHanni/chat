@@ -47,6 +47,16 @@ export class UsersController {
     return await this.usersService.signIn(signInUserDto);
   }
 
+  @Get('getMyProfile')
+  @UseGuards(AuthGuard)
+  async getMyProfile(@Req() request: Request) {
+    const userIdFromJwt = (request as CustomRequest).user?.subject;
+    if (!userIdFromJwt) {
+      throw new UnauthorizedException('not allowed user request');
+    }
+    return await this.usersService.getMyProfile(userIdFromJwt);
+  }
+
   @Patch('update')
   @UseGuards(AuthGuard)
   async updateProfile(
@@ -54,13 +64,10 @@ export class UsersController {
     @Req() request: Request,
   ) {
     const userIdFromJwt = (request as CustomRequest).user?.subject;
-    if (userIdFromJwt !== updateUserDto.id) {
+    if (!userIdFromJwt) {
       throw new UnauthorizedException('not allowed user request');
     }
-    return await this.usersService.updateProfile(
-      updateUserDto.id,
-      updateUserDto,
-    );
+    return await this.usersService.updateProfile(userIdFromJwt, updateUserDto);
   }
 
   @Post('send/friend-request')

@@ -34,11 +34,16 @@ import { ChattingModule } from './chatting/chatting.module';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: `mongodb://${configService.get<string>('MONGO_HOST')}:${configService.get<number>('MONGO_PORT')}/${configService.get<string>('MONGO_DATABASE')}`,
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
+        uri: `mongodb://${configService.get<string>('MONGO_INITDB_ROOT_USERNAME')}:${configService.get<string>('MONGO_INITDB_ROOT_PASSWORD')}@${configService.get<string>('MONGO_HOST')}:${configService.get<number>('MONGO_PORT')}/`,
       }),
     }),
+    //MongooseModule.forRootAsync({
+    //  inject: [ConfigService],
+    //  useFactory: () => ({
+    //    //uri: `mongodb://admin:admin@localhost:27017`,
+    //    uri: `mongodb://localhost:27017/chat`,
+    //  }),
+    //}),
 
     UsersModule,
 
