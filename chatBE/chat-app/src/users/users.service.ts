@@ -111,7 +111,7 @@ export class UsersService {
     uid: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const { username, profile_img, gender } = updateUserDto;
+    const { username, profile_img, gender, status_msg } = updateUserDto;
 
     const user = await this.userRepository.findOne({
       where: { id: uid },
@@ -147,13 +147,19 @@ export class UsersService {
       console.log(':ISER', user);
       user.gender = gender;
     }
+
+    if (status_msg) {
+      user.status_msg = status_msg;
+    }
     const updatedUser = await this.userRepository.save(user);
     return updatedUser;
   }
   async findFriend({ email }: FriendDto): Promise<FriendInfoDto> {
+    console.log('EMAMEM', email);
     const friend = await this.userRepository.findOne({
       where: { email: email },
     });
+    console.log('QWE', friend);
     if (!friend) {
       throw new BadRequestException('Invalid User');
     }
@@ -161,12 +167,15 @@ export class UsersService {
       username: friend.username,
       profile_img: friend.profile_img,
       status_msg: friend.status_msg,
+      email: friend.email,
     };
     return friendInfo;
   }
 
   /** 친구 요청 */
   async sendFriendRequest(uid, { email }: FriendDto): Promise<UserFriend[]> {
+    console.log('USER:', uid);
+    console.log('EMAIL F', email);
     const user = await this.userRepository.findOne({ where: { id: uid } });
     const friend = await this.userRepository.findOne({
       where: { email: email },
@@ -250,16 +259,10 @@ export class UsersService {
   // 자기 자신이 보낸 요청에 대해선 수락이 되면 안됌
   // 애초에 클라이언트는 나에게 요청이 들어온 것만 확인할 수 있을거라 괜찮긴 할 것
   // 뭔가 리팩토링이 필요할 것 같긴함.
-  async acceptFriendRequest(
-    uid,
-    { friend_id }: FriendDto,
-  ): Promise<UserFriend[]> {
-    if (uid === friend_id) {
-      throw new BadRequestException('Inavalid request');
-    }
+  async acceptFriendRequest(uid, { email }: FriendDto): Promise<UserFriend[]> {
     const reqProducer = await this.userFriendRepository.findOne({
       where: {
-        user: { id: friend_id },
+        user: { email: email },
         friend: { id: uid },
         is_accepted: false,
       },
@@ -268,10 +271,13 @@ export class UsersService {
     const reqSubscriber = await this.userFriendRepository.findOne({
       where: {
         user: { id: uid },
-        friend: { id: friend_id },
+        friend: { email: email },
         is_accepted: false,
       },
     });
+    if (uid === reqProducer.id) {
+      throw new BadRequestException('Inavalid request');
+    }
     console.log('R', reqSubscriber);
     if (!reqProducer || !reqSubscriber) {
       throw new BadRequestException(
@@ -287,13 +293,10 @@ export class UsersService {
     return await this.userFriendRepository.save([reqProducer, reqSubscriber]);
   }
 
-  async refuseFriendRequest(uid, { friend_id }: FriendDto): Promise<boolean> {
-    if (uid === friend_id) {
-      throw new BadRequestException('Inavalid request');
-    }
+  async refuseFriendRequest(uid, { email }: FriendDto): Promise<boolean> {
     const reqProducer = await this.userFriendRepository.findOne({
       where: {
-        user: { id: friend_id },
+        user: { email: email },
         friend: { id: uid },
         is_accepted: false,
       },
@@ -301,10 +304,13 @@ export class UsersService {
     const reqSubscriber = await this.userFriendRepository.findOne({
       where: {
         user: { id: uid },
-        friend: { id: friend_id },
+        friend: { email: email },
         is_accepted: false,
       },
     });
+    if (uid === reqProducer.id) {
+      throw new BadRequestException('Inavalid request');
+    }
     if (!reqProducer || !reqSubscriber) {
       throw new BadRequestException('invalid request');
     }
@@ -331,6 +337,7 @@ export class UsersService {
       username: friend.friend.username,
       profile_img: friend.friend.profile_img,
       status_msg: friend.friend.status_msg,
+      email: friend.friend.email,
     }));
     return friendInfo;
   }

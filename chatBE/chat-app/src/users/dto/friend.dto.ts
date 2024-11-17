@@ -1,12 +1,8 @@
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsString } from 'class-validator';
 
 export class FriendDto {
-  @IsInt()
-  @IsOptional()
-  friend_id?: number;
   @IsString()
-  @IsOptional()
-  email?: string;
+  email: string;
 }
 
 export class FriendInfoDto {
@@ -16,4 +12,6 @@ export class FriendInfoDto {
   profile_img: string;
   @IsString()
   status_msg: string;
+  @IsString()
+  email: string;
 }

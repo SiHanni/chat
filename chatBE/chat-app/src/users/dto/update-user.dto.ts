@@ -22,4 +22,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(Gender)
   gender?: Gender;
+
+  @IsOptional()
+  @IsString()
+  status_msg?: string;
 }

@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  //Put,
+  Query,
   Body,
   Req,
   Patch,
@@ -73,7 +73,7 @@ export class UsersController {
 
   @Get('find-friend')
   @UseGuards(AuthGuard)
-  async findFriend(@Body() friendDto: FriendDto): Promise<FriendInfoDto> {
+  async findFriend(@Query() friendDto: FriendDto): Promise<FriendInfoDto> {
     return this.usersService.findFriend(friendDto);
   }
 
