@@ -22,7 +22,7 @@ export class UserFriend {
     default: () => 'CURRENT_TIMESTAMP',
     precision: 0,
   })
-  createdAt: Date;
+  created_at: Date;
 
   @Column({ default: false })
   is_request: boolean;
@@ -48,5 +48,5 @@ export class UserFriend {
     default: null,
     precision: 0,
   })
-  acceptedAt: Date;
+  accepted_at: Date;
 }

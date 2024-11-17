@@ -6,7 +6,7 @@ import {
   Body,
   Req,
   Patch,
-  //Delete,
+  Delete,
   //HttpException,
   //HttpStatus,
   UsePipes,
@@ -88,6 +88,16 @@ export class UsersController {
   ): Promise<UserFriend[]> {
     const uid = (request as CustomRequest).user?.subject;
     return this.usersService.acceptFriendRequest(uid, friendDto);
+  }
+
+  @Delete('refuse/friend-request')
+  @UseGuards(AuthGuard)
+  async refuseFriendRequest(
+    @Req() request: Request,
+    @Body() friendDto: FriendDto,
+  ): Promise<boolean> {
+    const uid = (request as CustomRequest).user?.subject;
+    return this.usersService.refuseFriendRequest(uid, friendDto);
   }
 
   @Get('friends/lists')

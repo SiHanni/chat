@@ -18,6 +18,7 @@ import { FriendDto } from './dto/friend.dto';
 import { User } from './entities/user.entity';
 import { UserFriend } from './entities/user-friend.entity';
 import { Gender } from './dto/update-user.dto';
+import { FriendInfoDto } from './dto/friend.dto';
 import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class UsersService {
@@ -143,6 +144,7 @@ export class UsersService {
       if (![Gender.MALE, Gender.FEMALE, Gender.ALIEN].includes(gender)) {
         throw new BadRequestException('Invalid gender value');
       }
+      console.log(':ISER', user);
       user.gender = gender;
     }
     const updatedUser = await this.userRepository.save(user);
@@ -208,7 +210,7 @@ export class UsersService {
     });
     if (existingRequest.length > 0) {
       // 10초 제한
-      const lastRequestTime = existingRequest[0].createdAt;
+      const lastRequestTime = existingRequest[0].created_at;
       const currentTime = new Date();
       const timeDiff =
         (currentTime.getTime() - lastRequestTime.getTime()) / 1000;
@@ -274,15 +276,45 @@ export class UsersService {
     }
     const currentTime = new Date();
     reqProducer.is_accepted = true;
-    reqProducer.acceptedAt = currentTime;
+    reqProducer.accepted_at = currentTime;
     reqSubscriber.is_accepted = true;
-    reqSubscriber.acceptedAt = currentTime;
+    reqSubscriber.accepted_at = currentTime;
 
     return await this.userFriendRepository.save([reqProducer, reqSubscriber]);
   }
+  async refuseFriendRequest(uid, { friend_id }: FriendDto): Promise<boolean> {
+    if (uid === friend_id) {
+      throw new BadRequestException('Inavalid request');
+    }
+    const reqProducer = await this.userFriendRepository.findOne({
+      where: {
+        user: { id: friend_id },
+        friend: { id: uid },
+        is_accepted: false,
+      },
+    });
+    const reqSubscriber = await this.userFriendRepository.findOne({
+      where: {
+        user: { id: uid },
+        friend: { id: friend_id },
+        is_accepted: false,
+      },
+    });
+    if (!reqProducer || !reqSubscriber) {
+      throw new BadRequestException('invalid request');
+    }
+    try {
+      await this.userFriendRepository.delete([
+        reqProducer.id,
+        reqSubscriber.id,
+      ]);
+      return true;
+    } catch (error) {
+      throw new InternalServerErrorException(error);
+    }
+  }
 
-  async getFriendLists(uid: number): Promise<User[]> {
-    console.log('i', uid);
+  async getFriendLists(uid: number): Promise<FriendInfoDto[]> {
     const userFriends = await this.userFriendRepository.find({
       where: [
         { user: { id: uid }, is_accepted: true, is_blacklist: false },
@@ -290,12 +322,12 @@ export class UsersService {
       ],
       relations: ['user', 'friend'],
     });
-    return userFriends
-      .map((userFriend) => userFriend.friend)
-      .filter((friend) => friend.id !== uid);
-    //return userFriends.map((userFriend) =>
-    //  userFriend.user.id === uid ? userFriend.friend : userFriend.user,
-    //);
+    const friendInfo = userFriends.map((friend) => ({
+      username: friend.friend.username,
+      profile_img: friend.friend.profile_img,
+      status_msg: friend.friend.status_msg,
+    }));
+    return friendInfo;
   }
   /** 나에게 들어온 친구 추가 요청 목록 */
   async getFriendRequests(uid: number): Promise<UserFriend[]> {

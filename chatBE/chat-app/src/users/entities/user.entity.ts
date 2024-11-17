@@ -16,7 +16,7 @@ export class User {
     default: () => 'CURRENT_TIMESTAMP',
     precision: 0,
   })
-  createdAt: Date;
+  created_at: Date;
 
   @Column({
     name: 'updated_at',
@@ -25,7 +25,7 @@ export class User {
     default: null,
     precision: 0,
   })
-  updatedAt: Date;
+  updated_at: Date;
 
   @Column({ unique: true })
   username: string;
@@ -38,6 +38,9 @@ export class User {
 
   @Column({ nullable: true })
   profile_img: string;
+
+  @Column({ default: null })
+  status_msg: string;
 
   @Column({ default: true })
   is_active: boolean;

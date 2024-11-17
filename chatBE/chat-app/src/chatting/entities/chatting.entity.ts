@@ -19,7 +19,7 @@ export class Chatting {
     default: () => 'CURRENT_TIMESTAMP',
     precision: 0,
   })
-  createdAt: Date;
+  created_at: Date;
 
   @ManyToOne(() => User, { eager: true, nullable: false })
   @JoinColumn({ name: 'owner_id' })
