@@ -150,41 +150,45 @@ export class UsersService {
     const updatedUser = await this.userRepository.save(user);
     return updatedUser;
   }
-  // async signOut(): Promise<{ msg: string }> {}
+  async findFriend({ email }: FriendDto): Promise<FriendInfoDto> {
+    const friend = await this.userRepository.findOne({
+      where: { email: email },
+    });
+    if (!friend) {
+      throw new BadRequestException('Invalid User');
+    }
+    const friendInfo: FriendInfoDto = {
+      username: friend.username,
+      profile_img: friend.profile_img,
+      status_msg: friend.status_msg,
+    };
+    return friendInfo;
+  }
 
   /** 친구 요청 */
-  async sendFriendRequest(
-    uid,
-    { friend_id }: FriendDto,
-  ): Promise<UserFriend[]> {
-    if (uid === friend_id) {
-      throw new BadRequestException('Inavalid request');
-    }
+  async sendFriendRequest(uid, { email }: FriendDto): Promise<UserFriend[]> {
     const user = await this.userRepository.findOne({ where: { id: uid } });
     const friend = await this.userRepository.findOne({
-      where: { id: friend_id },
+      where: { email: email },
     });
+
+    if (uid === friend.id) {
+      throw new BadRequestException('Inavalid request');
+    }
+
     if (!user || !friend) {
       throw new BadRequestException('Inavalid request:: No target');
     }
 
-    //const existingRequest = await this.userFriendRepository
-    //  .createQueryBuilder('user_friends')
-    //  .where(
-    //    '(user_friends.user_id = :uid AND user_friends.friend_id = :friend_id AND user_friends.is_accepted = true)' +
-    //      'OR' +
-    //      '(user_friends.user_id = :friend_id AND user_friends.friend_id = :uid AND user_friends.is_accepted = true)',
-    //    { uid, friend_id },
-    //  ).getMany();
     const alreadyFriend = await this.userFriendRepository.find({
       where: [
         {
           user: { id: uid },
-          friend: { id: friend_id },
+          friend: { id: friend.id },
           is_accepted: true,
         },
         {
-          user: { id: friend_id },
+          user: { id: friend.id },
           friend: { id: uid },
           is_accepted: true,
         },
@@ -198,7 +202,7 @@ export class UsersService {
       where: [
         {
           user: { id: uid },
-          friend: { id: friend_id },
+          friend: { id: friend.id },
           is_accepted: false,
         },
         //{
@@ -282,6 +286,7 @@ export class UsersService {
 
     return await this.userFriendRepository.save([reqProducer, reqSubscriber]);
   }
+
   async refuseFriendRequest(uid, { friend_id }: FriendDto): Promise<boolean> {
     if (uid === friend_id) {
       throw new BadRequestException('Inavalid request');

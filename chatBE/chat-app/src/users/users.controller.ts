@@ -21,6 +21,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { SignInUserDto } from './dto/signIn-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FriendDto } from './dto/friend.dto';
+import { FriendInfoDto } from './dto/friend.dto';
 import { UserFriend } from './entities/user-friend.entity';
 //import { User } from './entities/user.entity';
 import { Request } from 'express';
@@ -68,6 +69,12 @@ export class UsersController {
       throw new UnauthorizedException('not allowed user request');
     }
     return await this.usersService.updateProfile(userIdFromJwt, updateUserDto);
+  }
+
+  @Get('find-friend')
+  @UseGuards(AuthGuard)
+  async findFriend(@Body() friendDto: FriendDto): Promise<FriendInfoDto> {
+    return this.usersService.findFriend(friendDto);
   }
 
   @Post('send/friend-request')

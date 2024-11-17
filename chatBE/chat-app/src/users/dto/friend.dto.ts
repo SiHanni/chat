@@ -1,9 +1,12 @@
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsOptional, IsString } from 'class-validator';
 
 export class FriendDto {
   @IsInt()
-  @IsNotEmpty()
-  friend_id: number;
+  @IsOptional()
+  friend_id?: number;
+  @IsString()
+  @IsOptional()
+  email?: string;
 }
 
 export class FriendInfoDto {
