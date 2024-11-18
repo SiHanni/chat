@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
 import styled from 'styled-components';
-import { User } from '../types';
+import { User } from '../type/user';
 
 const ChatContainer = styled.div`
   width: 100%;
@@ -19,49 +19,52 @@ const MessageList = styled.div`
   flex-direction: column;
 `;
 
-const MessageContainer = styled.div<{ isOwnMessage: boolean }>`
+const MessageContainer = styled.div.withConfig({
+  shouldForwardProp: prop => prop !== 'isOwnMessage',
+})<{ isOwnMessage: boolean }>`
   display: flex;
   flex-direction: ${props => (props.isOwnMessage ? 'row-reverse' : 'row')};
   margin-bottom: 15px;
   align-items: flex-start;
 `;
 
-const ProfileImage = styled.img`
+const ProfileImage = styled.img.withConfig({
+  shouldForwardProp: prop => prop !== 'isOwnMessage',
+})<{ isOwnMessage: boolean }>`
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  margin-right: 10px;
-  margin-left: 10px;
-  margin-bottom: 5px;
+  margin: ${props => (props.isOwnMessage ? '0 0 5px 10px' : '0 10px 5px 0')};
 `;
-
-const MessageContent = styled.div`
-  max-width: 80%;
-  background-color: #f1f1f1;
-  padding: 5px;
+const MessageContent = styled.div.withConfig({
+  shouldForwardProp: prop => prop !== 'isOwnMessage',
+})<{ isOwnMessage: boolean }>`
+  max-width: 60%;
+  background-color: ${props => (props.isOwnMessage ? '#d1e7dd' : '#f1f1f1')};
+  padding: 10px;
   border-radius: 10px;
   font-size: 1rem;
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: ${props => (props.isOwnMessage ? 'flex-end' : 'flex-start')};
 `;
 
 const Username = styled.div`
   font-weight: bold;
-  margin-bottom: 10px;
   font-size: 0.8rem;
-`;
-const MessageText = styled.div`
-  font-size: 0.85rem;
   margin-bottom: 5px;
 `;
 
+const MessageText = styled.div`
+  font-size: 0.9rem;
+`;
+
 const Timestamp = styled.div`
-  position: absolute;
-  bottom: -15px;
-  right: 0;
-  font-size: 0.8rem;
+  margin-top: 5px;
+  font-size: 0.7rem;
   color: #888;
+  align-self: flex-end;
 `;
 
 const InputContainer = styled.div`
@@ -122,6 +125,7 @@ const ChatPage: React.FC = () => {
     newSocket.emit('joinRoom', roomId);
 
     newSocket.on('receiveMessage', data => {
+      console.log(data);
       setMessages(prev => [...prev, data]);
     });
 
@@ -139,7 +143,7 @@ const ChatPage: React.FC = () => {
         sender_id: user?.id,
         sender_email: user?.email,
         sender_username: user?.username,
-        sender_profile_img: user?.profileImageUrl,
+        sender_profile_img: user?.profile_img,
       });
       setInput('');
     }
@@ -160,11 +164,16 @@ const ChatPage: React.FC = () => {
             isOwnMessage={msg.sender_id === user?.id}
           >
             <ProfileImage
-              src={msg.sender_profile_img || '/maruu.jpg'}
+              src={
+                msg.sender_profile_img && msg.sender_profile_img.trim() !== ''
+                  ? msg.sender_profile_img
+                  : '/maruu.jpg'
+              }
               alt='profile'
+              isOwnMessage={msg.sender_id === user?.id}
             />
-            <Username>{msg.sender_username}</Username>{' '}
-            <MessageContent>
+            <MessageContent isOwnMessage={msg.sender_id === user?.id}>
+              <Username>{msg.sender_username}</Username>
               <MessageText>{msg.message}</MessageText>
               <Timestamp>
                 {new Date(msg.timestamp).toLocaleTimeString()}
