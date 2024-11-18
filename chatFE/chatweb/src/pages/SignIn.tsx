@@ -81,9 +81,12 @@ const SignIn: React.FC = () => {
 
     if (response.ok) {
       const data = await response.json();
-      // 서버로부터 받은 accessToken을 localStorage에 저장
+
       localStorage.setItem('accessToken', data.accessToken);
-      navigate('/main'); // 로그인 성공 시 홈 페이지로 이동
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('last_login', data.last_login);
+      console.log('LO', localStorage);
+      navigate('/main');
     } else {
       alert('Invalid credentials');
     }

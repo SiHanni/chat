@@ -7,6 +7,7 @@ import FriendsList from '../components/FriendList';
 import FriendRequestsList from '../components/FriendRequestList';
 import ProfilePage from './ProfilePage';
 import FindFriendPage from './FindFriendPage';
+import ChatPage from '../components/ChatPage';
 
 // 스타일 정의
 const MainContainer = styled.div`
@@ -181,10 +182,7 @@ const MainPage: React.FC = () => {
         {activeTab === 'findFriend' && <FindFriendPage />}
         {activeTab === 'friendRequests' && <FriendRequestsList />}
 
-        {activeTab === 'acceptFriendRequest' && (
-          <div>Accept Friend Requests Content</div>
-        )}
-        {activeTab === 'chat' && <div>Chat Content</div>}
+        {activeTab === 'chat' && <ChatPage />}
       </Content>
     </MainContainer>
   );
