@@ -51,18 +51,34 @@ export class ChattingGateway
     @MessageBody() chatMessageDto: ChatMessageDto,
     @ConnectedSocket() client: Socket,
   ) {
-    const { room_id, sender_id, message } = chatMessageDto;
+    const {
+      room_id,
+      sender_id,
+      sender_email,
+      sender_username,
+      sender_profile_img,
+      message,
+    } = chatMessageDto;
+
+    // room_id 에 대한 채팅방 데이터를 가져와서 room_type: open, private에 따라 로직을 분리하면 됌.
 
     console.log('Message received:', chatMessageDto);
 
     const newMessage = new this.chatMessageModel({
       client_id: client.id,
       room_id: room_id,
-      sender_id: sender_id,
       message: message,
+      sender_id: sender_id,
+      sender_email: sender_email,
+      sender_username: sender_username,
+      sender_profile_img: sender_profile_img,
       timestamp: new Date(),
     });
-    await newMessage.save();
+    try {
+      await newMessage.save(); // 아직 동작 안함.
+    } catch (error) {
+      console.log('mongoose:', error);
+    }
     try {
       this.server.to(`room-${room_id}`).emit('receiveMessage', {
         sender_id: sender_id,

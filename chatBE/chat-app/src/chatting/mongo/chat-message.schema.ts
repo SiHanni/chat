@@ -13,6 +13,15 @@ export class ChatMessage extends Document {
   sender_id: number;
 
   @Prop({ required: true })
+  sender_email: string;
+
+  @Prop({ required: true })
+  sender_username: string;
+
+  @Prop({ required: true })
+  sender_profile_img: string;
+
+  @Prop({ required: true })
   room_id: string;
 
   @Prop({ default: Date.now })

@@ -20,6 +20,7 @@ import { UserFriend } from './entities/user-friend.entity';
 import { Gender } from './dto/update-user.dto';
 import { FriendInfoDto } from './dto/friend.dto';
 import { ConfigService } from '@nestjs/config';
+import { UserDto } from './dto/user.dto';
 @Injectable()
 export class UsersService {
   constructor(
@@ -69,7 +70,7 @@ export class UsersService {
   }
   async signIn(
     signInUserDto: SignInUserDto,
-  ): Promise<{ accessToken: string; last_login: Date }> {
+  ): Promise<{ accessToken: string; last_login: Date; user: UserDto }> {
     const { email, password } = signInUserDto;
 
     const user = await this.userRepository.findOne({
@@ -92,6 +93,7 @@ export class UsersService {
       return {
         accessToken: await this.jwtService.signAsync(payload, { secret }),
         last_login: user.last_login,
+        user: user,
       };
     } catch {
       throw new InternalServerErrorException('Failed to generate access token');
