@@ -81,8 +81,11 @@ export class ChattingGateway
     }
     try {
       this.server.to(`room-${room_id}`).emit('receiveMessage', {
-        sender_id: sender_id,
         message: message,
+        sender_id: sender_id,
+        sender_email: sender_email,
+        sender_username: sender_username,
+        sender_profile_img: sender_profile_img,
         timestamp: newMessage.timestamp,
       });
     } catch (error) {
