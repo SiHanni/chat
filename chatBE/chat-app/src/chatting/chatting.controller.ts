@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
 import { ChattingService } from './chatting.service';
 import { CreateChattingDto } from './dto/create-chatting.dto';
 import { Chatting } from './entities/chatting.entity';
@@ -15,7 +15,7 @@ interface CustomRequest extends Request {
 export class ChattingController {
   constructor(private readonly chattingService: ChattingService) {}
 
-  // 채팅방 생성
+  /** 채팅방 생성 */
   @Post('create')
   @UseGuards(AuthGuard)
   async createChatting(
@@ -24,5 +24,11 @@ export class ChattingController {
   ): Promise<Chatting> {
     const uid = (request as CustomRequest).user?.subject;
     return this.chattingService.createChatting(uid, createChattingDto);
+  }
+  @Get('rooms')
+  @UseGuards(AuthGuard)
+  async getUserChatRooms(@Req() request: Request) {
+    const uid = (request as CustomRequest).user?.subject;
+    return this.chattingService.getUserChatRooms(uid);
   }
 }

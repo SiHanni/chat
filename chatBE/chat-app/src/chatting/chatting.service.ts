@@ -43,8 +43,11 @@ export class ChattingService {
     const participants: number[] = !validUserIds.includes(uid)
       ? (validUserIds.push(uid), validUserIds)
       : validUserIds;
+    const participantsName: string = userCheck
+      .map((user) => user.username)
+      .join(',');
 
-    const chatName = name ? name : participants.join(',');
+    const chatName = name ? name : participantsName;
     const owner = await this.userRepository.findOne({
       where: { id: uid },
     });
@@ -94,5 +97,12 @@ export class ChattingService {
   async saveMessage(messageDto: ChatMessageDto): Promise<ChatMessage> {
     const message = new this.chatMessageModel(messageDto);
     return message.save();
+  }
+
+  async getUserChatRooms(uid: number) {
+    return this.userChattingRepository.find({
+      where: { user: { id: uid }, is_active: true },
+      relations: ['chatting'],
+    });
   }
 }

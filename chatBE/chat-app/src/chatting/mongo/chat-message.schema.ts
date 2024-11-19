@@ -6,8 +6,8 @@ export class ChatMessage extends Document {
   @Prop({ required: true })
   client_id: string;
 
-  @Prop({ required: true })
-  message: string;
+  @Prop({ required: false })
+  message?: string;
 
   @Prop({ required: true })
   sender_id: number;
@@ -26,6 +26,12 @@ export class ChatMessage extends Document {
 
   @Prop({ default: Date.now })
   timestamp?: Date;
+
+  @Prop({ required: false })
+  file_name?: string;
+
+  @Prop({ required: false })
+  file_path?: string;
 }
 
 export const ChatMessageSchema = SchemaFactory.createForClass(ChatMessage);

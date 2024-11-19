@@ -9,10 +9,12 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 //import { ChattingService } from './chatting.service';
-import { ChatMessageDto } from './dto/talk-chatting.dto';
+import { ChatFileDto, ChatMessageDto } from './dto/talk-chatting.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ChatMessage } from './mongo/chat-message.schema';
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -27,7 +29,9 @@ export class ChattingGateway
 {
   @WebSocketServer()
   server: Server;
-
+  //private fileStore: {
+  //  [Socket_id: string]: { fileBuffer: Buffer; fileName: string };
+  //} = {};
   constructor(
     //private readonly chattingService: ChattingService,
     @InjectModel(ChatMessage.name)
@@ -93,6 +97,92 @@ export class ChattingGateway
     }
 
     console.log(`Message from ${sender_id}: ${message}`);
+  }
+
+  @SubscribeMessage('sendFile')
+  async handleFile(
+    @MessageBody() chatFiledto: ChatFileDto,
+    @ConnectedSocket() client: Socket,
+  ) {
+    const {
+      room_id,
+      sender_id,
+      sender_email,
+      sender_username,
+      sender_profile_img,
+      file_name,
+      file_data,
+    } = chatFiledto;
+    // base64로 파일을 받았고, Buffer로 변환후 fs에 저장
+    const buffer = Buffer.from(file_data, 'base64');
+    const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+
+    const roomDir = path.join(uploadsDir, `room-${room_id}`);
+    const userDir = path.join(roomDir, `${sender_id}`);
+    await fsPromises.mkdir(userDir, { recursive: true });
+    const filePath = path.join(userDir, file_name);
+
+    // 저장
+    try {
+      await fsPromises.writeFile(filePath, buffer);
+    } catch (err) {
+      console.error('File save failed:', err);
+      return;
+    }
+
+    const newMessage = new this.chatMessageModel({
+      client_id: client.id,
+      room_id: room_id,
+      sender_id: sender_id,
+      sender_email: sender_email,
+      sender_username: sender_username,
+      sender_profile_img: sender_profile_img,
+      timestamp: new Date(),
+      file_name: file_name,
+      file_path: filePath,
+    });
+    try {
+      await newMessage.save(); // 아직 동작 안함.
+    } catch (error) {
+      console.log('mongoose:', error);
+    }
+
+    const fileUrl = `/uploads/${path.relative(uploadsDir, filePath)}`;
+    this.server.to(`room-${room_id}`).emit('receiveFile', {
+      sender_id: sender_id,
+      sender_username: sender_username,
+      sender_email: sender_email,
+      sender_profile_img: sender_profile_img,
+      file_url: fileUrl,
+      file_name: file_name,
+      timestamp: new Date(),
+    });
+  }
+
+  @SubscribeMessage('downloadFile')
+  handleDownloadFile(
+    @MessageBody() data: any,
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { file_url } = data;
+    console.log(file_url);
+    const uploadsDir = path.join(__dirname, '..', '..');
+    console.log(uploadsDir);
+    const filePath = path.join(uploadsDir, file_url);
+
+    // 파일을 base64로 읽기
+    fsPromises
+      .readFile(filePath, { encoding: 'base64' })
+      .then((fileData) => {
+        // base64로 인코딩된 파일을 클라이언트로 전송
+        socket.emit('fileDownload', {
+          file_data: fileData,
+          file_url: file_url,
+        });
+      })
+      .catch((error) => {
+        console.error('Error reading file:', error);
+      });
   }
 
   @SubscribeMessage('joinRoom')
