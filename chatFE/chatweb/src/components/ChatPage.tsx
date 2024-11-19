@@ -106,6 +106,19 @@ const SendButton = styled.button`
   }
 `;
 
+const FileButton = styled.button`
+  padding: 10px;
+  background-color: #ddd;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+
+  &:hover {
+    background-color: #bbb;
+  }
+`;
+
 const ChatPage: React.FC = () => {
   const { room_id } = useParams<{ room_id: string }>();
   const navigate = useNavigate();
@@ -117,12 +130,16 @@ const ChatPage: React.FC = () => {
       timestamp: string;
       sender_username: string;
       sender_profile_img: string;
+      file_name: string;
+      file_url: string;
     }[]
   >([]);
   const [input, setInput] = useState('');
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isComposing, setIsComposing] = useState(false);
   const messageListRef = useRef<HTMLDivElement | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileDownloadUrl, setFileDownloadUrl] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -146,6 +163,17 @@ const ChatPage: React.FC = () => {
       setMessages(prev => [...prev, data]);
     });
 
+    newSocket.on('receiveFile', data => {
+      console.log('data', data);
+      setMessages(prev => [
+        ...prev,
+        {
+          ...data,
+          file_url: data.file_url, // Ensure file_url is received and used
+        },
+      ]);
+    });
+
     return () => {
       newSocket.emit('leaveRoom', room_id);
       newSocket.disconnect();
@@ -161,8 +189,10 @@ const ChatPage: React.FC = () => {
         sender_email: user?.email,
         sender_username: user?.username,
         sender_profile_img: user?.profile_img,
+        file: file ? { filename: file.name, buffer: file } : null,
       });
       setInput('');
+      setFile(null);
     }
   };
 
@@ -198,6 +228,71 @@ const ChatPage: React.FC = () => {
     navigate('/main');
   };
 
+  const handleFileButtonClick = () => {
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    fileInput.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; // 선택된 파일
+    if (file && socket && room_id) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const fileData = reader.result as string; // base64 데이터
+
+        console.log('Sending file...', fileData); // 로그로 확인
+
+        // 파일 전송
+        socket.emit('sendFile', {
+          room_id,
+          file_name: file.name,
+          file_data: fileData, // base64 데이터 전송
+          sender_id: user?.id,
+          sender_email: user?.email,
+          sender_username: user?.username,
+          sender_profile_img: user?.profile_img,
+        });
+      };
+      reader.readAsDataURL(file); // 파일을 base64로 변환
+    }
+  };
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('fileDownload', data => {
+        const { file_data, file_url } = data;
+
+        // base64로 디코딩하여 Blob 객체로 변환
+        const byteCharacters = atob(file_data); // base64 디코딩
+        const byteArrays = [];
+
+        // base64 데이터를 Blob으로 변환
+        for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+          const slice = byteCharacters.slice(offset, offset + 1024);
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
+          byteArrays.push(new Uint8Array(byteNumbers));
+        }
+
+        const blob = new Blob(byteArrays, { type: 'application/octet-stream' });
+
+        // 파일을 다운로드 링크로 변환
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = file_url.split('/').pop(); // 파일 이름을 다운로드 이름으로 설정
+        downloadLink.click(); // 다운로드 시작
+      });
+    }
+  }, [socket]);
+
+  const handleFileClick = (fileUrl: string) => {
+    if (socket) {
+      socket.emit('downloadFile', { file_url: fileUrl }); // 다운로드 요청
+    }
+  };
+
   return (
     <ChatContainer>
       <button onClick={handleGoBack}>Back to Chat</button>
@@ -219,6 +314,13 @@ const ChatPage: React.FC = () => {
             <MessageContent isOwnMessage={msg.sender_id === user?.id}>
               <Username>{msg.sender_username}</Username>
               <MessageText>{msg.message}</MessageText>
+              {msg.file_url && (
+                <div>
+                  <button onClick={() => handleFileClick(msg.file_url)}>
+                    {msg.file_name} 다운로드
+                  </button>
+                </div>
+              )}
               <Timestamp>
                 {new Date(msg.timestamp).toLocaleTimeString()}
               </Timestamp>
@@ -227,6 +329,16 @@ const ChatPage: React.FC = () => {
         ))}
       </MessageList>
       <InputContainer>
+        {/* FileButton을 label로 감싸서 클릭 시 input이 트리거되도록 */}
+        <label htmlFor='fileInput'>
+          <FileButton onClick={handleFileButtonClick}>+</FileButton>
+        </label>
+        <input
+          type='file'
+          id='fileInput'
+          style={{ display: 'none' }} // input을 숨기고 label로 대체
+          onChange={handleFileChange}
+        />
         <Input
           type='text'
           value={input}
