@@ -6,6 +6,7 @@ import SignUp from './pages/SignUp';
 import MainPage from './pages/MainPage';
 import ProfilePage from './pages/ProfilePage';
 import PrivateRoute from './components/PrivateRoute';
+import ChatPage from './components/ChatPage';
 
 const App: React.FC = () => {
   return (
@@ -19,6 +20,7 @@ const App: React.FC = () => {
         <Route element={<PrivateRoute />}>
           <Route path='/main' element={<MainPage />} />
           <Route path='/profile' element={<ProfilePage />} />
+          <Route path='/chat/:room_id' element={<ChatPage />} />
         </Route>
       </Routes>
     </Router>
