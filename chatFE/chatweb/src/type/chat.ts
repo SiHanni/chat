@@ -1,4 +1,4 @@
-export interface ChatRoom {
+export interface UserChatRoom {
   id: number;
   is_active: boolean;
   joined_at: Date | null; // 참가 일시
@@ -38,4 +38,13 @@ export interface ChatRoom {
     gender: 'male' | 'female';
     last_login: Date;
   };
+}
+
+export interface ChatRoom {
+  id: number;
+  created_at: string;
+  name: string;
+  mongoRoom_id: string;
+  room_type: string;
+  owner?: any;
 }

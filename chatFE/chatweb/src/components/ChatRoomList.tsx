@@ -85,10 +85,10 @@ const ChatRoomsList: React.FC = () => {
       <ChatTitle>채팅</ChatTitle>
       <ChatRoomList>
         {chatRooms.map(room => (
-          <li key={room.id} onClick={() => handleRoomClick(room.chatting.id)}>
+          <li key={room.id} onClick={() => handleRoomClick(room.id)}>
             <ChatRoomItem>
               <ProfileImage src={'/marunotwe.png'} alt='Profile' />
-              <RoomName>{room.chatting.name}</RoomName>
+              <RoomName>{room.name}</RoomName>
             </ChatRoomItem>
           </li>
         ))}
