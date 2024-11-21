@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
-enum RoomType {
+export enum RoomType {
   OPEN = 'open',
   PRIVATE = 'private',
 }

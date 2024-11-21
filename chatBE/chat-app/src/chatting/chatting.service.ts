@@ -15,6 +15,7 @@ import { Model } from 'mongoose';
 import { ChatMessage } from './mongo/chat-message.schema';
 import { ChatMessageDto } from './dto/talk-chatting.dto';
 import { InjectModel } from '@nestjs/mongoose';
+import { RoomType } from './entities/chatting.entity';
 
 @Injectable()
 export class ChattingService {
@@ -100,9 +101,17 @@ export class ChattingService {
   }
 
   async getUserChatRooms(uid: number) {
-    return this.userChattingRepository.find({
-      where: { user: { id: uid }, is_active: true },
-      relations: ['chatting'],
+    const openChats = await this.chattingRepository.find({
+      where: { room_type: RoomType.OPEN },
     });
+    const privateChats = await this.chattingRepository
+      .createQueryBuilder('chatting')
+      .innerJoin('user_chatting', 'uc', 'chatting.id = uc.chatting_id')
+      .where('chatting.room_type = :room_type', { room_type: RoomType.PRIVATE })
+      .andWhere('uc.user_id=:uid', { uid })
+      .getMany();
+    console.log(openChats);
+    console.log(privateChats);
+    return [...openChats, ...privateChats];
   }
 }
