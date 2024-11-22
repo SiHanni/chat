@@ -8,13 +8,17 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-//import { ChattingService } from './chatting.service';
 import { ChatFileDto, ChatMessageDto } from './dto/talk-chatting.dto';
+import { UserChatting } from './entities/user-chatting.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ChatMessage } from './mongo/chat-message.schema';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AuthChatDto } from './dto/join-chatting.dto';
+import { BadRequestException } from '@nestjs/common';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -33,7 +37,8 @@ export class ChattingGateway
   //  [Socket_id: string]: { fileBuffer: Buffer; fileName: string };
   //} = {};
   constructor(
-    //private readonly chattingService: ChattingService,
+    @InjectRepository(UserChatting)
+    private readonly userChatting: Repository<UserChatting>,
     @InjectModel(ChatMessage.name)
     private readonly chatMessageModel: Model<ChatMessage>,
   ) {}
@@ -186,10 +191,24 @@ export class ChattingGateway
   }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(
-    @MessageBody() room_id: number,
+  async handleJoinRoom(
+    @MessageBody() authChatDto: AuthChatDto,
     @ConnectedSocket() client: Socket,
   ) {
+    const { room_type, room_id, uid } = authChatDto;
+    // open이면 그냥 들여보내고, private면 체크가 필요함
+
+    console.log('QWEQWE', 'room_id', room_id, room_type, uid);
+    const userCheck = await this.userChatting.find({
+      where: { chatting: { id: room_id }, user: { id: uid } },
+    });
+    console.log('USER', userCheck);
+    if (room_type === 'private') {
+      client.join(`room-${room_id}`);
+    } else if (userCheck.length < 1) {
+      throw new BadRequestException('Invalid User');
+    }
+
     client.join(`room-${room_id}`);
     console.log(`Client ${client.id} joined room ${room_id}`);
   }

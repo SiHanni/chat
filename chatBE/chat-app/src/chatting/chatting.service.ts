@@ -110,8 +110,8 @@ export class ChattingService {
       .where('chatting.room_type = :room_type', { room_type: RoomType.PRIVATE })
       .andWhere('uc.user_id=:uid', { uid })
       .getMany();
-    console.log(openChats);
-    console.log(privateChats);
-    return [...openChats, ...privateChats];
+    //console.log(openChats);
+    //console.log(privateChats);
+    return { uid: uid, chat: [...openChats, ...privateChats] };
   }
 }
