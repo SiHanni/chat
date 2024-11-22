@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import styled from 'styled-components';
 import { User } from '../type/user';
@@ -120,8 +120,12 @@ const FileButton = styled.button`
 `;
 
 const ChatPage: React.FC = () => {
-  const { room_id } = useParams<{ room_id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const uid = queryParams.get('uid');
+  const room_type = queryParams.get('room_type');
+  const room_id = queryParams.get('room_id');
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<
     {
@@ -155,8 +159,8 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     const newSocket = io('http://localhost:3000/chat');
     setSocket(newSocket);
-
-    newSocket.emit('joinRoom', room_id);
+    console.log('Emitting joinRoom:', { room_id, uid, room_type });
+    newSocket.emit('joinRoom', { uid, room_id, room_type });
 
     newSocket.on('receiveMessage', data => {
       console.log(data);

@@ -20,7 +20,7 @@ const App: React.FC = () => {
         <Route element={<PrivateRoute />}>
           <Route path='/main' element={<MainPage />} />
           <Route path='/profile' element={<ProfilePage />} />
-          <Route path='/chat/:room_id' element={<ChatPage />} />
+          <Route path='/chat' element={<ChatPage />} />
         </Route>
       </Routes>
     </Router>

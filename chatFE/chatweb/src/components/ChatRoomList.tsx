@@ -57,6 +57,7 @@ const ChatTitle = styled.h2`
 
 const ChatRoomsList: React.FC = () => {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
+  const [uid, setUid] = useState<number>();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -67,7 +68,8 @@ const ChatRoomsList: React.FC = () => {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
           },
         });
-        setChatRooms(response.data);
+        setChatRooms(response.data.chat);
+        setUid(response.data.uid);
       } catch (error) {
         console.error('Failed to fetch chat rooms', error);
       }
@@ -76,8 +78,8 @@ const ChatRoomsList: React.FC = () => {
     fetchChatRooms();
   }, []);
 
-  const handleRoomClick = (room_id: number) => {
-    navigate(`/chat/${room_id}`);
+  const handleRoomClick = (room_id: number, room_type: string) => {
+    navigate(`/chat/?room_type=${room_type}&room_id=${room_id}&uid=${uid}`);
   };
 
   return (
@@ -85,7 +87,10 @@ const ChatRoomsList: React.FC = () => {
       <ChatTitle>채팅</ChatTitle>
       <ChatRoomList>
         {chatRooms.map(room => (
-          <li key={room.id} onClick={() => handleRoomClick(room.id)}>
+          <li
+            key={room.id}
+            onClick={() => handleRoomClick(room.id, room.room_type)}
+          >
             <ChatRoomItem>
               <ProfileImage src={'/marunotwe.png'} alt='Profile' />
               <RoomName>{room.name}</RoomName>
