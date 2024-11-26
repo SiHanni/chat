@@ -126,11 +126,24 @@ export class ChattingGateway
     const roomDir = path.join(uploadsDir, `room-${room_id}`);
     const userDir = path.join(roomDir, `${sender_id}`);
     await fsPromises.mkdir(userDir, { recursive: true });
-    const filePath = path.join(userDir, file_name);
+    //const filePath = path.join(userDir, file_name);
+
+    const relativePath = path.join(
+      'uploads',
+      `room-${room_id}`,
+      `${sender_id}`,
+      file_name,
+    );
+    const absolutePath = path.join(
+      uploadsDir,
+      `room-${room_id}`,
+      `${sender_id}`,
+      file_name,
+    );
 
     // 저장
     try {
-      await fsPromises.writeFile(filePath, buffer);
+      await fsPromises.writeFile(absolutePath, buffer);
     } catch (err) {
       console.error('File save failed:', err);
       return;
@@ -145,7 +158,7 @@ export class ChattingGateway
       sender_profile_img: sender_profile_img,
       timestamp: new Date(),
       file_name: file_name,
-      file_path: filePath,
+      file_path: relativePath,
     });
     try {
       await newMessage.save();
@@ -153,13 +166,13 @@ export class ChattingGateway
       console.log('mongoose:', error);
     }
 
-    const fileUrl = `/uploads/${path.relative(uploadsDir, filePath)}`;
+    //const fileUrl = `/uploads/${path.relative(uploadsDir, filePath)}`;
     this.server.to(`room-${room_id}`).emit('receiveFile', {
       sender_id: sender_id,
       sender_username: sender_username,
       sender_email: sender_email,
       sender_profile_img: sender_profile_img,
-      file_url: fileUrl,
+      file_path: relativePath,
       file_name: file_name,
       timestamp: new Date(),
     });
@@ -171,14 +184,12 @@ export class ChattingGateway
     @ConnectedSocket() socket: Socket,
   ) {
     const { file_url } = data;
-    console.log(file_url);
-    const uploadsDir = path.join(__dirname, '..', '..');
-    console.log(uploadsDir);
-    const filePath = path.join(uploadsDir, file_url);
+    const uploadsDir = path.join(__dirname, '..', '..', file_url);
+    //const filePath = path.join(uploadsDir, file_url);
 
     // 파일을 base64로 읽기
     fsPromises
-      .readFile(filePath, { encoding: 'base64' })
+      .readFile(uploadsDir, { encoding: 'base64' })
       .then((fileData) => {
         // base64로 인코딩된 파일을 클라이언트로 전송
         socket.emit('fileDownload', {
@@ -199,11 +210,9 @@ export class ChattingGateway
     const { room_type, room_id, uid } = authChatDto;
     // open이면 그냥 들여보내고, private면 체크가 필요함
 
-    console.log('QWEQWE', 'room_id', room_id, room_type, uid);
     const userCheck = await this.userChatting.find({
       where: { chatting: { id: room_id }, user: { id: uid } },
     });
-    console.log('USER', userCheck);
     if (room_type === 'private') {
       client.join(`room-${room_id}`);
     } else if (userCheck.length < 1) {
