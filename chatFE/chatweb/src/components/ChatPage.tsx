@@ -143,7 +143,6 @@ const ChatPage: React.FC = () => {
   const [isComposing, setIsComposing] = useState(false);
   const messageListRef = useRef<HTMLDivElement | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [fileDownloadUrl, setFileDownloadUrl] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -196,7 +195,6 @@ const ChatPage: React.FC = () => {
         ...prev,
         {
           ...data,
-          file_url: data.file_url, // Ensure file_url is received and used
         },
       ]);
     });
@@ -205,7 +203,7 @@ const ChatPage: React.FC = () => {
       newSocket.emit('leaveRoom', room_id);
       newSocket.disconnect();
     };
-  }, [room_id]);
+  }, [room_id, uid, room_type]);
 
   const sendMessage = () => {
     if (socket && input.trim()) {
@@ -259,7 +257,7 @@ const ChatPage: React.FC = () => {
     const fileInput = document.getElementById('fileInput') as HTMLInputElement;
     fileInput.click();
   };
-
+  /** onloadend는 파일읽기가 끝나야 호출됌 */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; // 선택된 파일
     if (file && socket && room_id) {
