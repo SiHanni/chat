@@ -114,4 +114,24 @@ export class ChattingService {
     //console.log(privateChats);
     return { uid: uid, chat: [...openChats, ...privateChats] };
   }
+
+  async getMessages(uid: number, room_id: number) {
+    // 해당 uid가 해당 채팅방에 속해있는 유저인지 부터 확인
+    const userCheck = await this.userChattingRepository.find({
+      where: { user: { id: uid }, chatting: { id: room_id } },
+    });
+
+    if (userCheck.length < 1) {
+      throw new BadRequestException('no room');
+    }
+    const messages = await this.chatMessageModel
+      .find({ room_id })
+      .select(
+        'message sender_id sender_email sender_username sender_profile_img room_id timestamp file_name file_path',
+      )
+      .sort({ Timestamp: 1 });
+    return messages;
+
+    // 채팅 메세지를 몽고 디비에서 가져와 반환
+  }
 }

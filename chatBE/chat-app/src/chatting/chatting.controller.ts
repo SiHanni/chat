@@ -1,4 +1,13 @@
-import { Controller, Post, Get, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UseGuards,
+  Req,
+  Query,
+  BadRequestException,
+} from '@nestjs/common';
 import { ChattingService } from './chatting.service';
 import { CreateChattingDto } from './dto/create-chatting.dto';
 import { Chatting } from './entities/chatting.entity';
@@ -23,12 +32,30 @@ export class ChattingController {
     @Body() createChattingDto: CreateChattingDto,
   ): Promise<Chatting> {
     const uid = (request as CustomRequest).user?.subject;
+    if (!uid) {
+      throw new BadRequestException('Invalid Request');
+    }
     return this.chattingService.createChatting(uid, createChattingDto);
   }
   @Get('rooms')
   @UseGuards(AuthGuard)
   async getUserChatRooms(@Req() request: Request) {
     const uid = (request as CustomRequest).user?.subject;
+    if (!uid) {
+      throw new BadRequestException('Invalid Request');
+    }
     return this.chattingService.getUserChatRooms(uid);
+  }
+  @Get('messages')
+  @UseGuards(AuthGuard)
+  async getMessages(
+    @Req() request: Request,
+    @Query('room_id') room_id: number,
+  ) {
+    const uid = (request as CustomRequest).user?.subject;
+    if (!room_id || !uid) {
+      throw new BadRequestException('Invalid Request');
+    }
+    return this.chattingService.getMessages(uid, room_id);
   }
 }

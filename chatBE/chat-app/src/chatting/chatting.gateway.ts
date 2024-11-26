@@ -84,9 +84,10 @@ export class ChattingGateway
       timestamp: new Date(),
     });
     try {
-      await newMessage.save(); // 아직 동작 안함.
+      const savedMessage = await newMessage.save(); // MongoDB에 저장
+      console.log('Message saved to MongoDB:', savedMessage);
     } catch (error) {
-      console.log('mongoose:', error);
+      console.error('Error saving message to MongoDB:', error);
     }
     try {
       this.server.to(`room-${room_id}`).emit('receiveMessage', {
@@ -147,7 +148,7 @@ export class ChattingGateway
       file_path: filePath,
     });
     try {
-      await newMessage.save(); // 아직 동작 안함.
+      await newMessage.save();
     } catch (error) {
       console.log('mongoose:', error);
     }
