@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
 import styled from 'styled-components';
 import { User } from '../type/user';
@@ -135,7 +135,7 @@ const ChatPage: React.FC = () => {
       sender_username: string;
       sender_profile_img: string;
       file_name: string;
-      file_url: string;
+      file_path: string;
     }[]
   >([]);
   const [input, setInput] = useState('');
@@ -155,6 +155,29 @@ const ChatPage: React.FC = () => {
       console.error('Parsing error:', error);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/chat/messages?room_id=${room_id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            },
+          }
+        );
+        const data = await response.json();
+        console.log('Fetched messages:', data); // 데이터 출력
+        setMessages(Array.isArray(data) ? data : []);
+        //setMessages(data);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+      }
+    };
+
+    fetchMessages();
+  }, [room_id]);
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000/chat');
@@ -318,9 +341,9 @@ const ChatPage: React.FC = () => {
             <MessageContent isOwnMessage={msg.sender_id === user?.id}>
               <Username>{msg.sender_username}</Username>
               <MessageText>{msg.message}</MessageText>
-              {msg.file_url && (
+              {msg.file_path && (
                 <div>
-                  <button onClick={() => handleFileClick(msg.file_url)}>
+                  <button onClick={() => handleFileClick(msg.file_path)}>
                     {msg.file_name} 다운로드
                   </button>
                 </div>

@@ -99,7 +99,7 @@ const LogoutButton = styled(Button)`
 `;
 
 const MainPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('friends');
+  const [activeTab, setActiveTab] = useState('chat');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const navigate = useNavigate();
 
