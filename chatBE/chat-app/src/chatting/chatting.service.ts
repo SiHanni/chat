@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
@@ -36,17 +37,17 @@ export class ChattingService {
   ): Promise<Chatting> {
     const { name, friend_ids } = createChattingDto;
 
-    const userCheck = await this.userRepository.find({
-      where: { id: In(friend_ids) },
+    const users = await this.userRepository.find({
+      where: { id: In([...friend_ids, uid]) },
     });
-    const validUser = userCheck.map((user) => user.id);
-    const validUserIds = friend_ids.filter((id) => validUser.includes(id));
-    const participants: number[] = !validUserIds.includes(uid)
-      ? (validUserIds.push(uid), validUserIds)
-      : validUserIds;
-    const participantsName: string = userCheck
-      .map((user) => user.username)
-      .join(',');
+
+    if (!users.length) {
+      throw new NotFoundException('No valid users found.');
+    }
+
+    const validUserIds = users.map((user) => user.id);
+    if (!validUserIds.includes(uid)) validUserIds.push(uid);
+    const participantsName = users.map((user) => user.username).join(', ');
 
     const chatName = name ? name : participantsName;
     const owner = await this.userRepository.findOne({
@@ -58,20 +59,20 @@ export class ChattingService {
     });
     const saveChat = await this.chattingRepository.save(newChatting);
 
-    for (const users_id of participants) {
-      const user = await this.userRepository.findOne({
-        where: { id: users_id },
-      });
-      if (!user) {
-        throw new BadRequestException(`User not found`);
-      }
-      const userChat = this.userChattingRepository.create({
-        chatting: saveChat,
-        user: user,
-        joined_at: new Date(),
-      });
-      await this.userChattingRepository.save(userChat);
-    }
+    //for (const users_id of validUserIds) {
+    //  const userChat = this.userChattingRepository.create({
+    //    chatting: saveChat,
+    //    user: { id: users_id },
+    //    joined_at: new Date(),
+    //  });
+    //  await this.userChattingRepository.save(userChat);
+    //}
+    const userChattingEntries = validUserIds.map((user_id) => ({
+      chatting: saveChat,
+      user: users.find((user) => user.id === user_id),
+      joined_at: new Date(),
+    }));
+    await this.userChattingRepository.save(userChattingEntries);
     return saveChat;
   }
 

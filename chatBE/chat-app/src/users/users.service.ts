@@ -335,7 +335,9 @@ export class UsersService {
       ],
       relations: ['user', 'friend'],
     });
+    console.log('use', userFriends);
     const friendInfo = userFriends.map((friend) => ({
+      uid: friend.friend.id,
       username: friend.friend.username,
       profile_img: friend.friend.profile_img,
       status_msg: friend.friend.status_msg,
