@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-//import { useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
 import { FaCommentDots } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 interface Friend {
   uid: number;
   username: string;
@@ -10,6 +11,8 @@ interface Friend {
   status_msg: string;
   email: string;
 }
+/** 채팅방으로 이동시 웹소켓 연결을 확인하고 웹소켓 연결을 하기 위한 소켓 */
+const socket = io('http://localhost:3000', { autoConnect: false });
 
 const FriendListContainer = styled.div`
   width: 100%;
@@ -83,6 +86,8 @@ const ChatButton = styled.button`
 
 const FriendsList: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [uid, setUid] = useState<number>();
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -94,7 +99,8 @@ const FriendsList: React.FC = () => {
             },
           }
         );
-        setFriends(response.data);
+        setFriends(response.data.friends);
+        setUid(response.data.uid);
       } catch (error) {
         console.error('Failed to fetch friends', error);
       }
@@ -104,9 +110,8 @@ const FriendsList: React.FC = () => {
   }, []);
 
   const handleChatClick = async (friend_id: number) => {
-    console.log('Chat click handler triggered', friend_id);
     try {
-      await axios.post(
+      const response = await axios.post(
         'http://localhost:3000/chat/create',
         { friend_ids: [friend_id] },
         {
@@ -115,6 +120,13 @@ const FriendsList: React.FC = () => {
           },
         }
       );
+      const { id, room_type } = response.data;
+
+      if (!socket.connected) {
+        socket.connect();
+      }
+      socket.emit('joinRoom', { room_id: id, room_type, uid });
+      navigate(`/chat/?room_type=${room_type}&room_id=${id}&uid=${uid}`);
     } catch (error) {
       console.error('Failed to create or fetch chat', error);
     }
