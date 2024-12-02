@@ -14,6 +14,7 @@ import {
   //ParseIntPipe,
   UseGuards,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { UsersService } from './users.service';
@@ -111,6 +112,9 @@ export class UsersController {
   @UseGuards(AuthGuard)
   async getFriends(@Req() request: Request) {
     const uid = (request as CustomRequest).user?.subject;
+    if (!uid) {
+      throw new BadRequestException('Invalid Request');
+    }
     return this.usersService.getFriendLists(uid);
   }
 

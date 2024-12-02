@@ -327,7 +327,9 @@ export class UsersService {
     }
   }
 
-  async getFriendLists(uid: number): Promise<FriendInfoDto[]> {
+  async getFriendLists(
+    uid: number,
+  ): Promise<{ uid: number; friends: FriendInfoDto[] }> {
     const userFriends = await this.userFriendRepository.find({
       where: [
         { user: { id: uid }, is_accepted: true, is_blacklist: false },
@@ -343,7 +345,7 @@ export class UsersService {
       status_msg: friend.friend.status_msg,
       email: friend.friend.email,
     }));
-    return friendInfo;
+    return { uid: uid, friends: friendInfo };
   }
   /** 나에게 들어온 친구 추가 요청 목록 */
   async getFriendRequests(uid: number): Promise<UserFriend[]> {

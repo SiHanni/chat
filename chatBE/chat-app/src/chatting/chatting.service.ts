@@ -65,7 +65,7 @@ export class ChattingService {
         user.is_active = true;
         await this.userChattingRepository.save(user);
       }
-
+      console.log('EEEE', existingChat);
       return existingChat;
     }
 
