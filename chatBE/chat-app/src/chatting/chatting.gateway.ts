@@ -44,7 +44,7 @@ export class ChattingGateway
   ) {}
 
   onModuleInit() {
-    console.log('WebSocket server initialized');
+    console.log('WebSocket server initialized', new Date());
   }
 
   handleConnection(client: Socket) {
@@ -230,5 +230,6 @@ export class ChattingGateway
   ) {
     client.leave(`room-${room_id}`);
     console.log(`Client ${client.id} left room ${room_id}`);
+    client.to(`room-${room_id}`).emit('roomLeft', { room_id });
   }
 }

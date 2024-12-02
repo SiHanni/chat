@@ -7,11 +7,13 @@ import {
   Req,
   Query,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { ChattingService } from './chatting.service';
 import { CreateChattingDto } from './dto/create-chatting.dto';
 import { Chatting } from './entities/chatting.entity';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { LeaveChattingDto } from './dto/leave-chatting.dto';
 
 interface CustomRequest extends Request {
   user?: {
@@ -57,5 +59,24 @@ export class ChattingController {
       throw new BadRequestException('Invalid Request');
     }
     return this.chattingService.getMessages(uid, room_id);
+  }
+  @Post('leave')
+  @UseGuards(AuthGuard)
+  async leaveChatting(
+    @Req() request: Request,
+    @Body() leaveChattingDto: LeaveChattingDto,
+  ): Promise<{ message: string }> {
+    const uid = (request as CustomRequest).user?.subject;
+    if (!uid) {
+      throw new BadRequestException('Invalid Request');
+    }
+
+    try {
+      await this.chattingService.leaveChatting(uid, leaveChattingDto);
+      return { message: 'Successfully left the chat room' };
+    } catch (error) {
+      console.error('Error leaving chat room:', error);
+      throw new InternalServerErrorException('Failed to leave the chat room');
+    }
   }
 }

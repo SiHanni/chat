@@ -1,3 +1,3 @@
 export class LeaveChattingDto {
-  chatting_id: number;
+  room_id: number;
 }

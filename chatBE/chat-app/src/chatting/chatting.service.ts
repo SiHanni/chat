@@ -10,13 +10,13 @@ import { Chatting } from './entities/chatting.entity';
 import { UserChatting } from './entities/user-chatting.entity';
 import { User } from 'src/users/entities/user.entity';
 import { CreateChattingDto } from './dto/create-chatting.dto';
-import { LeaveChattingDto } from './dto/leave-chatting.dto';
 
 import { Model } from 'mongoose';
 import { ChatMessage } from './mongo/chat-message.schema';
 import { ChatMessageDto } from './dto/talk-chatting.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { RoomType } from './entities/chatting.entity';
+import { LeaveChattingDto } from './dto/leave-chatting.dto';
 
 @Injectable()
 export class ChattingService {
@@ -36,18 +36,40 @@ export class ChattingService {
     createChattingDto: CreateChattingDto,
   ): Promise<Chatting> {
     const { name, friend_ids } = createChattingDto;
+    console.log('F', friend_ids);
+    const existingChat = await this.chattingRepository
+      .createQueryBuilder('chat')
+      .innerJoin('user_chatting', 'uc', 'uc.chatting_id = chat.id')
+      .where('uc.user_id IN (:...ids)', { ids: friend_ids.concat(uid) })
+      .andWhere('chat.room_type = :roomType', { roomType: RoomType.PRIVATE })
+      .andWhere('uc.is_active = :isActive', { isActive: true })
+      .groupBy('chat.id')
+      .having('COUNT(DISTINCT uc.user_id) = :count', {
+        count: friend_ids.length + 1,
+      })
+      .andHaving(
+        'GROUP_CONCAT(DISTINCT uc.user_id ORDER BY uc.user_id) = :exactIds',
+        { exactIds: friend_ids.concat(uid).sort().join(',') },
+      )
+      .getOne();
+    if (existingChat) {
+      console.log('이미 있는 채팅방이야! 리다이렉트 시도해볼게', existingChat);
+      return existingChat;
+    }
 
     const users = await this.userRepository.find({
       where: { id: In([...friend_ids, uid]) },
     });
-
+    console.log('USERSSS', users);
     if (!users.length) {
       throw new NotFoundException('No valid users found.');
     }
 
     const validUserIds = users.map((user) => user.id);
+    console.log('QWEQWE', users);
     if (!validUserIds.includes(uid)) validUserIds.push(uid);
     const participantsName = users.map((user) => user.username).join(', ');
+    console.log('NAME:', name, 'OR', participantsName);
 
     const chatName = name ? name : participantsName;
     const owner = await this.userRepository.findOne({
@@ -59,20 +81,14 @@ export class ChattingService {
     });
     const saveChat = await this.chattingRepository.save(newChatting);
 
-    //for (const users_id of validUserIds) {
-    //  const userChat = this.userChattingRepository.create({
-    //    chatting: saveChat,
-    //    user: { id: users_id },
-    //    joined_at: new Date(),
-    //  });
-    //  await this.userChattingRepository.save(userChat);
-    //}
-    const userChattingEntries = validUserIds.map((user_id) => ({
-      chatting: saveChat,
-      user: users.find((user) => user.id === user_id),
-      joined_at: new Date(),
-    }));
-    await this.userChattingRepository.save(userChattingEntries);
+    for (const users_id of validUserIds) {
+      const userChat = this.userChattingRepository.create({
+        chatting: saveChat,
+        user: { id: users_id },
+        joined_at: new Date(),
+      });
+      await this.userChattingRepository.save(userChat);
+    }
     return saveChat;
   }
 
@@ -80,10 +96,12 @@ export class ChattingService {
     uid: number,
     leaveChattingDto: LeaveChattingDto,
   ): Promise<void> {
+    console.log('U', uid, leaveChattingDto);
+    const { room_id } = leaveChattingDto;
     const userChat = await this.userChattingRepository.findOne({
       where: {
         user: { id: uid },
-        chatting: { id: leaveChattingDto.chatting_id },
+        chatting: { id: room_id },
       },
     });
 
@@ -91,7 +109,8 @@ export class ChattingService {
       throw new BadRequestException('User is not in this chat room');
     }
     try {
-      await this.userChattingRepository.remove(userChat);
+      userChat.is_active = false;
+      await this.userChattingRepository.save(userChat);
     } catch {
       throw new InternalServerErrorException('error occured at leave chat');
     }
@@ -110,6 +129,7 @@ export class ChattingService {
       .innerJoin('user_chatting', 'uc', 'chatting.id = uc.chatting_id')
       .where('chatting.room_type = :room_type', { room_type: RoomType.PRIVATE })
       .andWhere('uc.user_id=:uid', { uid })
+      .andWhere('uc.is_active=:isActive', { isActive: true })
       .getMany();
     //console.log(openChats);
     //console.log(privateChats);
