@@ -42,7 +42,7 @@ export class ChattingService {
       .innerJoin('user_chatting', 'uc', 'uc.chatting_id = chat.id')
       .where('uc.user_id IN (:...ids)', { ids: friend_ids.concat(uid) })
       .andWhere('chat.room_type = :roomType', { roomType: RoomType.PRIVATE })
-      .andWhere('uc.is_active = :isActive', { isActive: true })
+      //.andWhere('uc.is_active = :isActive', { isActive: true })
       .groupBy('chat.id')
       .having('COUNT(DISTINCT uc.user_id) = :count', {
         count: friend_ids.length + 1,
@@ -52,24 +52,33 @@ export class ChattingService {
         { exactIds: friend_ids.concat(uid).sort().join(',') },
       )
       .getOne();
+
+    console.log('ASD', existingChat);
     if (existingChat) {
-      console.log('이미 있는 채팅방이야! 리다이렉트 시도해볼게', existingChat);
+      const inactiveUsers = await this.userChattingRepository.find({
+        where: {
+          chatting: { id: existingChat.id },
+          is_active: false,
+        },
+      });
+      for (const user of inactiveUsers) {
+        user.is_active = true;
+        await this.userChattingRepository.save(user);
+      }
+
       return existingChat;
     }
 
     const users = await this.userRepository.find({
       where: { id: In([...friend_ids, uid]) },
     });
-    console.log('USERSSS', users);
     if (!users.length) {
       throw new NotFoundException('No valid users found.');
     }
 
     const validUserIds = users.map((user) => user.id);
-    console.log('QWEQWE', users);
     if (!validUserIds.includes(uid)) validUserIds.push(uid);
     const participantsName = users.map((user) => user.username).join(', ');
-    console.log('NAME:', name, 'OR', participantsName);
 
     const chatName = name ? name : participantsName;
     const owner = await this.userRepository.findOne({
