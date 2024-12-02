@@ -30,10 +30,14 @@ const ChatRoomItem = styled.div`
   cursor: pointer;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-
+  position: relative; /* LeaveButton을 절대 위치로 조정하기 위함 */
   &:hover {
     background-color: #f1f1f1;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  &:hover button {
+    opacity: 1;
+    visibility: visible;
   }
 `;
 
@@ -59,16 +63,20 @@ const ChatTitle = styled.h2`
 `;
 
 const LeaveButton = styled.button`
-  margin-left: auto;
-  background-color: red;
+  position: absolute;
+  right: 15px;
+  background-color: #ffb6b9;
   color: white;
   border: none;
   padding: 5px 10px;
   border-radius: 5px;
   cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
 
   &:hover {
-    background-color: #e60000;
+    background-color: #2f2f2f;
   }
 `;
 
@@ -114,10 +122,8 @@ const ChatRoomsList: React.FC = () => {
             },
           }
         );
-
+        console.log('res', response);
         if (response.status === 200) {
-          socket.emit('leaveRoom', room_id);
-          alert('채팅방에서 나갔습니다.');
           setChatRooms(prevRooms =>
             prevRooms.filter(room => room.id !== room_id)
           );
@@ -155,9 +161,11 @@ const ChatRoomsList: React.FC = () => {
             <ChatRoomItem>
               <ProfileImage src={'/marunotwe.png'} alt='Profile' />
               <RoomName>{room.name}</RoomName>
-              <LeaveButton onClick={e => handleLeaveClick(e, room.id)}>
-                나가기
-              </LeaveButton>
+              {room.room_type !== 'open' && (
+                <LeaveButton onClick={e => handleLeaveClick(e, room.id)}>
+                  나가기
+                </LeaveButton>
+              )}
             </ChatRoomItem>
           </li>
         ))}
