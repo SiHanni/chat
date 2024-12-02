@@ -8,6 +8,8 @@ import {
   Query,
   BadRequestException,
   InternalServerErrorException,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { ChattingService } from './chatting.service';
 import { CreateChattingDto } from './dto/create-chatting.dto';
@@ -61,6 +63,7 @@ export class ChattingController {
     return this.chattingService.getMessages(uid, room_id);
   }
   @Post('leave')
+  @HttpCode(HttpStatus.OK) // 성공시 200 상태 코드 반환
   @UseGuards(AuthGuard)
   async leaveChatting(
     @Req() request: Request,
