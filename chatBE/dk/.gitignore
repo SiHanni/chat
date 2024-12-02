@@ -1,0 +1,8 @@
+# dk/chat/docker-compose.yml 무시
+dk/chat/docker-compose.yml
+
+# dk/mongo/docker-compose.yml 무시
+dk/mongo/docker-compose.yml
+
+# dk/mysql/docker-compose.yml 무시
+dk/mysql/docker-compose.yml
