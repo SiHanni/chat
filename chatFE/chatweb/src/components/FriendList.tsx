@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-
+//import { useNavigate } from 'react-router-dom';
+import { FaCommentDots } from 'react-icons/fa';
 interface Friend {
-  id: number;
+  uid: number;
   username: string;
   profile_img: string;
   status_msg: string;
+  email: string;
 }
 
 const FriendListContainer = styled.div`
@@ -65,9 +67,22 @@ const StatusMessage = styled.span`
   color: #555;
 `;
 
+const ChatButton = styled.button`
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #f4d03f;
+  font-size: 1.5rem;
+  transition: color 0.3s;
+  margin-left: 20px;
+
+  &:hover {
+    color: #0056b3;
+  }
+`;
+
 const FriendsList: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
-
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -88,6 +103,23 @@ const FriendsList: React.FC = () => {
     fetchFriends();
   }, []);
 
+  const handleChatClick = async (friend_id: number) => {
+    console.log('Chat click handler triggered', friend_id);
+    try {
+      await axios.post(
+        'http://localhost:3000/chat/create',
+        { friend_ids: [friend_id] },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Failed to create or fetch chat', error);
+    }
+  };
+
   return (
     <FriendListContainer>
       {friends.length === 0 ? (
@@ -95,17 +127,22 @@ const FriendsList: React.FC = () => {
       ) : (
         <ul>
           {friends.map(friend => (
-            <FriendItem key={friend.username}>
-              <ProfileImage
-                src={friend.profile_img || '/maruu.jpg'}
-                alt={friend.username}
-              />
-              <FriendDetails>
-                <Username>{friend.username}</Username>
-                {friend.status_msg && (
-                  <StatusMessage>{friend.status_msg}</StatusMessage>
-                )}
-              </FriendDetails>
+            <FriendItem key={friend.uid}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <ProfileImage
+                  src={friend.profile_img || '/maruu.jpg'}
+                  alt={friend.username}
+                />
+                <FriendDetails>
+                  <Username>{friend.username}</Username>
+                  {friend.status_msg && (
+                    <StatusMessage>{friend.status_msg}</StatusMessage>
+                  )}
+                </FriendDetails>
+              </div>
+              <ChatButton onClick={() => handleChatClick(friend.uid)}>
+                <FaCommentDots />
+              </ChatButton>
             </FriendItem>
           ))}
         </ul>

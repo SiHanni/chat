@@ -3,6 +3,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { ChatRoom } from '../type/chat';
+import io from 'socket.io-client';
+
+const socket = io('http://localhost:3000');
 
 // 스타일 정의
 const ChatRoomListContainer = styled.div`
@@ -55,6 +58,20 @@ const ChatTitle = styled.h2`
   margin-bottom: 15px;
 `;
 
+const LeaveButton = styled.button`
+  margin-left: auto;
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #e60000;
+  }
+`;
+
 const ChatRoomsList: React.FC = () => {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [uid, setUid] = useState<number>();
@@ -82,6 +99,50 @@ const ChatRoomsList: React.FC = () => {
     navigate(`/chat/?room_type=${room_type}&room_id=${room_id}&uid=${uid}`);
   };
 
+  const handleLeaveClick = async (e: React.MouseEvent, room_id: number) => {
+    e.stopPropagation();
+    // "나가시겠습니까?" 확인 창 띄우기
+    const confirmLeave = window.confirm('채팅방을 나가시겠습니까?');
+    if (confirmLeave) {
+      try {
+        const response = await axios.post(
+          'http://localhost:3000/chat/leave',
+          { room_id: room_id },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          socket.emit('leaveRoom', room_id);
+          alert('채팅방에서 나갔습니다.');
+          setChatRooms(prevRooms =>
+            prevRooms.filter(room => room.id !== room_id)
+          );
+          navigate('/main');
+        } else {
+          alert('채팅방 나가기 실패');
+        }
+      } catch (error) {
+        console.error('Error leaving chat:', error);
+        alert('오류가 발생했습니다.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    // WebSocket에서 'roomLeft' 이벤트를 받으면 채팅방 목록에서 해당 방 제거
+    socket.on('roomLeft', ({ room_id }) => {
+      setChatRooms(prevRooms => prevRooms.filter(room => room.id !== room_id));
+    });
+
+    return () => {
+      socket.off('roomLeft');
+    };
+  }, []);
+
   return (
     <ChatRoomListContainer>
       <ChatTitle>채팅</ChatTitle>
@@ -94,6 +155,9 @@ const ChatRoomsList: React.FC = () => {
             <ChatRoomItem>
               <ProfileImage src={'/marunotwe.png'} alt='Profile' />
               <RoomName>{room.name}</RoomName>
+              <LeaveButton onClick={e => handleLeaveClick(e, room.id)}>
+                나가기
+              </LeaveButton>
             </ChatRoomItem>
           </li>
         ))}
