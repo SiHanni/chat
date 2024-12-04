@@ -1,6 +1,6 @@
 FROM node:18-alpine
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
 
@@ -8,10 +8,11 @@ RUN npm install
 
 COPY . .
 
+COPY .env.production .env
+
 RUN npm run build
 
-CMD ["npm", "run", "start:prod"]
+CMD ["node", "dist/main.js"]
 
-EXPOSE 3000
+EXPOSE 10030
 
-#

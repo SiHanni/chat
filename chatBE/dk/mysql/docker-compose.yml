@@ -1,0 +1,22 @@
+services:
+  mysql-chat:
+    image: mysql:8.0
+    container_name: mysql-chat
+    restart: always
+    ports:
+      - '3307:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: 4581
+      MYSQL_DATABASE: chat
+      MYSQL_USER: sihanni
+      MYSQL_PASSWORD: 4581
+      TZ: Asia/Seoul
+    volumes:
+      - mysql-chat-data:/var/lib/mysql
+    networks:
+      - chat_network
+networks:
+  chat_network:
+    external: true
+volumes:
+  mysql-chat-data: {}

@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { ChattingModule } from './chatting/chatting.module';
+import * as path from 'path';
 
 // TODO: 로컬 개발 완료되면 환경변수 config 같은거 활용해서 외부로 빼기
 
@@ -13,11 +14,14 @@ import { ChattingModule } from './chatting/chatting.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: path.resolve(
+        __dirname,
+        `../.env.${process.env.NODE_ENV || 'development'}`,
+      ),
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        //retryAttempts: configService.get('NODE_ENV') === 'prod' ? 3 : 1,
         type: 'mysql',
         host: configService.get<string>('MYSQL_HOST'),
         port: configService.get<number>('MYSQL_PORT'),
@@ -25,8 +29,8 @@ import { ChattingModule } from './chatting/chatting.module';
         password: configService.get<string>('MYSQL_PASSWORD'),
         database: configService.get<string>('MYSQL_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true, // 개발 중에는 true로 설정하고, 배포 시에는 false로 설정
-        logging: true,
+        synchronize: configService.get<string>('NODE_ENV') === 'development', // 개발 환경에서는 true, 프로덕션에서는 false
+        logging: configService.get<string>('NODE_ENV') === 'development', // 개발 환경에서만 로그 출력
         timezone: 'Z',
       }),
     }),

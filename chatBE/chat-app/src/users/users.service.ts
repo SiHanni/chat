@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 //import isImageURL from 'image-url-validator';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SignInUserDto } from './dto/signIn-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
