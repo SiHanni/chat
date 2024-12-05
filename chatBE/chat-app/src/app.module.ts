@@ -8,8 +8,6 @@ import { UsersModule } from './users/users.module';
 import { ChattingModule } from './chatting/chatting.module';
 import * as path from 'path';
 
-// TODO: 로컬 개발 완료되면 환경변수 config 같은거 활용해서 외부로 빼기
-
 @Module({
   imports: [
     ConfigModule.forRoot({
