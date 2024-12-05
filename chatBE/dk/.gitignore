@@ -6,3 +6,5 @@ dk/mongo/docker-compose.yml
 
 # dk/mysql/docker-compose.yml 무시
 dk/mysql/docker-compose.yml
+
+**/docker-compose.yml
