@@ -1,5 +1,4 @@
 import { DataSource } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 
 const AppDataSource = new DataSource({
   type: 'mysql',
@@ -17,3 +16,5 @@ const AppDataSource = new DataSource({
   synchronize: false,
   logging: true,
 });
+
+export default AppDataSource;

@@ -28,7 +28,7 @@ import * as path from 'path';
         database: configService.get<string>('MYSQL_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get<string>('NODE_ENV') === 'development', // 개발 환경에서는 true, 프로덕션에서는 false
-        logging: configService.get<string>('NODE_ENV') === 'development', // 개발 환경에서만 로그 출력
+        logging: configService.get<string>('NODE_ENV') === 'development',
         timezone: 'Z',
       }),
     }),
@@ -39,14 +39,6 @@ import * as path from 'path';
         uri: `mongodb://${configService.get<string>('MONGO_INITDB_ROOT_USERNAME')}:${configService.get<string>('MONGO_INITDB_ROOT_PASSWORD')}@${configService.get<string>('MONGO_HOST')}:${configService.get<number>('MONGO_PORT')}/${configService.get<string>('MONGO_DATABASE')}?authSource=admin`,
       }),
     }),
-    //MongooseModule.forRootAsync({
-    //  inject: [ConfigService],
-    //  useFactory: () => ({
-    //    //uri: `mongodb://admin:admin@localhost:27017`,
-    //    uri: `mongodb://localhost:27017/chat`,
-    //  }),
-    //}),
-
     UsersModule,
 
     ChattingModule,

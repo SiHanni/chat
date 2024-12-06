@@ -223,6 +223,7 @@ export class ChattingGateway
     console.log(`Client ${client.id} joined room ${room_id}`);
   }
 
+  /** 방나가기 : deprecated  */
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(
     @MessageBody() room_id: number,
