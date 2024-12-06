@@ -10,7 +10,7 @@ COPY . .
 
 COPY .env.production .env
 
-RUN npm run build
+RUN NODE_OPTIONS="--max-old-space-size=1024" npm run build
 
 #RUN npx ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:run --dataSource ./src/data-source.ts
 
