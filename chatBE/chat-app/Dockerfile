@@ -12,7 +12,7 @@ COPY .env.production .env
 
 RUN npm run build
 
-RUN npx ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:run --dataSource ./src/data-source.ts
+#RUN npx ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:run --dataSource ./src/data-source.ts
 
 CMD ["node", "dist/main.js"]
 
