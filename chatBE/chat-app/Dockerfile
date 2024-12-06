@@ -12,8 +12,6 @@ COPY .env.production .env
 
 RUN npm run build
 
-COPY src/data-source.ts ./src/data-source.ts
-
 RUN npx typeorm migration:run --dataSource ./src/data-source.ts
 
 CMD ["node", "dist/main.js"]
