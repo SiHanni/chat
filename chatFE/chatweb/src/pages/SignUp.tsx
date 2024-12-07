@@ -62,6 +62,7 @@ const SignUp: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,10 +76,17 @@ const SignUp: React.FC = () => {
     });
 
     if (response.ok) {
-      alert('Sign up successful');
+      alert('회원가입 완료');
       navigate('/'); // 회원가입 후 로그인 화면으로 이동
     } else {
-      alert('Sign up failed');
+      const errorData = await response.json();
+      setErrorMessage(errorData.message);
+
+      if (errorData.message === 'Email already exists') {
+        alert('이미 가입된 이메일입니다.');
+      } else {
+        alert('Invalid credentials');
+      }
     }
   };
 
@@ -124,6 +132,7 @@ const SignUp: React.FC = () => {
             <Button type='submit'>회원 가입</Button>
           </Buttons>
         </form>
+        {errorMessage && <div style={{ color: '#FFD700' }}>{errorMessage}</div>}
       </FormContainer>
     </SignUpContainer>
   );
