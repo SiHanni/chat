@@ -4,6 +4,7 @@ import axios from 'axios';
 import io from 'socket.io-client';
 import { FaCommentDots } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import { server_url } from '../common/serverConfig';
 interface Friend {
   uid: number;
   username: string;
@@ -12,7 +13,7 @@ interface Friend {
   email: string;
 }
 /** 채팅방으로 이동시 웹소켓 연결을 확인하고 웹소켓 연결을 하기 위한 소켓 */
-const socket = io('http://localhost:3000', { autoConnect: false });
+const socket = io(server_url, { autoConnect: false });
 
 const FriendListContainer = styled.div`
   width: 100%;
@@ -91,14 +92,11 @@ const FriendsList: React.FC = () => {
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const response = await axios.get(
-          'http://localhost:3000/users/friends/lists',
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          }
-        );
+        const response = await axios.get(`${server_url}/users/friends/lists`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
         setFriends(response.data.friends);
         setUid(response.data.uid);
       } catch (error) {
@@ -112,7 +110,7 @@ const FriendsList: React.FC = () => {
   const handleChatClick = async (friend_id: number) => {
     try {
       const response = await axios.post(
-        'http://localhost:3000/chat/create',
+        `${server_url}/chat/create`,
         { friend_ids: [friend_id] },
         {
           headers: {

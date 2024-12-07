@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import FriendCard from '../components/FriendCard';
+import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
 const FindFriendContainer = styled.div`
@@ -38,15 +39,12 @@ const FindFriendPage: React.FC = () => {
     }
 
     try {
-      const response = await axios.get(
-        'http://localhost:3000/users/find-friend',
-        {
-          params: { email },
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        }
-      );
+      const response = await axios.get(`${server_url}/users/find-friend`, {
+        params: { email },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      });
       setFriends([response.data]); // 검색된 친구 정보를 리스트에 저장
       setError(null);
     } catch (err) {

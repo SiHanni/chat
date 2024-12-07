@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
+import { server_url } from '../common/serverConfig';
 
 const FriendCardContainer = styled.div`
   width: 200px;
@@ -52,7 +53,7 @@ const FriendCard: React.FC<{ friend: any }> = ({ friend }) => {
   const handleSendRequest = async () => {
     try {
       await axios.post(
-        'http://localhost:3000/users/send/friend-request',
+        `${server_url}/users/send/friend-request`,
         { email: friend.email },
         {
           headers: {

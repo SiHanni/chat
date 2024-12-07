@@ -7,8 +7,8 @@ import FriendsList from '../components/FriendList';
 import FriendRequestsList from '../components/FriendRequestList';
 import ProfilePage from './ProfilePage';
 import FindFriendPage from './FindFriendPage';
-//import ChatPage from '../components/ChatPage';
 import ChatRoomsList from '../components/ChatRoomList';
+import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
 const MainContainer = styled.div`
@@ -107,14 +107,11 @@ const MainPage: React.FC = () => {
     // JWT 토큰에서 사용자 정보 가져오기
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(
-          'http://localhost:3000/users/getMyProfile',
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          }
-        );
+        const response = await axios.get(`${server_url}/users/getMyProfile`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
         setProfileImage(response.data.profile_img); // 프로필 이미지 URL 설정
       } catch (error) {
         console.error('Failed to fetch profile', error);

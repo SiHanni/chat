@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { ChatRoom } from '../type/chat';
 import io from 'socket.io-client';
+import { server_url } from '../common/serverConfig';
 
-const socket = io('http://localhost:3000');
+const socket = io(server_url);
 
 // 스타일 정의
 const ChatRoomListContainer = styled.div`
@@ -88,7 +89,7 @@ const ChatRoomsList: React.FC = () => {
   useEffect(() => {
     const fetchChatRooms = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/chat/rooms', {
+        const response = await axios.get(`${server_url}/chat/rooms`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
           },
@@ -114,7 +115,7 @@ const ChatRoomsList: React.FC = () => {
     if (confirmLeave) {
       try {
         const response = await axios.post(
-          'http://localhost:3000/chat/leave',
+          `${server_url}/chat/leave`,
           { room_id: room_id },
           {
             headers: {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { server_url } from '../common/serverConfig';
 
 const ProfileContainer = styled.div`
   display: flex;
@@ -122,7 +123,7 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    const response = await fetch('http://localhost:3000/users/getMyProfile', {
+    const response = await fetch(`${server_url}/users/getMyProfile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -152,7 +153,7 @@ const ProfilePage: React.FC = () => {
 
     const updateData = { username, profile_img, gender, status_msg };
 
-    const response = await fetch('http://localhost:3000/users/update', {
+    const response = await fetch(`${server_url}/users/update`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',

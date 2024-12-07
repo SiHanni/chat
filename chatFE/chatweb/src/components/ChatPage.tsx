@@ -4,6 +4,7 @@ import { io, Socket } from 'socket.io-client';
 import styled from 'styled-components';
 import { User } from '../type/user';
 import { useNavigate } from 'react-router-dom';
+import { server_url } from '../common/serverConfig';
 
 const ChatContainer = styled.div`
   width: 70%; /* 화면 너비의 70% */
@@ -119,6 +120,7 @@ const FileButton = styled.button`
   }
 `;
 
+/** 채팅 페이지 */
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -155,11 +157,12 @@ const ChatPage: React.FC = () => {
     }
   }, []);
 
+  /** 메세지를 가져오는 useEffect (room_id에 의존성 존재) */
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/chat/messages?room_id=${room_id}`,
+          `http://${server_url}/chat/messages?room_id=${room_id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -167,9 +170,7 @@ const ChatPage: React.FC = () => {
           }
         );
         const data = await response.json();
-        console.log('Fetched messages:', data); // 데이터 출력
         setMessages(Array.isArray(data) ? data : []);
-        //setMessages(data);
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -179,7 +180,7 @@ const ChatPage: React.FC = () => {
   }, [room_id]);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3000/chat');
+    const newSocket = io(`${server_url}/chat`);
     setSocket(newSocket);
     console.log('Emitting joinRoom:', { room_id, uid, room_type });
     newSocket.emit('joinRoom', { uid, room_id, room_type });
@@ -259,19 +260,17 @@ const ChatPage: React.FC = () => {
   };
   /** onloadend는 파일읽기가 끝나야 호출됌 */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]; // 선택된 파일
+    const file = e.target.files?.[0];
     if (file && socket && room_id) {
       const reader = new FileReader();
       reader.onloadend = () => {
         const fileData = reader.result as string; // base64 데이터
 
-        console.log('Sending file...', fileData); // 로그로 확인
-
         // 파일 전송
         socket.emit('sendFile', {
           room_id,
           file_name: file.name,
-          file_data: fileData, // base64 데이터 전송
+          file_data: fileData,
           sender_id: user?.id,
           sender_email: user?.email,
           sender_username: user?.username,

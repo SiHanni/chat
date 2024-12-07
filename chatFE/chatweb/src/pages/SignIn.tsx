@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Button from '../components/Button';
+import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
 const SignInContainer = styled.div`
@@ -71,7 +72,7 @@ const SignIn: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch('http://localhost:3000/users/signIn', {
+    const response = await fetch(`${server_url}/users/signIn`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

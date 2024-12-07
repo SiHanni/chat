@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
 import { calculateTimeAgo } from '../common/tidmediff';
+import { server_url } from '../common/serverConfig';
 
 // 스타일 컴포넌트 정의
 const FriendRequestContainer = styled.div`
@@ -100,7 +101,7 @@ const FriendRequestsList: React.FC = () => {
     const fetchFriendRequests = async () => {
       try {
         const response = await axios.get(
-          'http://localhost:3000/users/friend/requests',
+          `${server_url}/users/friend/requests`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
@@ -120,7 +121,7 @@ const FriendRequestsList: React.FC = () => {
   const handleAccept = async (friendId: number) => {
     try {
       await axios.patch(
-        'http://localhost:3000/users/accept/friend-request',
+        `${server_url}/users/accept/friend-request`,
         { friend_id: friendId },
         {
           headers: {
@@ -138,7 +139,7 @@ const FriendRequestsList: React.FC = () => {
 
   const handleReject = async (friendId: number) => {
     try {
-      await axios.delete('http://localhost:3000/users/refuse/friend-request', {
+      await axios.delete(`${server_url}/users/refuse/friend-request`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
