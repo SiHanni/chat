@@ -162,7 +162,7 @@ const ChatPage: React.FC = () => {
     const fetchMessages = async () => {
       try {
         const response = await fetch(
-          `http://${server_url}/chat/messages?room_id=${room_id}`,
+          `${server_url}/chat/messages?room_id=${room_id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
