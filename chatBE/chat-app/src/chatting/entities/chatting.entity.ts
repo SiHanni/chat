@@ -33,8 +33,8 @@ export class Chatting {
   @Column({ nullable: true })
   name: string;
 
-  @Column({ type: 'varchar', length: 24, nullable: true })
-  mongoRoom_id: string; // MongoDB 채팅방의 _id (24자 길이 문자열)
+  //@Column({ type: 'varchar', length: 24, nullable: true })
+  //mongoRoom_id: string; // MongoDB 채팅방의 _id (24자 길이 문자열)
   // MongoDB의 _id는 ObjectId라는 특수한 타입이기 때문에, MySQL에서는 이를 문자열로 저장하는 것이 일반적
 
   @Column({
