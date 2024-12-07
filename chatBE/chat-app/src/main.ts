@@ -9,7 +9,11 @@ async function bootstrap() {
   const port = configService.get<number>('SERVER_PORT');
   console.log('Port', port);
   app.enableCors({
-    origin: ['*'], // 나중에 프론트 도메인 생기면 수정필요. 와일드카드 격인 *는 너무 느슨함.
+    origin: [
+      'http://marutalk-build.s3-website.ap-northeast-2.amazonaws.com/',
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ], // 나중에 프론트 도메인 생기면 수정필요. 와일드카드 격인 *는 너무 느슨함.
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
   });
