@@ -44,11 +44,14 @@ export class UsersService {
 
     if (checkUser) {
       if (checkUser.email === email) {
-        throw new ConflictException('Email already exists');
+        throw new ConflictException({
+          statusCode: 409,
+          message: 'Email already exists',
+        });
       }
-      if (checkUser.username === username) {
-        throw new ConflictException('Username already exists');
-      }
+      //if (checkUser.username === username) {
+      //  throw new ConflictException('Username already exists');
+      //}
     }
 
     const salt = await bcrypt.genSalt(12);
