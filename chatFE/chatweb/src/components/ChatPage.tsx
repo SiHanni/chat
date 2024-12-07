@@ -214,7 +214,11 @@ const ChatPage: React.FC = () => {
         sender_id: user?.id,
         sender_email: user?.email,
         sender_username: user?.username,
-        sender_profile_img: user?.profile_img,
+        //sender_profile_img: user?.profile_img,
+        sender_profile_img:
+          user?.profile_img !== null
+            ? user?.profile_img
+            : 'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
         file: file ? { filename: file.name, buffer: file } : null,
       });
       setInput('');
@@ -274,7 +278,10 @@ const ChatPage: React.FC = () => {
           sender_id: user?.id,
           sender_email: user?.email,
           sender_username: user?.username,
-          sender_profile_img: user?.profile_img,
+          sender_profile_img:
+            user?.profile_img !== null
+              ? user?.profile_img
+              : 'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
         });
       };
       reader.readAsDataURL(file); // 파일을 base64로 변환
