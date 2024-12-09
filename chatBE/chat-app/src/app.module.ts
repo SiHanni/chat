@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { ChattingModule } from './chatting/chatting.module';
+import { LoggerModule } from './common/logger/logger.module';
 import * as path from 'path';
 
 @Module({
@@ -42,6 +43,8 @@ import * as path from 'path';
     UsersModule,
 
     ChattingModule,
+
+    LoggerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
