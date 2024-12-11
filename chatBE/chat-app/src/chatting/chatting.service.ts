@@ -105,7 +105,6 @@ export class ChattingService {
     uid: number,
     leaveChattingDto: LeaveChattingDto,
   ): Promise<void> {
-    console.log('U', uid, leaveChattingDto);
     this.logger.log(`leave chatting req: ${uid}, ${leaveChattingDto}`);
     const { room_id } = leaveChattingDto;
     const userChat = await this.userChattingRepository.findOne({
