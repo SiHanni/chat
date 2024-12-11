@@ -36,7 +36,7 @@ jobs:
       - name: Build Docker image
         run: |
           cd chatBE/chat-app
-          docker build -t marutalk .
+          docker build -t marutalk/server .
 
       - name: Push Docker image to Amazon ECR
         run: |
