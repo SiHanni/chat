@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'chat/chatBE/**'
+      - 'chatBE/**'
 
 jobs:
   build_and_push:
