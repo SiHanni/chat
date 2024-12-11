@@ -22,6 +22,6 @@ async function bootstrap() {
   app.useWebSocketAdapter(new IoAdapter(app));
   await app.listen(port ?? 3000);
   logger.log(`Server is starting in port ${port}!`);
-  logger.log('test for action2');
+  logger.log('test for action3');
 }
 bootstrap();
