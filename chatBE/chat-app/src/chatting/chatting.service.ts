@@ -115,6 +115,7 @@ export class ChattingService {
     });
 
     if (!userChat) {
+      this.logger.error(`leaveChatting : uid : ${uid} room error`);
       throw new BadRequestException('User is not in this chat room');
     }
     try {
