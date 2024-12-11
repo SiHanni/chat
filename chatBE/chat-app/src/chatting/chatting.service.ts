@@ -17,6 +17,7 @@ import { ChatMessageDto } from './dto/talk-chatting.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { RoomType } from './entities/chatting.entity';
 import { LeaveChattingDto } from './dto/leave-chatting.dto';
+import { CustomLoggerService } from 'src/common/logger/logger.service';
 
 @Injectable()
 export class ChattingService {
@@ -29,6 +30,7 @@ export class ChattingService {
     private readonly userRepository: Repository<User>,
     @InjectModel(ChatMessage.name)
     private readonly chatMessageModel: Model<ChatMessage>,
+    private readonly logger: CustomLoggerService,
   ) {}
 
   async createChatting(
@@ -36,7 +38,6 @@ export class ChattingService {
     createChattingDto: CreateChattingDto,
   ): Promise<Chatting> {
     const { name, friend_ids } = createChattingDto;
-    console.log('F', friend_ids);
     const existingChat = await this.chattingRepository
       .createQueryBuilder('chat')
       .innerJoin('user_chatting', 'uc', 'uc.chatting_id = chat.id')
@@ -53,7 +54,6 @@ export class ChattingService {
       )
       .getOne();
 
-    console.log('ASD', existingChat);
     if (existingChat) {
       const inactiveUsers = await this.userChattingRepository.find({
         where: {
@@ -65,7 +65,7 @@ export class ChattingService {
         user.is_active = true;
         await this.userChattingRepository.save(user);
       }
-      console.log('EEEE', existingChat);
+
       return existingChat;
     }
 
@@ -106,6 +106,7 @@ export class ChattingService {
     leaveChattingDto: LeaveChattingDto,
   ): Promise<void> {
     console.log('U', uid, leaveChattingDto);
+    this.logger.log(`leave chatting req: ${uid}, ${leaveChattingDto}`);
     const { room_id } = leaveChattingDto;
     const userChat = await this.userChattingRepository.findOne({
       where: {
