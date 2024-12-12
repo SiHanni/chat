@@ -36,9 +36,9 @@ jobs:
       - name: Build Docker image
         run: |
           cd chatBE/chat-app
-          docker build -t marutalk/server .
+          docker build -t marutalk .
 
       - name: Push Docker image to Amazon ECR
         run: |
-          docker tag marutalk/server:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/marutalk/server:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/marutalk/server:latest
+          docker tag marutalk:latest public.ecr.aws/z8l9m2x3/marutalk:latest
+          docker push public.ecr.aws/z8l9m2x3/marutalk:latest
