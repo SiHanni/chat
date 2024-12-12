@@ -3,7 +3,7 @@ name: CI/CD for Docker with ECR and ECS
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'chatBE/**'
 
