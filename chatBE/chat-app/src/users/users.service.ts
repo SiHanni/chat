@@ -21,6 +21,7 @@ import { Gender } from './dto/update-user.dto';
 import { FriendInfoDto } from './dto/friend.dto';
 import { ConfigService } from '@nestjs/config';
 import { UserDto } from './dto/user.dto';
+import { JWTPayload } from 'src/common/type/user.type';
 @Injectable()
 export class UsersService {
   constructor(
@@ -90,7 +91,10 @@ export class UsersService {
     user.last_login = new Date();
     await this.userRepository.save(user);
     // TODO: JWT 발행 , JWT 정책 필요
-    const payload = { subject: user.id, username: user.username };
+    const payload: Omit<JWTPayload, 'iat' | 'exp'> = {
+      subject: user.id,
+      username: user.username,
+    };
     const secret = this.configService.get<string>('JWT_SECRET');
     try {
       return {

@@ -7,11 +7,8 @@ import {
   Req,
   Patch,
   Delete,
-  //HttpException,
-  //HttpStatus,
   UsePipes,
   ValidationPipe,
-  //ParseIntPipe,
   UseGuards,
   UnauthorizedException,
   BadRequestException,
@@ -26,6 +23,7 @@ import { FriendInfoDto } from './dto/friend.dto';
 import { UserFriend } from './entities/user-friend.entity';
 //import { User } from './entities/user.entity';
 import { Request } from 'express';
+import { CustomLoggerService } from 'src/common/logger/logger.service';
 
 interface CustomRequest extends Request {
   user?: {
@@ -36,7 +34,10 @@ interface CustomRequest extends Request {
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly logger: CustomLoggerService,
+  ) {}
 
   @Post('signUp')
   async signUp(@Body() createUserDto: CreateUserDto) {
@@ -52,6 +53,8 @@ export class UsersController {
   @Get('getMyProfile')
   @UseGuards(AuthGuard)
   async getMyProfile(@Req() request: Request) {
+    console.log('REQ', request);
+    this.logger.log('TEST');
     const userIdFromJwt = (request as CustomRequest).user?.subject;
     if (!userIdFromJwt) {
       throw new UnauthorizedException('not allowed user request');
