@@ -56,4 +56,7 @@ export class User {
 
   @Column({ nullable: true })
   last_login: Date;
+
+  @Column({ nullable: true })
+  refresh_token: string;
 }
