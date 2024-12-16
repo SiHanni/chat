@@ -22,6 +22,7 @@ import { FriendInfoDto } from './dto/friend.dto';
 import { ConfigService } from '@nestjs/config';
 import { UserDto } from './dto/user.dto';
 import { JWTPayload } from 'src/common/type/user.type';
+import { CustomLoggerService } from '../common/logger/logger.service';
 @Injectable()
 export class UsersService {
   constructor(
@@ -31,11 +32,15 @@ export class UsersService {
     private readonly userFriendRepository: Repository<UserFriend>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private readonly logger: CustomLoggerService,
   ) {}
   // 회원가입에는 이메일, 유저네임, 패스워드만 받고 프로필 이미지는 기본이미지, 폰 인증은 추후
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     const { email, username, password } = createUserDto;
 
+    if (!email || !username || !password) {
+      throw new BadRequestException('Requied Data Missing');
+    }
     const checkUser = await this.userRepository.findOne({
       where: [
         { email, is_active: true },
@@ -67,6 +72,7 @@ export class UsersService {
       const savedUser = await this.userRepository.save(newUser);
       return savedUser;
     } catch {
+      this.logger.error(`Save User Error :: ${newUser}`);
       throw new InternalServerErrorException(
         'An error occurred while saving the user',
       );
@@ -76,6 +82,9 @@ export class UsersService {
     signInUserDto: SignInUserDto,
   ): Promise<{ accessToken: string; last_login: Date; user: UserDto }> {
     const { email, password } = signInUserDto;
+    if (!email || !password) {
+      throw new BadRequestException('Required Data Missing');
+    }
 
     const user = await this.userRepository.findOne({
       where: { email, is_active: true },
@@ -97,6 +106,7 @@ export class UsersService {
     };
     const secret = this.configService.get<string>('JWT_SECRET');
     try {
+      this.logger.log(`user login :: ${(user.email, user.last_login)}`);
       return {
         accessToken: await this.jwtService.signAsync(payload, { secret }),
         last_login: user.last_login,
