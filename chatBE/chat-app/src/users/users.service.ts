@@ -9,7 +9,6 @@ import {
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 //import isImageURL from 'image-url-validator';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SignInUserDto } from './dto/signIn-user.dto';
@@ -19,10 +18,9 @@ import { User } from './entities/user.entity';
 import { UserFriend } from './entities/user-friend.entity';
 import { Gender } from './dto/update-user.dto';
 import { FriendInfoDto } from './dto/friend.dto';
-import { ConfigService } from '@nestjs/config';
 import { UserDto } from './dto/user.dto';
-import { JWTPayload } from 'src/common/type/user.type';
 import { CustomLoggerService } from '../common/logger/logger.service';
+import { AuthService } from 'src/auth/auth.service';
 @Injectable()
 export class UsersService {
   constructor(
@@ -30,9 +28,8 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(UserFriend)
     private readonly userFriendRepository: Repository<UserFriend>,
-    private jwtService: JwtService,
-    private configService: ConfigService,
     private readonly logger: CustomLoggerService,
+    private authService: AuthService,
   ) {}
   // 회원가입에는 이메일, 유저네임, 패스워드만 받고 프로필 이미지는 기본이미지, 폰 인증은 추후
   async signUp(createUserDto: CreateUserDto): Promise<User> {
@@ -78,9 +75,12 @@ export class UsersService {
       );
     }
   }
-  async signIn(
-    signInUserDto: SignInUserDto,
-  ): Promise<{ accessToken: string; last_login: Date; user: UserDto }> {
+  async signIn(signInUserDto: SignInUserDto): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    last_login: Date;
+    user: UserDto;
+  }> {
     const { email, password } = signInUserDto;
     if (!email || !password) {
       throw new BadRequestException('Required Data Missing');
@@ -98,17 +98,22 @@ export class UsersService {
       throw new UnauthorizedException('Invalid password');
     }
     user.last_login = new Date();
+
+    const accessToken = this.authService.generateAccessToken(
+      user.id,
+      user.email,
+    );
+    const refreshToken = this.authService.generateRefreshToken(
+      user.id,
+      user.email,
+    );
+    user.refresh_token = refreshToken;
     await this.userRepository.save(user);
-    // TODO: JWT 발행 , JWT 정책 필요
-    const payload: Omit<JWTPayload, 'iat' | 'exp'> = {
-      subject: user.id,
-      username: user.username,
-    };
-    const secret = this.configService.get<string>('JWT_SECRET');
     try {
       this.logger.log(`user login :: ${(user.email, user.last_login)}`);
       return {
-        accessToken: await this.jwtService.signAsync(payload, { secret }),
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         last_login: user.last_login,
         user: user,
       };

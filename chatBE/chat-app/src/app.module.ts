@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { ChattingModule } from './chatting/chatting.module';
 import { LoggerModule } from './common/logger/logger.module';
 import * as path from 'path';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -45,6 +46,8 @@ import * as path from 'path';
     ChattingModule,
 
     LoggerModule,
+
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
