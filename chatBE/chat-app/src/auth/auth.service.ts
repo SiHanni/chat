@@ -84,8 +84,7 @@ export class AuthService {
     }
   };
 
-  async updateTokens(body: { refreshToken: string }) {
-    const { refreshToken } = body;
+  async updateTokens(refreshToken: string) {
     if (!refreshToken) {
       throw new BadRequestException('Requied Data Missing');
     }
