@@ -89,8 +89,7 @@ const SignIn: React.FC = () => {
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
 
-      const accessTokenUpdateExp = 15 * 60 * 1000; // TODO: 시간 정보는 환경변수로 빼는게 좋지 않을까
-      setTokenRefreshTimer(accessTokenUpdateExp);
+      reqUpdateTokens();
 
       navigate('/main');
     } else {
@@ -98,22 +97,17 @@ const SignIn: React.FC = () => {
     }
   };
 
-  const setTokenRefreshTimer = (accessTokenUpdateExp: number) => {
-    // 만료 1분 전 갱신 요청
-    setTimeout(() => {
-      reqUpdateTokens();
-    }, accessTokenUpdateExp - 60 * 1000);
-  };
-
   const reqUpdateTokens = async () => {
     const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return; // TODO: 그냥 로그아웃 시킬까
+    if (!refreshToken) return;
     try {
       const response = await fetch(`${server_url}/auth/updatetoken`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
+
         body: JSON.stringify({ refreshToken }),
       });
 

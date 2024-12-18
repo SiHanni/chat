@@ -124,6 +124,7 @@ const MainPage: React.FC = () => {
   // 로그아웃 처리 함수
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     navigate('/'); // 홈 페이지로 이동
   };
 

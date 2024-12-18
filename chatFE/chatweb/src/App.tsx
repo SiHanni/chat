@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
 import SignIn from './pages/SignIn';
@@ -7,8 +7,16 @@ import MainPage from './pages/MainPage';
 import ProfilePage from './pages/ProfilePage';
 import PrivateRoute from './components/PrivateRoute';
 import ChatPage from './components/ChatPage';
+import TokenManager from './common/tokenManager';
 
 const App: React.FC = () => {
+  useEffect(() => {
+    const tokenManager = TokenManager.getInstance();
+    tokenManager.startTokenUpdate();
+    console.log('TOKEN UPDATE BACKGROUND WORKING ON');
+    return () => {};
+  }, []);
+
   return (
     <Router>
       <Routes>
