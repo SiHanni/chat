@@ -1,13 +1,18 @@
 import { JwtService } from '@nestjs/jwt';
 import { JWTPayload } from 'src/common/type/user.type';
 import { ConfigService } from '@nestjs/config';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CustomLoggerService } from 'src/common/logger/logger.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { TokenHistory } from './entities/auth-history.entity';
+import { checkTimeDiff } from 'src/common/timediff';
 
 @Injectable()
 export class AuthService {
@@ -79,7 +84,6 @@ export class AuthService {
     }
   };
 
-  // TODO: refreshTokenHistory 테이블을 생성해서 created, uid, refreshToken 기록하기
   async updateTokens(body: { refreshToken: string }) {
     const { refreshToken } = body;
     if (!refreshToken) {
@@ -91,12 +95,13 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
 
-      const { subject: uid, email } = decoded;
-      this.logger.log(uid, email);
+      const { subject: uid, email, exp } = decoded;
+      this.logger.log(JSON.stringify({ uid: uid, email: email, exp: exp }));
 
       const userData = await this.userRepository.findOne({
         where: { id: uid },
       });
+
       if (userData.id !== uid || userData.refresh_token !== refreshToken) {
         this.logger.error(
           `Security Error: Refresh Token Inconsistency, uid : ${uid}`,
@@ -106,26 +111,37 @@ export class AuthService {
       const userEmail = userData.email;
 
       const newAccessToken = this.generateAccessToken(uid, userEmail);
-      const newRefreshToken = this.generateRefreshToken(uid, userEmail);
 
-      userData.refresh_token = newRefreshToken;
-      //await this.userRepository.save(userData);
-      const updateData = await this.userRepository.update(
-        { id: uid },
-        { refresh_token: newRefreshToken },
-      );
-      if (updateData.affected === 0) {
-        throw new Error('User not found or no change');
+      const timediff = checkTimeDiff(exp);
+      const refreshTokenStandard =
+        this.configService.get<number>('REFRESH_TOKEN_EXP_HOUR') * 60 * 60; //(12시간)
+      // 12시간보다 많이 남았다면 리프레쉬 토큰은 기존의 것으로 반환한다.
+      if (timediff >= refreshTokenStandard) {
+        return {
+          status: 'success',
+          accessToken: newAccessToken,
+          refreshToken: refreshToken,
+        };
+      } else {
+        const newRefreshToken = this.generateRefreshToken(uid, userEmail);
+
+        userData.refresh_token = newRefreshToken;
+        //await this.userRepository.save(userData);
+        const updateData = await this.userRepository.update(
+          { id: uid },
+          { refresh_token: newRefreshToken },
+        );
+        if (updateData.affected === 0) {
+          throw new InternalServerErrorException('Update Data failed');
+        }
+        return {
+          status: 'success',
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        };
       }
-      return {
-        msg: `access token, refresh token update success :: uid::${uid}`,
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      };
     } catch (error) {
-      this.logger.error(
-        `Error updating tokens :refreshToken: ${refreshToken}: ${error}`,
-      );
+      this.logger.error(`Error updating tokens :refreshToken: uid: ${error}`);
       throw new Error('Error updating tokens');
     }
   }

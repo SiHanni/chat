@@ -12,11 +12,11 @@ export class CustomLoggerService implements LoggerService {
       ...winstonConfig,
     });
   }
-  log(message: string, context?: string) {
-    this.logger.info({ message, context });
+  log(message: any, context?: any) {
+    this.logger.info(message, { context });
   }
 
-  error(message: string, trace?: string, context?: string) {
+  error(message: any, trace?: string, context?: string) {
     this.logger.error({ message, trace, context });
   }
 
