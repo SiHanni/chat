@@ -64,7 +64,9 @@ const Buttons = styled.div`
   margin-top: 20px;
 `;
 
-const SignIn: React.FC = () => {
+const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
+  handleLogin,
+}) => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,54 +80,19 @@ const SignIn: React.FC = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
+      credentials: 'include',
     });
 
     if (response.ok) {
       const data = await response.json();
 
       localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      // 리프레시 토큰을 로컬스토리지에 저장하는게 보안상 좋지 않은데, 다른 방법을 찾아보자
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
-
-      reqUpdateTokens();
-
+      handleLogin(data.accessToken);
       navigate('/main');
     } else {
       alert('Invalid credentials');
-    }
-  };
-
-  const reqUpdateTokens = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) return;
-    try {
-      const response = await fetch(`${server_url}/auth/updatetoken`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('accessToken', data.accessToken);
-        console.log('ACCESS TOKEN REFRESHED');
-      } else {
-        console.error('ACCESS TOKEN REFRESH FAILED');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('TOKEN REFRESH ERROR');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      navigate('/');
     }
   };
 
