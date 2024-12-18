@@ -84,12 +84,54 @@ const SignIn: React.FC = () => {
       const data = await response.json();
 
       localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      // 리프레시 토큰을 로컬스토리지에 저장하는게 보안상 좋지 않은데, 다른 방법을 찾아보자
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
-      console.log('LO', localStorage);
+
+      const accessTokenUpdateExp = 15 * 60 * 1000; // TODO: 시간 정보는 환경변수로 빼는게 좋지 않을까
+      setTokenRefreshTimer(accessTokenUpdateExp);
+
       navigate('/main');
     } else {
       alert('Invalid credentials');
+    }
+  };
+
+  const setTokenRefreshTimer = (accessTokenUpdateExp: number) => {
+    // 만료 1분 전 갱신 요청
+    setTimeout(() => {
+      reqUpdateTokens();
+    }, accessTokenUpdateExp - 60 * 1000);
+  };
+
+  const reqUpdateTokens = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return; // TODO: 그냥 로그아웃 시킬까
+    try {
+      const response = await fetch(`${server_url}/auth/updatetoken`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        console.log('ACCESS TOKEN REFRESHED');
+      } else {
+        console.error('ACCESS TOKEN REFRESH FAILED');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('TOKEN REFRESH ERROR');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      navigate('/');
     }
   };
 
