@@ -12,6 +12,7 @@ import {
   UseGuards,
   UnauthorizedException,
   BadRequestException,
+  Res,
 } from '@nestjs/common';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { UsersService } from './users.service';
@@ -24,6 +25,7 @@ import { UserFriend } from './entities/user-friend.entity';
 //import { User } from './entities/user.entity';
 import { Request } from 'express';
 import { CustomLoggerService } from 'src/common/logger/logger.service';
+import { Response } from 'express';
 
 interface CustomRequest extends Request {
   user?: {
@@ -46,14 +48,25 @@ export class UsersController {
 
   @Post('signIn')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async signIn(@Body() signInUserDto: SignInUserDto) {
-    return await this.usersService.signIn(signInUserDto);
+  async signIn(
+    @Body() signInUserDto: SignInUserDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken, last_login, user } =
+      await this.usersService.signIn(signInUserDto);
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+    return { accessToken, last_login, user };
   }
 
   @Get('getMyProfile')
   @UseGuards(AuthGuard)
   async getMyProfile(@Req() request: Request) {
-    console.log('REQ', request);
     this.logger.log('TEST');
     const userIdFromJwt = (request as CustomRequest).user?.subject;
     if (!userIdFromJwt) {

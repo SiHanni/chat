@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ConfigService } from '@nestjs/config';
 import { CustomLoggerService } from './common/logger/logger.service';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -20,7 +20,7 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'],
     credentials: true,
   });
-  await app.use(cookieParser);
+  app.use(cookieParser());
   app.useWebSocketAdapter(new IoAdapter(app));
   await app.listen(port ?? 3000);
   logger.log(`Server is starting in port ${port}!`);

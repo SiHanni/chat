@@ -116,8 +116,9 @@ export class AuthService {
         this.configService.get<number>('REFRESH_TOKEN_EXP_HOUR') * 60 * 60; //(12시간)
       // 12시간보다 많이 남았다면 리프레쉬 토큰은 기존의 것으로 반환한다.
       if (timediff >= refreshTokenStandard) {
+        this.logger.log(`token update::uid:${uid}: Ac`);
         return {
-          status: 'success',
+          msg: 'success',
           accessToken: newAccessToken,
           refreshToken: refreshToken,
         };
@@ -133,8 +134,9 @@ export class AuthService {
         if (updateData.affected === 0) {
           throw new InternalServerErrorException('Update Data failed');
         }
+        this.logger.log(`token update::uid:${uid}: Ac & Re`);
         return {
-          status: 'success',
+          msg: 'success',
           accessToken: newAccessToken,
           refreshToken: newRefreshToken,
         };
