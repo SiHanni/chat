@@ -69,7 +69,7 @@ export class UsersService {
       const savedUser = await this.userRepository.save(newUser);
       return savedUser;
     } catch {
-      this.logger.error(`Save User Error :: ${newUser}`);
+      this.logger.error(`Save User Error :: ${JSON.stringify(newUser)}`);
       throw new InternalServerErrorException(
         'An error occurred while saving the user',
       );
