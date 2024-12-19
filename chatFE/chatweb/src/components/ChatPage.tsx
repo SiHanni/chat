@@ -5,16 +5,60 @@ import styled from 'styled-components';
 import { User } from '../type/user';
 import { useNavigate } from 'react-router-dom';
 import { server_url } from '../common/serverConfig';
+import { Message } from '../type/chat';
+import FilePreviewModal from './FilePreviewModal';
+import { FiArrowLeft } from 'react-icons/fi';
+
+const ChatHeader = styled.div`
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px; /* 아래 여백을 주어 다른 요소와 간격을 유지 */
+  padding: -1px 0;
+`;
+
+const RoomName = styled.h1`
+  margin-left: 25px; /* GoBackButton과 채팅방 이름 사이의 간격 설정 */
+  font-size: 20px;
+  font-weight: normal;
+  margin-top: -20px;
+`;
+
+const GoBackButton = styled.button`
+  background-color: #f4d03f; /* 전송 버튼과 동일한 색상 */
+  color: white;
+  border: none;
+  padding: 5px;
+  margin-top: -15px;
+  transform: translateY(-10px);
+  font-size: 30px;
+  border-radius: 50%; /* 원형 버튼 */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 40px; /* 버튼 크기 설정 */
+  height: 40px; /* 버튼 크기 설정 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: #0056b3; /* Hover 시 색상 변경 */
+  }
+
+  &:active {
+    background-color: #004085; /* 클릭 시 색상 변경 */
+  }
+`;
 
 const ChatContainer = styled.div`
-  width: 70%; /* 화면 너비의 70% */
-  height: 85vh; /* 화면 높이의 80% */
+  width: 60%;
+  height: 85vh;
   margin: 0 auto; /* 중앙 정렬 */
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 25px;
   position: relative;
-  padding-bottom: 60px;
+  padding-top: 40px;
+  padding-bottom: 70px;
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -22,7 +66,7 @@ const ChatContainer = styled.div`
 
 const MessageList = styled.div`
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* 자동 스크롤 */
   overflow-x: hidden;
   margin-bottom: 10px;
   display: flex;
@@ -78,7 +122,7 @@ const Timestamp = styled.div`
 `;
 
 const InputContainer = styled.div`
-  width: 92%; /* 채팅창 전체 너비에 맞춤 */
+  width: 90%; /* 채팅창 전체 너비에 맞춤 */
   display: flex;
   padding: 10px;
   background-color: white;
@@ -128,23 +172,23 @@ const ChatPage: React.FC = () => {
   const uid = queryParams.get('uid');
   const room_type = queryParams.get('room_type');
   const room_id = queryParams.get('room_id');
+
   const [user, setUser] = useState<User | null>(null);
-  const [messages, setMessages] = useState<
-    {
-      sender_id: number;
-      message: string;
-      timestamp: string;
-      sender_username: string;
-      sender_profile_img: string;
-      file_name: string;
-      file_path: string;
-    }[]
-  >([]);
+  const [roomName, setRoomName] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isComposing, setIsComposing] = useState(false);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [showFilePreviewModal, setShowFilePreviewModal] = useState<
+    boolean | null
+  >(null);
+
   const messageListRef = useRef<HTMLDivElement | null>(null);
-  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     try {
@@ -156,6 +200,58 @@ const ChatPage: React.FC = () => {
       console.error('Parsing error:', error);
     }
   }, []);
+
+  useEffect(() => {
+    const socketInstance = io(`${server_url}/chat`);
+    //console.log('Emitting joinRoom:', { room_id, uid, room_type });
+    socketInstance.emit('joinRoom', { uid, room_id, room_type });
+
+    socketInstance.on('broadcastMessage', data => {
+      //console.log('broadcastMessage:', data);
+      setMessages(prev => [...prev, data]);
+    });
+
+    socketInstance.on('broadcastFile', data => {
+      //console.log('broadcastFile data:', data);
+      setMessages(prev => [
+        ...prev,
+        {
+          ...data,
+        },
+      ]);
+    });
+    setSocket(socketInstance);
+
+    return () => {
+      socketInstance.emit('leaveRoom', room_id);
+      socketInstance.disconnect();
+      //console.log('DISCONNECT');
+    };
+  }, [room_id, uid, room_type]);
+
+  useEffect(() => {
+    let pingInterval: any;
+
+    if (socket) {
+      pingInterval = setInterval(() => {
+        //console.log('Sending ping...');
+        socket.emit('ping');
+      }, 5000); // 5초
+
+      socket.on('pong', data => {
+        //console.log('Received pong:', data);
+      });
+    }
+
+    return () => {
+      if (pingInterval) {
+        clearInterval(pingInterval);
+      }
+      if (socket) {
+        socket.off('pong');
+      }
+    };
+  }, [socket]);
 
   /** 메세지를 가져오는 useEffect (room_id에 의존성 존재) */
   useEffect(() => {
@@ -170,7 +266,8 @@ const ChatPage: React.FC = () => {
           }
         );
         const data = await response.json();
-        setMessages(Array.isArray(data) ? data : []);
+        setRoomName(data.room_name);
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -178,33 +275,6 @@ const ChatPage: React.FC = () => {
 
     fetchMessages();
   }, [room_id]);
-
-  useEffect(() => {
-    const newSocket = io(`${server_url}/chat`);
-    setSocket(newSocket);
-    console.log('Emitting joinRoom:', { room_id, uid, room_type });
-    newSocket.emit('joinRoom', { uid, room_id, room_type });
-
-    newSocket.on('receiveMessage', data => {
-      console.log(data);
-      setMessages(prev => [...prev, data]);
-    });
-
-    newSocket.on('receiveFile', data => {
-      console.log('data', data);
-      setMessages(prev => [
-        ...prev,
-        {
-          ...data,
-        },
-      ]);
-    });
-
-    return () => {
-      newSocket.emit('leaveRoom', room_id);
-      newSocket.disconnect();
-    };
-  }, [room_id, uid, room_type]);
 
   const sendMessage = () => {
     if (socket && input.trim()) {
@@ -214,17 +284,111 @@ const ChatPage: React.FC = () => {
         sender_id: user?.id,
         sender_email: user?.email,
         sender_username: user?.username,
-        //sender_profile_img: user?.profile_img,
         sender_profile_img:
           user?.profile_img !== null
             ? user?.profile_img
             : 'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
-        file: file ? { filename: file.name, buffer: file } : null,
+        file: selectedFile
+          ? { filename: selectedFile.name, buffer: selectedFile }
+          : null,
       });
       setInput('');
-      setFile(null);
+      setSelectedFile(null);
     }
   };
+
+  const handleFileButtonClick = () => {
+    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+    fileInput.click();
+  };
+
+  /** onloadend는 파일읽기가 끝나야 호출됌 */
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+    setFilePreview(null);
+    setFileName(null);
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.');
+      return;
+    }
+    //console.log('TYPE:', file.type);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFilePreview(reader.result as string); // 이미지 미리보기 설정
+      setFileName(file.name);
+    };
+    reader.readAsDataURL(file);
+
+    setSelectedFile(file);
+    setShowFilePreviewModal(true);
+  };
+
+  const handleSendFile = async () => {
+    if (!selectedFile || !socket || !room_id) return;
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const fileData = reader.result as ArrayBuffer;
+
+        socket.emit('sendFile', {
+          room_id,
+          file_name: selectedFile.name,
+          file_data: fileData, // ArrayBuffer 형태로 파일 데이터를 전송
+          content_type: selectedFile.type,
+          sender_id: user?.id,
+          sender_email: user?.email,
+          sender_username: user?.username,
+          sender_profile_img:
+            user?.profile_img ||
+            'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
+          file: selectedFile
+            ? { filename: selectedFile.name, buffer: selectedFile }
+            : null,
+        });
+      };
+
+      reader.readAsArrayBuffer(selectedFile); // ArrayBuffer로 파일 읽기
+      setShowFilePreviewModal(false); // 전송 후 모달 닫기
+    } catch (error) {
+      console.error('파일 전송 중 오류가 발생했습니다.', error);
+    }
+  };
+
+  const handleFileClick = (fileUrl: string) => {
+    if (socket) {
+      socket.emit('downloadFile', { file_url: fileUrl }); // 다운로드 요청
+    }
+  };
+
+  const handleCancelFilePreview = () => {
+    setShowFilePreviewModal(null); // 취소 버튼 클릭 시 모달 닫기
+    setFilePreview(null); // 초기화
+    setFileName(null); // 초기화
+    setSelectedFile(null); //초기화
+  };
+
+  useEffect(() => {
+    if (socket) {
+      socket.on('fileDownload', data => {
+        const { file_data, file_url, original_file_name } = data;
+
+        const blob = new Blob([file_data], {
+          type: 'application/octet-stream',
+        });
+
+        // 파일을 다운로드 링크로 변환
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = original_file_name || file_url.split('/').pop();
+        downloadLink.click();
+      });
+    }
+  }, [socket]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
@@ -247,8 +411,8 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  /** 자동으로 스크롤을 최신 메시지로 이동 */
   useEffect(() => {
-    // 메시지가 업데이트될 때마다 자동으로 스크롤을 최신 메시지로 이동
     if (messageListRef.current) {
       messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     }
@@ -258,75 +422,14 @@ const ChatPage: React.FC = () => {
     navigate('/main');
   };
 
-  const handleFileButtonClick = () => {
-    const fileInput = document.getElementById('fileInput') as HTMLInputElement;
-    fileInput.click();
-  };
-  /** onloadend는 파일읽기가 끝나야 호출됌 */
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && socket && room_id) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const fileData = reader.result as string; // base64 데이터
-
-        // 파일 전송
-        socket.emit('sendFile', {
-          room_id,
-          file_name: file.name,
-          file_data: fileData,
-          sender_id: user?.id,
-          sender_email: user?.email,
-          sender_username: user?.username,
-          sender_profile_img:
-            user?.profile_img !== null
-              ? user?.profile_img
-              : 'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
-        });
-      };
-      reader.readAsDataURL(file); // 파일을 base64로 변환
-    }
-  };
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('fileDownload', data => {
-        const { file_data, file_url } = data;
-
-        // base64로 디코딩하여 Blob 객체로 변환
-        const byteCharacters = atob(file_data); // base64 디코딩
-        const byteArrays = [];
-
-        // base64 데이터를 Blob으로 변환
-        for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
-          const slice = byteCharacters.slice(offset, offset + 1024);
-          const byteNumbers = new Array(slice.length);
-          for (let i = 0; i < slice.length; i++) {
-            byteNumbers[i] = slice.charCodeAt(i);
-          }
-          byteArrays.push(new Uint8Array(byteNumbers));
-        }
-
-        const blob = new Blob(byteArrays, { type: 'application/octet-stream' });
-
-        // 파일을 다운로드 링크로 변환
-        const downloadLink = document.createElement('a');
-        downloadLink.href = URL.createObjectURL(blob);
-        downloadLink.download = file_url.split('/').pop(); // 파일 이름을 다운로드 이름으로 설정
-        downloadLink.click(); // 다운로드 시작
-      });
-    }
-  }, [socket]);
-
-  const handleFileClick = (fileUrl: string) => {
-    if (socket) {
-      socket.emit('downloadFile', { file_url: fileUrl }); // 다운로드 요청
-    }
-  };
-
   return (
     <ChatContainer>
-      <button onClick={handleGoBack}>Back to Chat</button>
+      <ChatHeader>
+        <GoBackButton onClick={handleGoBack}>
+          <FiArrowLeft />
+        </GoBackButton>
+        <RoomName>{roomName}</RoomName> {/* 채팅방 이름을 표시 */}
+      </ChatHeader>
       <MessageList ref={messageListRef}>
         {messages.map((msg, index) => (
           <MessageContainer
@@ -347,9 +450,30 @@ const ChatPage: React.FC = () => {
               <MessageText>{msg.message}</MessageText>
               {msg.file_path && (
                 <div>
-                  <button onClick={() => handleFileClick(msg.file_path)}>
-                    {msg.file_name} 다운로드
-                  </button>
+                  {msg.file_path.endsWith('.jpg') ||
+                  msg.file_path.endsWith('.jpeg') ||
+                  msg.file_path.endsWith('.webp') ||
+                  msg.file_path.endsWith('.png') ? (
+                    <>
+                      <img
+                        src={msg.file_path}
+                        alt='file preview'
+                        style={{
+                          width: '100px',
+                          height: 'auto',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleFileClick(msg.file_path)}
+                      />
+                      <button onClick={() => handleFileClick(msg.file_path)}>
+                        다운로드
+                      </button>
+                    </>
+                  ) : (
+                    <button onClick={() => handleFileClick(msg.file_path)}>
+                      {msg.file_name}
+                    </button>
+                  )}
                 </div>
               )}
               <Timestamp>
@@ -378,8 +502,24 @@ const ChatPage: React.FC = () => {
           onCompositionStart={handleCompositionStart}
           onCompositionEnd={handleCompositionEnd}
         />
-        <SendButton onClick={sendMessage}>Send</SendButton>
+        <SendButton
+          onClick={() => {
+            if (input.trim()) sendMessage();
+            if (selectedFile) handleSendFile();
+          }}
+        >
+          전송
+        </SendButton>
       </InputContainer>
+
+      {showFilePreviewModal && (
+        <FilePreviewModal
+          filePreview={filePreview}
+          fileName={fileName}
+          onClose={handleCancelFilePreview}
+          onSend={handleSendFile}
+        />
+      )}
     </ChatContainer>
   );
 };

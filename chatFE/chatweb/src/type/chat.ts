@@ -48,3 +48,14 @@ export interface ChatRoom {
   room_type: string;
   owner?: any;
 }
+
+export interface Message {
+  sender_id: number;
+  message: string;
+  timestamp: string;
+  sender_username: string;
+  sender_profile_img: string;
+  file_name: string;
+  file_path: string;
+  file_preview?: string;
+}
