@@ -18,7 +18,7 @@ const ChatHeader = styled.div`
 
 const RoomName = styled.h1`
   margin-left: 25px; /* GoBackButton과 채팅방 이름 사이의 간격 설정 */
-  font-size: 20px;
+  font-size: 18px;
   font-weight: normal;
   margin-top: -20px;
 `;
@@ -158,6 +158,21 @@ const FileButton = styled.button`
   border-radius: 5px;
   cursor: pointer;
   margin-right: 10px;
+
+  &:hover {
+    background-color: #bbb;
+  }
+`;
+
+const DownloadButton = styled.button`
+  background-color: #fcf1c0;
+  border: none;
+  border-radius: 12px; /* 둥근 모서리 */
+  padding: 10px 20px; /* 버튼 안의 여백 */
+  font-size: 13px; /* 글자 크기 */
+  color: black; /* 글자 색 */
+  cursor: pointer; /* 마우스를 올렸을 때 커서 변경 */
+  transition: background-color 0.3s ease; /* 배경색 변화 효과 */
 
   &:hover {
     background-color: #bbb;
@@ -472,14 +487,18 @@ const ChatPage: React.FC = () => {
                         }}
                         onClick={() => handleFileClick(msg.file_path)}
                       />
-                      <button onClick={() => handleFileClick(msg.file_path)}>
-                        다운로드
-                      </button>
+                      <DownloadButton
+                        onClick={() => handleFileClick(msg.file_path)}
+                      >
+                        {msg.file_path}
+                      </DownloadButton>
                     </>
                   ) : (
-                    <button onClick={() => handleFileClick(msg.file_path)}>
+                    <DownloadButton
+                      onClick={() => handleFileClick(msg.file_path)}
+                    >
                       {msg.file_name}
-                    </button>
+                    </DownloadButton>
                   )}
                 </div>
               )}
