@@ -155,13 +155,15 @@ export class ChattingService {
     if (userCheck.length < 1) {
       throw new BadRequestException('no room');
     }
+    const roomName = userCheck[0].chatting.name;
     const messages = await this.chatMessageModel
       .find({ room_id })
       .select(
         'message sender_id sender_email sender_username sender_profile_img room_id timestamp file_name file_path',
       )
-      .sort({ Timestamp: 1 });
-    return messages;
+      .sort({ timestamp: 1 });
+
+    return { room_name: roomName, messages };
 
     // 채팅 메세지를 몽고 디비에서 가져와 반환
   }

@@ -12,7 +12,7 @@ import { User } from 'src/users/entities/user.entity';
 import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { TokenHistory } from './entities/auth-history.entity';
-import { checkTimeDiff } from 'src/common/timediff';
+import { checkTimeDiff } from 'src/common/time';
 
 @Injectable()
 export class AuthService {
@@ -116,7 +116,7 @@ export class AuthService {
         this.configService.get<number>('REFRESH_TOKEN_EXP_HOUR') * 60 * 60; //(12시간)
       // 12시간보다 많이 남았다면 리프레쉬 토큰은 기존의 것으로 반환한다.
       if (timediff >= refreshTokenStandard) {
-        this.logger.log(`token update::uid:${uid}: Ac`);
+        //this.logger.log(`token update::uid:${uid}: Ac`);
         return {
           msg: 'success',
           accessToken: newAccessToken,

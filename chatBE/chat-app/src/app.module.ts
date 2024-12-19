@@ -9,6 +9,7 @@ import { ChattingModule } from './chatting/chatting.module';
 import { LoggerModule } from './common/logger/logger.module';
 import * as path from 'path';
 import { AuthModule } from './auth/auth.module';
+import { S3Module } from './common/s3/s3.module';
 
 @Module({
   imports: [
@@ -48,6 +49,8 @@ import { AuthModule } from './auth/auth.module';
     LoggerModule,
 
     AuthModule,
+
+    S3Module,
   ],
   controllers: [AppController],
   providers: [AppService],

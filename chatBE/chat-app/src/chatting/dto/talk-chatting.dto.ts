@@ -15,6 +15,7 @@ export class ChatFileDto {
   sender_profile_img: string;
   file_name: string;
   file_data: string;
+  content_type: string;
 }
 /** 추후 위 두개는 아래 것으로 통합 */
 export class MessageDto {

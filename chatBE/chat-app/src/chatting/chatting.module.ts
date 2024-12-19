@@ -10,11 +10,13 @@ import { User } from '../users/entities/user.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ChatMessage, ChatMessageSchema } from './mongo/chat-message.schema';
+import { S3Metadata } from 'src/common/s3/entities/s3.entity';
+import { S3Service } from 'src/common/s3/s3.service';
 
 // TODO: Auth 모듈 분리
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Chatting, UserChatting, User]),
+    TypeOrmModule.forFeature([Chatting, UserChatting, User, S3Metadata]),
     MongooseModule.forFeature([
       { name: ChatMessage.name, schema: ChatMessageSchema },
     ]),
@@ -31,6 +33,6 @@ import { ChatMessage, ChatMessageSchema } from './mongo/chat-message.schema';
     }),
   ],
   controllers: [ChattingController], // REST API 컨트롤러
-  providers: [ChattingService, ChattingGateway], // 웹소켓 게이트웨이
+  providers: [ChattingService, ChattingGateway, S3Service], // 웹소켓 게이트웨이
 })
 export class ChattingModule {}
