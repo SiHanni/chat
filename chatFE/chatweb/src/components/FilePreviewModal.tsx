@@ -16,9 +16,8 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 }) => {
   if (!filePreview) return null;
 
-  console.log(':QWEQWEQWEQWE', filePreview);
   const fileType = fileName?.split('.').pop()?.toLowerCase();
-  console.log('FF', fileType);
+
   const getFilePreviewIcon = () => {
     const iconPath = () => {
       console.log('File Type:', fileType); // 파일 타입을 확인해 보세요.
@@ -29,7 +28,6 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         case 'gif':
         case 'bmp':
         case 'webp':
-          console.log('Image preview:', filePreview); // 미리보기 이미지 경로 확인
           return filePreview !== null ? filePreview : '/static/nopreview.png';
         case 'xlsx':
         case 'xls':
@@ -58,7 +56,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
     };
 
     const icon = iconPath();
-    console.log('Returned Icon Path:', icon); // 최종 아이콘 경로 확인
+
     return icon;
   };
   return (

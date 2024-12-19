@@ -1,8 +1,6 @@
 export const calculateTimeAgo = (create_at: string) => {
   const requestDate = new Date(create_at);
   const today = new Date();
-  console.log(today);
-  console.log(requestDate);
   const diffInTime = today.getTime() - requestDate.getTime();
   const diffInDays = Math.floor(diffInTime / (1000 * 3600 * 24));
 

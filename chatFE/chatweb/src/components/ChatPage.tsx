@@ -168,11 +168,11 @@ const FileButton = styled.button`
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const uid = queryParams.get('uid');
-  const room_type = queryParams.get('room_type');
-  const room_id = queryParams.get('room_id');
-
+  //const queryParams = new URLSearchParams(location.search);
+  //const uid = queryParams.get('uid');
+  //const room_type = queryParams.get('room_type');
+  //const room_id = queryParams.get('room_id');
+  const { room_type, room_id, uid } = location.state || {};
   const [user, setUser] = useState<User | null>(null);
   const [roomName, setRoomName] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -189,6 +189,13 @@ const ChatPage: React.FC = () => {
   >(null);
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!room_type || !room_id || !uid) {
+      console.error('Missing required chat room information');
+      navigate('/'); // 홈 페이지 또는 적절한 경로로 이동
+    }
+  }, [room_type, room_id, uid, navigate]);
 
   useEffect(() => {
     try {

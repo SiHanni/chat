@@ -108,7 +108,7 @@ const FriendRequestsList: React.FC = () => {
             },
           }
         );
-        console.log('DATA', response.data);
+
         setFriendRequests(response.data);
       } catch (error) {
         console.error('Failed to fetch friend requests', error);

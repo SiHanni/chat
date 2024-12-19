@@ -105,7 +105,14 @@ const ChatRoomsList: React.FC = () => {
   }, []);
 
   const handleRoomClick = (room_id: number, room_type: string) => {
-    navigate(`/chat/?room_type=${room_type}&room_id=${room_id}&uid=${uid}`);
+    //navigate(`/chat/?room_type=${room_type}&room_id=${room_id}&uid=${uid}`);
+    navigate('/chat', {
+      state: {
+        room_type,
+        room_id,
+        uid,
+      },
+    });
   };
 
   const handleLeaveClick = async (e: React.MouseEvent, room_id: number) => {
@@ -123,7 +130,7 @@ const ChatRoomsList: React.FC = () => {
             },
           }
         );
-        console.log('res', response);
+        //console.log('res', response);
         if (response.status === 200) {
           setChatRooms(prevRooms =>
             prevRooms.filter(room => room.id !== room_id)
@@ -133,7 +140,7 @@ const ChatRoomsList: React.FC = () => {
           alert('채팅방 나가기 실패');
         }
       } catch (error) {
-        console.error('Error leaving chat:', error);
+        //console.error('Error leaving chat:', error);
         alert('오류가 발생했습니다.');
       }
     }
