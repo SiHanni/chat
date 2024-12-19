@@ -119,12 +119,18 @@ const FriendsList: React.FC = () => {
         }
       );
       const { id, room_type } = response.data;
-
+      const room_id = id;
       if (!socket.connected) {
         socket.connect();
       }
-      socket.emit('joinRoom', { room_id: id, room_type, uid });
-      navigate(`/chat/?room_type=${room_type}&room_id=${id}&uid=${uid}`);
+      socket.emit('joinRoom', { room_id: room_id, room_type, uid });
+      navigate('/chat', {
+        state: {
+          room_type,
+          room_id,
+          uid,
+        },
+      });
     } catch (error) {
       console.error('Failed to create or fetch chat', error);
     }

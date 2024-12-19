@@ -30,7 +30,6 @@
     "start": "react-scripts start",
     "start:production": "env-cmd -f .env.production react-scripts start",
     "build": "react-scripts build",
-    "build:webpack:production": "env-cmd -f .env.production webpack --config webpack.config.js",
     "build:production": "env-cmd -f .env.production react-scripts build",
     "start:development": "env-cmd -f .env.development react-scripts start",
     "test": "react-scripts test",
