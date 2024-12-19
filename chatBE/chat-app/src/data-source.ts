@@ -25,7 +25,8 @@ const AppDataSource = new DataSource({
     'dist/auth/entities/*.js',
     'dist/chatting/entities/*.js',
     'dist/users/entities/*.js',
-    //'dist/**/entities/*.js'
+
+    'dist/**/entities/*.js',
   ],
   migrations: [migrationsDir],
   synchronize: false,
