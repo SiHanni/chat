@@ -67,7 +67,7 @@ export class UsersController {
   @Get('getMyProfile')
   @UseGuards(AuthGuard)
   async getMyProfile(@Req() request: Request) {
-    this.logger.log('TEST');
+    this.logger.log('Logger TEST');
     const userIdFromJwt = (request as CustomRequest).user?.subject;
     if (!userIdFromJwt) {
       throw new UnauthorizedException('not allowed user request');

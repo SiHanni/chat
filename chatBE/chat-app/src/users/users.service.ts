@@ -179,7 +179,6 @@ export class UsersService {
     return updatedUser;
   }
   async findFriend({ email }: FriendDto): Promise<FriendInfoDto> {
-    console.log('EMAMEM', email);
     const friend = await this.userRepository.findOne({
       where: { email: email },
     });
@@ -349,9 +348,15 @@ export class UsersService {
     }
   }
 
-  async getFriendLists(
-    uid: number,
-  ): Promise<{ uid: number; friends: FriendInfoDto[] }> {
+  async getFriendLists(uid: number): Promise<{
+    uid: number;
+    userInfo: FriendInfoDto;
+    friends: FriendInfoDto[];
+    friendCnt: number;
+  }> {
+    const getUser = await this.userRepository.findOne({
+      where: { id: uid },
+    });
     const userFriends = await this.userFriendRepository.find({
       where: [
         { user: { id: uid }, is_accepted: true, is_blacklist: false },
@@ -359,7 +364,14 @@ export class UsersService {
       ],
       relations: ['user', 'friend'],
     });
-    console.log('use', userFriends);
+    const friendCnt = userFriends.length;
+    const userInfo = {
+      uid: getUser.id,
+      username: getUser.username,
+      profile_img: getUser.profile_img,
+      status_msg: getUser.status_msg,
+      email: getUser.email,
+    };
     const friendInfo = userFriends.map((friend) => ({
       uid: friend.friend.id,
       username: friend.friend.username,
@@ -367,7 +379,12 @@ export class UsersService {
       status_msg: friend.friend.status_msg,
       email: friend.friend.email,
     }));
-    return { uid: uid, friends: friendInfo };
+    return {
+      uid: uid,
+      userInfo: userInfo,
+      friends: friendInfo,
+      friendCnt: friendCnt,
+    };
   }
   /** 나에게 들어온 친구 추가 요청 목록 */
   async getFriendRequests(uid: number): Promise<UserFriend[]> {
