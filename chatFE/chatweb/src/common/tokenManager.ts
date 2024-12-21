@@ -9,13 +9,12 @@ class TokenManager {
   async updateToken() {
     try {
       const accessToken = localStorage.getItem('accessToken');
-      console.log('ACCE', accessToken);
       if (accessToken) {
         const response = await fetch(`${server_url}/auth/updatetoken`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`, // 토큰을 헤더에 추가
+            Authorization: `Bearer ${accessToken}`,
           },
           credentials: 'include', // HttpOnly 쿠키 포함
         });

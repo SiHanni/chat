@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import Button from '../components/Button';
 import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
@@ -10,19 +9,36 @@ const SignInContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f5f3e7; /* 아주 연한 베이지색 */
+  height: 110vh;
+
+  background-color: #f9f5ee;
   color: #333;
   font-family: 'Roboto', sans-serif;
 `;
 
 const FormContainer = styled.div`
   background-color: #fff;
-  padding: 40px;
+  padding: 30px;
   border-radius: 15px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
+  width: 90%;
+  max-width: 300px;
+  text-align: center;
+  margin-top: -60px;
+`;
+
+const ImageContainer = styled.div`
+  width: 30%;
+  max-width: 90px;
+  margin-top: -70px; /* 이미지 아래로 이동 */
+  position: relative;
+  left: -130px;
+
+  img {
+    width: 110%;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+  }
 `;
 
 const Title = styled.h2`
@@ -32,7 +48,7 @@ const Title = styled.h2`
 `;
 
 const InputGroup = styled.div`
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 `;
 
 //const Label = styled.label`
@@ -62,6 +78,29 @@ const Buttons = styled.div`
   flex-direction: column;
   gap: 15px;
   margin-top: 20px;
+`;
+
+const StyledButton = styled.button`
+  background-color: #ffe787; /* 버튼 색상 */
+  color: #fff;
+  font-size: 1rem;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+
+  &:hover {
+    background-color: #f4d03f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
 `;
 
 const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
@@ -98,6 +137,9 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
 
   return (
     <SignInContainer>
+      <ImageContainer>
+        <img src='/maruhi.png' alt='Login Banner' />
+      </ImageContainer>
       <FormContainer>
         <Title></Title>
         <form onSubmit={handleSubmit}>
@@ -107,7 +149,7 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
               type='email'
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder='email'
+              placeholder='이메일'
               required
             />
           </InputGroup>
@@ -118,13 +160,13 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
               type='password'
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder='password'
+              placeholder='비밀번호'
               required
             />
           </InputGroup>
 
           <Buttons>
-            <Button type='submit'>Sign In</Button>
+            <StyledButton type='submit'>로그인</StyledButton>
           </Buttons>
         </form>
       </FormContainer>
