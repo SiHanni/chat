@@ -31,7 +31,7 @@ import { S3Module } from './common/s3/s3.module';
         database: configService.get<string>('MYSQL_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get<string>('NODE_ENV') === 'development', // 개발 환경에서는 true, 프로덕션에서는 false
-        logging: configService.get<string>('NODE_ENV') === 'development',
+        logging: false, //configService.get<string>('NODE_ENV') === 'development',
         timezone: 'Z',
       }),
     }),

@@ -55,17 +55,7 @@ export class ChattingGateway
     private readonly logger: CustomLoggerService,
     private configService: ConfigService,
     private readonly s3Service: S3Service,
-  ) {
-    this.s3Client = new S3Client({
-      credentials: {
-        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY'),
-        secretAccessKey: this.configService.get<string>(
-          'AWS_SECRET_ACCESS_KEY',
-        ),
-      },
-      region: this.configService.get<string>('AWS_REGION'),
-    });
-  }
+  ) {}
 
   /** NestJS 모듈이 초기화 될 때 호출 */
   onModuleInit() {
