@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import { server_url } from '../common/serverConfig';
+import { FindFriend } from '../type/user';
 
 const FriendCardContainer = styled.div`
   width: 200px;
@@ -15,6 +16,12 @@ const FriendCardContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+
+  @media (max-width: 600px) {
+    width: 150px;
+    height: 200px;
+    padding: 10px;
+  }
 `;
 
 const ProfileImage = styled.img`
@@ -23,17 +30,33 @@ const ProfileImage = styled.img`
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 10px;
+
+  @media (max-width: 480px) {
+    width: 75px;
+    height: 75px;
+  }
 `;
 
-const Username = styled.h4`
-  font-size: 1.2rem;
-  margin-bottom: 10px;
+const Username = styled.p`
+  font-size: 1rem;
+  color: black;
+  margin-bottom: 15px;
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
 `;
 
 const StatusMsg = styled.p`
   font-size: 1rem;
   color: #777;
   margin-bottom: 15px;
+
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    margin-top: 5px;
+  }
 `;
 
 const FriendButton = styled.button`
@@ -47,9 +70,13 @@ const FriendButton = styled.button`
   &:hover {
     background-color: #ffcc00;
   }
+
+  @media (max-width: 768px) {
+    padding: 7px;
+  }
 `;
 
-const FriendCard: React.FC<{ friend: any }> = ({ friend }) => {
+const FriendCard: React.FC<{ friend: FindFriend }> = ({ friend }) => {
   const handleSendRequest = async () => {
     try {
       await axios.post(
@@ -69,7 +96,7 @@ const FriendCard: React.FC<{ friend: any }> = ({ friend }) => {
 
   return (
     <FriendCardContainer>
-      <ProfileImage src={friend.profile_img || '/maruu.jpg'} alt='Profile' />
+      <ProfileImage src={friend.profile_img || '/maruu.jpeg'} alt='Profile' />
       <Username>{friend.username}</Username>
       <StatusMsg>{friend.status_msg}</StatusMsg>
       <FriendButton onClick={handleSendRequest}>친구 요청</FriendButton>

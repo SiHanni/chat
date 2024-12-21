@@ -4,14 +4,16 @@ import styled from 'styled-components';
 import { calculateTimeAgo } from '../common/tidmediff';
 import { server_url } from '../common/serverConfig';
 
-// 스타일 컴포넌트 정의
 const FriendRequestContainer = styled.div`
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 15px;
-  background-color: #f9f9f9;
   border-radius: 10px;
+
+  @media (max-width: 600px) {
+    padding: 15px;
+  }
 `;
 
 const RequestItem = styled.div`
@@ -27,6 +29,12 @@ const RequestItem = styled.div`
   &:hover {
     background-color: #f2f2f2;
   }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 `;
 
 const ProfileImage = styled.img`
@@ -35,19 +43,33 @@ const ProfileImage = styled.img`
   border-radius: 50%;
   margin-right: 15px;
   object-fit: cover;
+
+  @media (max-width: 600px) {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+  }
 `;
 
 const Username = styled.span`
   font-size: 1rem;
   font-weight: bold;
   color: #333;
-  white-space: nowrap; /* 텍스트가 세로로 나타나지 않게 수정 */
+  white-space: nowrap;
+
+  @media (max-width: 600px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const EmptyMessage = styled.p`
   text-align: center;
   color: #888;
   font-size: 1rem;
+
+  @media (max-width: 600px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const Button = styled.button<{ variant: 'accept' | 'reject' }>`
@@ -58,6 +80,7 @@ const Button = styled.button<{ variant: 'accept' | 'reject' }>`
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: 500;
+  white-space: nowrap;
 
   background-color: ${props =>
     props.variant === 'accept' ? '#f8e8b6' : '#f8b0b0'};
@@ -68,6 +91,11 @@ const Button = styled.button<{ variant: 'accept' | 'reject' }>`
       props.variant === 'accept' ? '#e5d88d' : '#f29c9c'};
     transform: scale(1.05);
   }
+
+  @media (max-width: 600px) {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+  }
 `;
 
 const ButtonContainer = styled.div`
@@ -75,12 +103,24 @@ const ButtonContainer = styled.div`
   justify-content: flex-start; /* 버튼을 약간 왼쪽으로 위치시킴 */
   gap: 15px; /* 버튼 간 간격 조정 */
   margin-right: 50px;
+
+  @media (max-width: 600px) {
+    flex-direction: row;
+    gap: 10px;
+    margin-right: 0;
+  }
 `;
 
 const TimeAgo = styled.span`
   font-size: 0.9rem;
   color: #888;
   margin-left: 300px;
+  white-space: nowrap;
+
+  @media (max-width: 600px) {
+    margin-left: 15px;
+    font-size: 0.8rem;
+  }
 `;
 
 interface FriendRequest {
@@ -162,12 +202,10 @@ const FriendRequestsList: React.FC = () => {
           <RequestItem key={request.friend.id}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <ProfileImage
-                src={request.friend.profile_img || '/maruu.jpg'}
+                src={request.friend.profile_img || '/maruu.jpeg'}
                 alt={request.friend.username}
               />
               <Username>{request.friend.username}</Username>
-            </div>
-            <div>
               <TimeAgo>{calculateTimeAgo(request.created_at)}</TimeAgo>
             </div>
             <ButtonContainer>

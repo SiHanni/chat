@@ -1,41 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import Button from '../components/Button';
-import axios from 'axios';
 import FriendsList from '../components/FriendList';
 import FriendRequestsList from '../components/FriendRequestList';
-import ProfilePage from './ProfilePage';
 import FindFriendPage from './FindFriendPage';
 import ChatRoomsList from '../components/ChatRoomList';
-import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
 const MainContainer = styled.div`
   display: flex;
-  height: 100vh;
-  background-color: #f4f4f9;
-  font-family: 'Roboto', sans-serif;
-`;
-
-const Sidebar = styled.div`
-  width: 200px;
-  background-color: #f4f4f9;
-  color: #1e2a47;
-  padding: 20px;
-  display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+  height: calc(100vh - 60px);
+  background-color: transparent;
+  font-family: 'Roboto', sans-serif;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
 `;
 
-const ProfileImage = styled.img`
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 15px;
-  margin-left: 50px;
+const Header = styled.div`
+  width: 100%;
+  background-color: #f7f6ed;
+  color: #1e2a47;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    padding: 0 10px;
+  }
 `;
 
 const Logo = styled.h3`
@@ -44,16 +47,29 @@ const Logo = styled.h3`
   margin-bottom: 30px;
   font-weight: bold;
   text-align: center;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
 `;
 
-const MenuList = styled.ul`
-  list-style-type: none;
-  padding: 0;
-  margin-top: 50px;
+const TabContainer = styled.div`
+  display: flex;
   width: 100%;
+  justify-content: space-around;
+  margin-top: 5px;
+
+  @media (max-width: 768px) {
+    justify-content: space-evenly;
+    margin-top: -20px;
+    margin-bottom: 15px;
+    margin-rigth: -5px;
+    margin-left: -20px;
+  }
 `;
 
-const MenuItem = styled.li<{ isActive: boolean }>`
+const Tab = styled.div<{ isActive: boolean }>`
   padding: 12px 20px;
   cursor: pointer;
   font-size: 1.1rem;
@@ -68,58 +84,94 @@ const MenuItem = styled.li<{ isActive: boolean }>`
     background-color: #f2e6b6; /* 연한 베이지색의 밝은 버전 */
     transform: scale(1.05);
   }
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    padding: 3px 10px;
+    maring-left: -5px;
+    margin-top: -2px;
+  }
 `;
 
 const Content = styled.div`
   flex-grow: 1;
   padding: 40px;
-  background-color: white;
-  color: #333;
+  background-color: transparent;
+  color: transparent;
   overflow-y: auto;
-  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
+
+  border-radius: 3px;
   margin: 20px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    margin: 10px;
+  }
 `;
 
-const LogoutButton = styled(Button)`
-  background-color: #f4d03f; /* 골드 */
-  color: #1e2a47; /* 남색 */
-  border: 2px solid #1e2a47;
-  padding: 12px 25px;
-  font-weight: bold;
-  margin-top: 40px;
-  border-radius: 30px;
+const MoreMenu = styled.div<{ show: boolean }>`
+  position: absolute;
+  top: 60px;
+  right: 10px;
+  background-color: #f7f6ed;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+  display: ${({ show }) => (show ? 'block' : 'none')};
+  width: 150px;
+  transition: background-color 0.3s ease;
 
-  &:hover {
-    background-color: #ffcc00;
-    border-color: #ffcc00;
-    transform: translateY(-2px);
+  @media (max-width: 768px) {
+    top: -40px;
+    right: 0;
+    width: 70px;
+    height: 30px;
+    font-size: 0.8em;
+    margin-right: 35px;
+  }
+
+  & > button {
+    width: 100%;
+    padding: 10px;
+    background-color: #f7f6ed; /* 기본 배경색 */
+    color: #1e2a47; /* 텍스트 색상 */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em; /* 글씨 크기 조정 */
+    text-align: center;
+    position: relative;
+    overflow: hidden; /* 자식 요소가 버튼 밖으로 나가지 않도록 */
+    transition: transform 0.3s ease; /* 호버 시 애니메이션 */
+  }
+
+  & > button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(211, 211, 211, 0.3); /* 아주 얕은 회색 */
+    border-radius: 5px;
+    transform: scaleX(0); /* 처음에는 가로 크기를 0으로 설정 */
+    transform-origin: left; /* 왼쪽에서부터 확장되도록 설정 */
+    transition: transform 0.4s ease;
+  }
+
+  & > button:hover {
+    transform: translateY(-2px); /* 버튼 호버 시 살짝 위로 올라가는 효과 */
+  }
+
+  & > button:hover::before {
+    transform: scaleX(1); /* 호버 시 배경이 왼쪽에서부터 오른쪽으로 확장됨 */
   }
 `;
 
 const MainPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('chat');
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('friends');
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // JWT 토큰에서 사용자 정보 가져오기
-    const fetchProfile = async () => {
-      try {
-        const response = await axios.get(`${server_url}/users/getMyProfile`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
-        setProfileImage(response.data.profile_img); // 프로필 이미지 URL 설정
-      } catch (error) {
-        console.error('Failed to fetch profile', error);
-      }
-    };
-
-    fetchProfile();
-  }, []);
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
@@ -133,54 +185,52 @@ const MainPage: React.FC = () => {
     setActiveTab(tab);
   };
 
+  const handleMoreClick = () => {
+    setShowMoreMenu(prevState => !prevState); // 현재 상태의 반대값으로 토글
+  };
+
   return (
     <MainContainer>
-      <Sidebar>
-        <Logo>MaruTalk</Logo>
-        <ProfileImage src={profileImage || '/maruu.jpg'} alt='Profile' />
-        <MenuList>
-          <MenuItem
-            isActive={activeTab === 'profile'}
-            onClick={() => handleTabClick('profile')}
-          >
-            프로필
-          </MenuItem>
-          <MenuItem
+      <Header>
+        <Logo></Logo>
+        <TabContainer>
+          <Tab
             isActive={activeTab === 'friends'}
             onClick={() => handleTabClick('friends')}
           >
             친구
-          </MenuItem>
-          <MenuItem
-            isActive={activeTab === 'findFriend'}
-            onClick={() => handleTabClick('findFriend')}
-          >
-            친구 찾기
-          </MenuItem>
-          <MenuItem
-            isActive={activeTab === 'friendRequests'}
-            onClick={() => handleTabClick('friendRequests')}
-          >
-            친구 요청
-          </MenuItem>
-
-          <MenuItem
+          </Tab>
+          <Tab
             isActive={activeTab === 'chat'}
             onClick={() => handleTabClick('chat')}
           >
             채팅
-          </MenuItem>
-        </MenuList>
-        <LogoutButton type='button' onClick={handleLogout}>
-          로그아웃
-        </LogoutButton>
-      </Sidebar>
+          </Tab>
+          <Tab
+            isActive={activeTab === 'findFriend'}
+            onClick={() => handleTabClick('findFriend')}
+          >
+            친구 찾기
+          </Tab>
+          <Tab
+            isActive={activeTab === 'friendRequests'}
+            onClick={() => handleTabClick('friendRequests')}
+          >
+            친구 요청
+          </Tab>
+          <Tab isActive={activeTab === 'more'} onClick={handleMoreClick}>
+            더보기
+          </Tab>
+        </TabContainer>
+        <MoreMenu ref={moreMenuRef} show={showMoreMenu}>
+          <button onClick={handleLogout}>로그아웃</button>
+        </MoreMenu>
+      </Header>
+
       <Content>
-        {activeTab === 'profile' && <ProfilePage />}
         {activeTab === 'friends' && <FriendsList />}
         {activeTab === 'findFriend' && <FindFriendPage />}
         {activeTab === 'friendRequests' && <FriendRequestsList />}
-
         {activeTab === 'chat' && <ChatRoomsList />}
       </Content>
     </MainContainer>

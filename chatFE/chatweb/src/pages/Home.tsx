@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -9,11 +9,16 @@ const HomeContainer = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #faf7eb; /* 아주 연한 베이지색 */
+  background-color: transparent; /* 아주 연한 베이지색 */
   color: #333;
   font-family: 'Roboto', sans-serif;
   overflow: hidden; /* 화면 넘침 방지 */
   position: relative;
+
+  @media (max-width: 768px) {
+    padding: 20px; /* 모바일에서 여백 추가 */
+    height: auto; /* 높이 조정 */
+  }
 `;
 
 const LogoContainer = styled.div`
@@ -50,6 +55,10 @@ const Logo = styled.h1`
       transform: scale(1); /* 원래 크기로 돌아옴 */
     }
   }
+
+  @media (max-width: 768px) {
+    font-size: 1.2rem; /* 글자 크기 줄이기 */
+  }
 `;
 
 const TitleImage = styled.img`
@@ -75,6 +84,10 @@ const TitleImage = styled.img`
     100% {
       transform: translateX(0) scaleX(1); /* 다시 0으로 돌아가며 반전 */
     }
+  }
+  @media (max-width: 768px) {
+    width: 60px; /* 이미지 크기 줄이기 */
+    top: -23%; /* 이미지 위치 조정 */
   }
 `;
 
@@ -119,8 +132,8 @@ const Buttons = styled.div`
 `;
 
 const ButtonStyled = styled.button`
-  padding: 10px 30px; /* 버튼 크기 조금 더 키움 */
-  font-size: 1.3rem; /* 글자 크기 조금 더 키움 */
+  padding: 7px 15px; /* 버튼 크기 조금 더 키움 */
+  font-size: 1rem; /* 글자 크기 조금 더 키움 */
   font-weight: bold;
   border-radius: 30px;
   border: none;
@@ -132,7 +145,7 @@ const ButtonStyled = styled.button`
 
   /* 버튼 크기 조정 */
   @media (max-width: 600px) {
-    font-size: 1.1rem; /* 작은 화면에서 글자 크기 줄이기 */
+    font-size: 0.8rem; /* 작은 화면에서 글자 크기 줄이기 */
     padding: 8px 25px; /* 버튼 크기 줄이기 */
   }
 
@@ -153,9 +166,32 @@ const ButtonStyled = styled.button`
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   }
 `;
+const CloudDescription = styled.div<{ show: boolean }>`
+  position: absolute;
+  bottom: 10vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #faf7eb;
+  color: #333;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  font-size: 0.7rem;
+  text-align: center;
+  opacity: ${props => (props.show ? 1 : 0)};
+  visibility: ${props => (props.show ? 'visible' : 'hidden')};
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+
+  @media (max-width: 600px) {
+    top: auto;
+    bottom: 0;
+    z-index: 9999;
+  }
+`;
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [showDescription, setShowDescription] = useState(false);
 
   const handleLogin = () => {
     navigate('/signin'); // 로그인 페이지로 이동
@@ -163,6 +199,13 @@ const Home: React.FC = () => {
 
   const handleSignUp = () => {
     navigate('/signup'); // 회원가입 페이지로 이동
+  };
+
+  const handleShowDescription = () => {
+    setShowDescription(true);
+    setTimeout(() => {
+      setShowDescription(false);
+    }, 3000); // 3초 후에 설명 사라짐
   };
 
   return (
@@ -183,7 +226,15 @@ const Home: React.FC = () => {
         <ButtonStyled type='button' onClick={handleLogin}>
           로그인
         </ButtonStyled>
+        <ButtonStyled type='button' onClick={handleShowDescription}>
+          MaruTalk?
+        </ButtonStyled>
       </Buttons>
+      <CloudDescription show={showDescription}>
+        <p>
+          마루톡은 마루는 강쥐를 사랑하는 누구나 사용할 수 있는 웹 메신저입니다.
+        </p>
+      </CloudDescription>
     </HomeContainer>
   );
 };

@@ -12,7 +12,7 @@ import TokenManager from './common/tokenManager';
 const App: React.FC = () => {
   const refreshAuthToken = () => {
     const accessToken = localStorage.getItem('accessToken');
-    console.log('App.tsx accessToken:', accessToken);
+
     if (accessToken) {
       const newTokenManager = new TokenManager(accessToken);
       newTokenManager.startTokenUpdate();

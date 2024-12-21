@@ -12,8 +12,13 @@ import { FiArrowLeft } from 'react-icons/fi';
 const ChatHeader = styled.div`
   display: flex;
   align-items: center;
-  margin-bottom: 10px; /* 아래 여백을 주어 다른 요소와 간격을 유지 */
+  margin-bottom: 10px;
   padding: -1px 0;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    height: 15px;
+  }
 `;
 
 const RoomName = styled.h1`
@@ -21,6 +26,12 @@ const RoomName = styled.h1`
   font-size: 18px;
   font-weight: normal;
   margin-top: -20px;
+
+  @media (max-width: 768px) {
+    font-size: 13px; /* 작은 화면에서는 폰트 크기 조정 */
+    margin-left: 15px; /* 모바일에서 왼쪽 여백 제거 */
+    margin-top: -5px;
+  }
 `;
 
 const GoBackButton = styled.button`
@@ -47,6 +58,13 @@ const GoBackButton = styled.button`
   &:active {
     background-color: #004085; /* 클릭 시 색상 변경 */
   }
+
+  @media (max-width: 768px) {
+    width: 35px;
+    height: 35px;
+    font-size: 22px;
+    margin-top: -3px;
+  }
 `;
 
 const ChatContainer = styled.div`
@@ -62,6 +80,11 @@ const ChatContainer = styled.div`
   background-color: #fff;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    width: 90%;
+    padding: 15px;
+  }
 `;
 
 const MessageList = styled.div`
@@ -71,6 +94,10 @@ const MessageList = styled.div`
   margin-bottom: 10px;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 600px) {
+    padding-right: 0px;
+  }
 `;
 
 const MessageContainer = styled.div.withConfig({
@@ -80,6 +107,10 @@ const MessageContainer = styled.div.withConfig({
   flex-direction: ${props => (props.isOwnMessage ? 'row-reverse' : 'row')};
   margin-bottom: 15px;
   align-items: flex-start;
+
+  @media (max-width: 600px) {
+    margin-bottom: 5px; /* 작은 화면에서 메시지 간격 줄이기 */
+  }
 `;
 
 const ProfileImage = styled.img.withConfig({
@@ -89,7 +120,13 @@ const ProfileImage = styled.img.withConfig({
   height: 40px;
   border-radius: 50%;
   margin: ${props => (props.isOwnMessage ? '0 0 5px 10px' : '0 10px 5px 0')};
+
+  @media (max-width: 600px) {
+    width: 35px; /* 모바일에서 이미지 크기 줄이기 */
+    height: 35px;
+  }
 `;
+
 const MessageContent = styled.div.withConfig({
   shouldForwardProp: prop => prop !== 'isOwnMessage',
 })<{ isOwnMessage: boolean }>`
@@ -102,16 +139,29 @@ const MessageContent = styled.div.withConfig({
   display: flex;
   flex-direction: column;
   align-items: ${props => (props.isOwnMessage ? 'flex-end' : 'flex-start')};
+
+  @media (max-width: 600px) {
+    max-width: 40%;
+    font-size: 0.75rem;
+  }
 `;
 
 const Username = styled.div`
   font-weight: bold;
   font-size: 0.8rem;
   margin-bottom: 5px;
+
+  @media (max-width: 600px) {
+    font-size: 0.7rem;
+  }
 `;
 
 const MessageText = styled.div`
   font-size: 0.9rem;
+
+  @media (max-width: 600px) {
+    font-size: 0.7rem;
+  }
 `;
 
 const Timestamp = styled.div`
@@ -119,16 +169,26 @@ const Timestamp = styled.div`
   font-size: 0.7rem;
   color: #888;
   align-self: flex-end;
+
+  @media (max-width: 600px) {
+    font-size: 0.6rem;
+  }
 `;
 
 const InputContainer = styled.div`
-  width: 90%; /* 채팅창 전체 너비에 맞춤 */
+  width: 90%;
   display: flex;
   padding: 10px;
   background-color: white;
   /* box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); */
-  position: absolute; /* 고정 위치가 아닌 채팅창 내에 배치 */
-  bottom: 0; /* 하단에 위치 */
+  position: absolute;
+  bottom: 0;
+
+  @media (max-width: 600px) {
+    width: 80%;
+    height: 10%;
+    padding: -5px;
+  }
 `;
 
 const Input = styled.input`
@@ -136,7 +196,11 @@ const Input = styled.input`
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
-  margin-right: 10px;
+  margin-right: 15px;
+
+  @media (max-width: 600px) {
+    padding: 9px; /* 작은 화면에서 입력창 여백 줄이기 */
+  }
 `;
 
 const SendButton = styled.button`
@@ -145,9 +209,17 @@ const SendButton = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  white-space: nowrap;
+  margin-right: 5px;
+  margin-left: -15px;
 
   &:hover {
     background-color: #e1b347;
+  }
+
+  @media (max-width: 600px) {
+    padding: 5px 13px; /* 작은 화면에서 버튼 크기 줄이기 */
+    margin-right: 5px;
   }
 `;
 
@@ -157,10 +229,15 @@ const FileButton = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
-  margin-right: 10px;
+  margin-right: 5px;
+  margin-left: -15px;
 
   &:hover {
     background-color: #bbb;
+  }
+
+  @media (max-width: 768px) {
+    padding: 10px; /* 작은 화면에서 버튼 크기 줄이기 */
   }
 `;
 
@@ -176,6 +253,11 @@ const DownloadButton = styled.button`
 
   &:hover {
     background-color: #bbb;
+  }
+
+  @media (max-width: 768px) {
+    padding: 5px 12px;
+    font-size: 12px;
   }
 `;
 
@@ -309,7 +391,7 @@ const ChatPage: React.FC = () => {
         sender_profile_img:
           user?.profile_img !== null
             ? user?.profile_img
-            : 'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
+            : 'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpeg',
         file: selectedFile
           ? { filename: selectedFile.name, buffer: selectedFile }
           : null,
@@ -367,7 +449,7 @@ const ChatPage: React.FC = () => {
           sender_username: user?.username,
           sender_profile_img:
             user?.profile_img ||
-            'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpg',
+            'https://marutalk-build.s3.ap-northeast-2.amazonaws.com/maruu.jpeg',
           file: selectedFile
             ? { filename: selectedFile.name, buffer: selectedFile }
             : null,
@@ -462,7 +544,7 @@ const ChatPage: React.FC = () => {
               src={
                 msg.sender_profile_img && msg.sender_profile_img.trim() !== ''
                   ? msg.sender_profile_img
-                  : '/maruu.jpg'
+                  : '/maruu.jpeg'
               }
               alt='profile'
               isOwnMessage={msg.sender_id === user?.id}

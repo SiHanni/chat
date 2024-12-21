@@ -18,6 +18,11 @@ const SearchInput = styled.input`
   margin-bottom: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
+
+  @media (max-width: 600px) {
+    width: 100%;
+    padding: 8px;
+  }
 `;
 
 const FriendListContainer = styled.div`
@@ -25,6 +30,40 @@ const FriendListContainer = styled.div`
   flex-wrap: wrap;
   justify-content: center;
   gap: 20px;
+
+  @media (max-width: 600px) {
+    gap: 10px;
+  }
+`;
+
+const StyledButton = styled.button`
+  background-color: #ffe787; /* 버튼 색상 */
+  color: #7d7d7d;
+  font-size: 1rem;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  margin-bottom: 15px;
+
+  &:hover {
+    background-color: #f4d03f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+    margin-top: -10px;
+    padding: 12px;
+  }
 `;
 
 const FindFriendPage: React.FC = () => {
@@ -45,7 +84,7 @@ const FindFriendPage: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
-      setFriends([response.data]); // 검색된 친구 정보를 리스트에 저장
+      setFriends([response.data]);
       setError(null);
     } catch (err) {
       setError('친구를 찾을 수 없습니다.');
@@ -61,7 +100,7 @@ const FindFriendPage: React.FC = () => {
         value={email}
         onChange={e => setEmail(e.target.value)}
       />
-      <button onClick={handleSearch}>친구 찾기</button>
+      <StyledButton onClick={handleSearch}>친구 찾기</StyledButton>
 
       {error && <div>{error}</div>}
 

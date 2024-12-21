@@ -21,10 +21,15 @@ const FormContainer = styled.div`
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  width: 90%;
+  width: 80%;
   max-width: 300px;
   text-align: center;
   margin-top: -60px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    margin-top: -30px; /* 모바일에서 여백 조정 */
+  }
 `;
 
 const ImageContainer = styled.div`
@@ -38,6 +43,12 @@ const ImageContainer = styled.div`
     width: 110%;
     border-top-left-radius: 15px;
     border-top-right-radius: 15px;
+
+    @media (max-width: 768px) {
+      width: 90%; /* 작은 화면에서 이미지 크기 조정 */
+      position: relative;
+      transform: translate(45px, 15px);
+    }
   }
 `;
 
@@ -45,18 +56,15 @@ const Title = styled.h2`
   text-align: center;
   color: #1f3c73; /* 남색 */
   margin-bottom: 30px;
+
+  @media (max-width: 768px) {
+    font-size: 1.5rem; /* 제목 크기 축소 */
+  }
 `;
 
 const InputGroup = styled.div`
   margin-bottom: 15px;
 `;
-
-//const Label = styled.label`
-//  font-size: 1rem;
-//  color: #555;
-//  margin-bottom: 5px;
-//  display: block;
-//`;
 
 const Input = styled.input`
   width: 100%;
@@ -70,6 +78,10 @@ const Input = styled.input`
 
   &:focus {
     border-color: #1f3c73; /* 남색으로 포커스 시 색상 변경 */
+  }
+
+  @media (max-width: 768px) {
+    padding: 12px; /* 모바일에서 입력 필드 패딩 축소 */
   }
 `;
 
@@ -100,6 +112,11 @@ const StyledButton = styled.button`
   &:active {
     transform: translateY(0);
     box-shadow: none;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem; /* 작은 화면에서 글씨 크기 축소 */
+    padding: 12px;
   }
 `;
 

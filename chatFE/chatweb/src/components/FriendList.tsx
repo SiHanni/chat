@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { FaCommentDots } from 'react-icons/fa';
+import { FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { server_url } from '../common/serverConfig';
 interface Friend {
@@ -15,44 +16,150 @@ interface Friend {
 /** 채팅방으로 이동시 웹소켓 연결을 확인하고 웹소켓 연결을 하기 위한 소켓 */
 const socket = io(server_url, { autoConnect: false });
 
-const FriendListContainer = styled.div`
+const MyContainer = styled.div`
   width: 100%;
-  padding: 10px;
-  background-color: #f4f4f9;
+  background-color: transparent;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+
+  @media (max-width: 768px) {
+    margin-left: -20px;
+  }
 `;
 
-const FriendItem = styled.li`
+const MyProfileCard = styled.div`
+  height: 80px;
+  display: flex;
+  padding: -3px;
+  border-radius: 30px;
+  position: relative; /* 자식 요소의 절대 위치를 설정하려면 부모가 relative여야 함 */
+
+  @media (max-width: 768px) {
+    height: 60px;
+  }
+`;
+
+const MyProfileImage = styled.img`
+  width: 60px;
+  height: 60px;
+  border-radius: 30%;
+  object-fit: cover;
+  position: absolute; /* 고정 위치 설정 */
+  left: 10px; /* 카드 내 왼쪽에서 10px 위치 */
+  top: 50%; /* 카드 내 세로 중앙에 위치 */
+  transform: translateY(-50%); /* 세로 중앙 정렬을 위해 offset을 조정 */
+
+  @media (max-width: 768px) {
+    width: 50px; /* 작은 화면에서 이미지 크기 줄이기 */
+    height: 50px;
+  }
+`;
+
+const MyDetails = styled.div`
+  display: flex;
+  align-items: center; /* 수평 정렬 */
+`;
+
+const MyUsername = styled.span`
+  font-size: 1rem;
+  font-weight: bold;
+  color: #1e2a47;
+  margin-left: 100px;
+  margin-right: 30px;
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    margin-left: 80px;
+    margin-right: 20px;
+    margin-bottom: 5px;
+  }
+`;
+const MyStatusMessage = styled.span`
+  font-size: 0.9rem;
+  color: #555;
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+    white-space: nowrap;
+  }
+`;
+
+const FriendCount = styled.div`
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #555;
+  margin-bottom: -10px;
+  text-align: left;
+  width: 100%;
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+  }
+`;
+
+const FriendListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  background-color: #ffffff; /* 배경색을 흰색으로 */
+  border-radius: 1px; /* 라운드 처리 */
+  margin-top: 20px; /* 프로필 카드와의 간격 */
+  min-height: 200px; /* 최소 높이 설정 */
+  max-height: 500px; /* 최대 높이 설정 */
+
+  @media (max-width: 768px) {
+    margin-top: -5px;
+    margin-left: -20px;
+  }
+`;
+
+const FriendCard = styled.li`
   display: flex;
   align-items: center;
-  padding: 15px;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  padding: 5px;
+  margin-left: -30px;
+  margin-right: 20px;
+  margin-bottom: 15px;
   border-radius: 10px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background-color: #transparent; /* 배경색을 밝은 회색으로 설정 */
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  height: 55px; /* 기본 카드 높이 */
+  cursor: pointer; /* 클릭 가능한 카드 */
+  position: relative;
+  flex-basis: 100%;
 
   &:hover {
-    background-color: #f7f7f7;
+    background-color: #f0f0f0; /* 호버 시 배경색 */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
   &:nth-child(odd) {
-    background-color: #f9f9f9; /* 홀수 항목 배경색 다르게 */
+    background-color: #white; /* 홀수번째 카드 배경색 변경 */
   }
 
-  &:last-child {
-    margin-bottom: 0;
+  @media (max-width: 768px) {
+    margin-right: 20px;
+    height: 50px; /* 작은 화면에서 카드 높이 줄이기 */
   }
 `;
-
 const ProfileImage = styled.img`
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  border-radius: 30%;
   object-fit: cover;
   margin-right: 15px;
+
+  @media (max-width: 768px) {
+    width: 45px;
+    height: 45px;
+  }
 `;
 
 const FriendDetails = styled.div`
@@ -61,14 +168,26 @@ const FriendDetails = styled.div`
 `;
 
 const Username = styled.span`
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: bold;
   color: #1e2a47;
+  white-space: nowrap; /* 텍스트가 한 줄로 유지되도록 */
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    font-weight: normal;
+  }
 `;
 
 const StatusMessage = styled.span`
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #555;
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    font-size: 0.7rem;
+    font-weight: normal;
+  }
 `;
 
 const ChatButton = styled.button`
@@ -83,11 +202,37 @@ const ChatButton = styled.button`
   &:hover {
     color: #0056b3;
   }
+
+  @media (max-width: 768px) {
+    margin-left: 50px;
+    margin-right: 10px;
+  }
+`;
+
+const ProfileButton = styled.button`
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  color: #f4d03f;
+  font-size: 1.5rem;
+  transition: color 0.3s;
+  margin-left: 100px;
+
+  &:hover {
+    color: #0056b3;
+  }
+
+  @media (max-width: 768px) {
+    margin-left: 20px;
+    margin-right: 10px;
+  }
 `;
 
 const FriendsList: React.FC = () => {
+  const [my, setMy] = useState<Friend>();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [uid, setUid] = useState<number>();
+  const [friendCnt, setFriendCnt] = useState<number>();
   const navigate = useNavigate();
   useEffect(() => {
     const fetchFriends = async () => {
@@ -97,8 +242,10 @@ const FriendsList: React.FC = () => {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
           },
         });
+        setMy(response.data.userInfo);
         setFriends(response.data.friends);
         setUid(response.data.uid);
+        setFriendCnt(response.data.friendCnt);
       } catch (error) {
         console.error('Failed to fetch friends', error);
       }
@@ -136,34 +283,68 @@ const FriendsList: React.FC = () => {
     }
   };
 
+  const handleProfileClick = async (uid: number) => {
+    try {
+      navigate(`/profile`);
+    } catch (error) {
+      console.error('Failed to navigate to profile', error);
+    }
+  };
+
   return (
-    <FriendListContainer>
-      {friends.length === 0 ? (
-        <p>친구가 없습니다.</p>
-      ) : (
-        <ul>
-          {friends.map(friend => (
-            <FriendItem key={friend.uid}>
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <ProfileImage
-                  src={friend.profile_img || '/maruu.jpg'}
-                  alt={friend.username}
-                />
-                <FriendDetails>
-                  <Username>{friend.username}</Username>
-                  {friend.status_msg && (
-                    <StatusMessage>{friend.status_msg}</StatusMessage>
-                  )}
-                </FriendDetails>
-              </div>
-              <ChatButton onClick={() => handleChatClick(friend.uid)}>
-                <FaCommentDots />
-              </ChatButton>
-            </FriendItem>
-          ))}
-        </ul>
+    <div>
+      <div style={{ borderBottom: '1px solid #ddd', margin: '10px 0' }} />
+      {my && (
+        <MyContainer>
+          <MyProfileCard>
+            <MyProfileImage
+              src={my.profile_img || '/maruu.jpeg'}
+              alt={my.username}
+            />
+            <MyDetails>
+              <MyUsername>{my.username}</MyUsername>
+              {my.status_msg && (
+                <MyStatusMessage>{my.status_msg}</MyStatusMessage>
+              )}
+            </MyDetails>
+            <ProfileButton onClick={() => handleProfileClick(my.uid)}>
+              <FaUser />
+            </ProfileButton>
+          </MyProfileCard>
+        </MyContainer>
       )}
-    </FriendListContainer>
+      <div style={{ borderBottom: '1px solid #ddd', margin: '10px 0' }} />
+      {friendCnt !== undefined && (
+        <FriendCount>{`친구 ${friendCnt}`}</FriendCount>
+      )}
+      <FriendListContainer>
+        {friends.length === 0 ? (
+          <p>친구가 없습니다.</p>
+        ) : (
+          <ul>
+            {friends.map(friend => (
+              <FriendCard key={friend.uid}>
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <ProfileImage
+                    src={friend.profile_img || '/maruu.jpeg'}
+                    alt={friend.username}
+                  />
+                  <FriendDetails>
+                    <Username>{friend.username}</Username>
+                    {friend.status_msg && (
+                      <StatusMessage>{friend.status_msg}</StatusMessage>
+                    )}
+                  </FriendDetails>
+                </div>
+                <ChatButton onClick={() => handleChatClick(friend.uid)}>
+                  <FaCommentDots />
+                </ChatButton>
+              </FriendCard>
+            ))}
+          </ul>
+        )}
+      </FriendListContainer>
+    </div>
   );
 };
 

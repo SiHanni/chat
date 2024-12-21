@@ -9,6 +9,10 @@ const ProfileContainer = styled.div`
   height: 100vh;
   background-color: #f4f4f9;
   font-family: 'Roboto', sans-serif;
+
+  @media (max-width: 768px) {
+    padding: 10px;
+  }
 `;
 
 const Content = styled.div`
@@ -21,6 +25,11 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    margin: 0;
+  }
 `;
 
 const ProfileForm = styled.form`
@@ -28,12 +37,20 @@ const ProfileForm = styled.form`
   flex-direction: column;
   gap: 20px;
   margin-top: 20px;
+
+  @media (max-width: 768px) {
+    gap: 15px;
+  }
 `;
 
 const Label = styled.label`
   margin-bottom: 5px; /* 라벨과 입력 칸 간의 간격 추가 */
   font-size: 1rem;
   color: #333;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const ProfileInput = styled.input`
@@ -44,6 +61,11 @@ const ProfileInput = styled.input`
   width: 100%;
   max-width: 200px;
   background-color: #f4f4f9;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
 `;
 
 const ProfileSelect = styled.select`
@@ -54,28 +76,40 @@ const ProfileSelect = styled.select`
   width: 100%;
   max-width: 100px;
   background-color: #f4f4f9;
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
 `;
 
-const ProfileButton = styled.button`
-  background-color: #eae1d9;
-  color: #1e2a47;
-  border: 0.1px solid #1e2a47;
-  padding: 14px 30px;
-  font-weight: bold;
-  border-radius: 30px;
-  width: 100%;
-  max-width: 200px;
-  align-self: center;
+const StyledButton = styled.button`
+  background-color: #ffe787; /* 버튼 색상 */
+  color: #fff;
+  font-size: 1rem;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.3s ease;
+  font-weight: bold;
+  width: 150px;
+  max-width: 100%;
 
   &:hover {
-    background-color: #d4c8b2;
-    border-color: #d4c8b2;
-    transform: translateY(-3px) scale(1.05);
+    background-color: #f4d03f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
   &:active {
-    transform: translateY(2px);
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.9rem; /* 작은 화면에서 글씨 크기 축소 */
+    padding: 12px;
   }
 `;
 
@@ -84,6 +118,10 @@ const ProfileImageWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   margin-bottom: 30px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 5px;
+  }
 `;
 
 const ProfileImage = styled.img`
@@ -92,11 +130,16 @@ const ProfileImage = styled.img`
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 20px;
-  opacity: 0.7;
+  opacity: 0.9;
   transition: opacity 0.3s ease;
 
   &:hover {
     opacity: 1;
+  }
+  @media (max-width: 768px) {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 15px;
   }
 `;
 
@@ -182,7 +225,7 @@ const ProfilePage: React.FC = () => {
     <ProfileContainer>
       <Content>
         <ProfileImageWrapper>
-          <ProfileImage src={profile_img || '/maruu.jpg'} alt='Profile' />
+          <ProfileImage src={profile_img || '/maruu.jpeg'} alt='Profile' />
         </ProfileImageWrapper>
         <ProfileForm onSubmit={handleProfileUpdate}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -220,7 +263,7 @@ const ProfilePage: React.FC = () => {
               <option value='alien'>외계인</option>
             </ProfileSelect>
           </div>
-          <ProfileButton type='submit'>프로필 수정</ProfileButton>
+          <StyledButton type='submit'>프로필 수정</StyledButton>
         </ProfileForm>
       </Content>
     </ProfileContainer>
