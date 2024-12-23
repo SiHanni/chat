@@ -6,8 +6,6 @@ import { ChatRoom } from '../type/chat';
 import io from 'socket.io-client';
 import { server_url } from '../common/serverConfig';
 
-const socket = io(server_url);
-
 // 스타일 정의
 const ChatRoomListContainer = styled.div`
   padding: 15px;
@@ -85,6 +83,14 @@ const ChatRoomsList: React.FC = () => {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [uid, setUid] = useState<number>();
   const navigate = useNavigate();
+
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    navigate('/');
+  }
+  const socket = io(`${server_url}`, {
+    auth: { token },
+  });
 
   useEffect(() => {
     const fetchChatRooms = async () => {

@@ -293,7 +293,7 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     if (!room_type || !room_id || !uid) {
       console.error('Missing required chat room information');
-      navigate('/'); // 홈 페이지 또는 적절한 경로로 이동
+      navigate('/');
     }
   }, [room_type, room_id, uid, navigate]);
 
@@ -312,7 +312,7 @@ const ChatPage: React.FC = () => {
     const token = localStorage.getItem('accessToken');
 
     const socketInstance = io(`${server_url}/chat`, {
-      auth: { token }, // 인증 토큰을 서버로 전달
+      auth: { token },
     });
     socketInstance.emit('joinRoom', { uid, room_id, room_type });
 
