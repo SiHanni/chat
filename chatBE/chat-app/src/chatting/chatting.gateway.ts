@@ -63,6 +63,14 @@ export class ChattingGateway
   }
   /** ws 서버에 연결될 떄 호출 (클라이언트가 서버에 연결을 시도할 때 실행) */
   handleConnection(client: Socket) {
+    const authToken = client.handshake.auth.token;
+
+    if (!authToken) {
+      this.logger.error(
+        `No authentication token provided is WS  :${client.id}`,
+      );
+      throw new BadRequestException('No authentication token provided');
+    }
     this.logger.log(
       `Client Connected: id:${client.id}, room:${JSON.stringify(client.rooms)}`,
     );
