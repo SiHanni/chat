@@ -1,10 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import FriendsList from '../components/FriendList';
 import FriendRequestsList from '../components/FriendRequestList';
 import FindFriendPage from './FindFriendPage';
 import ChatRoomsList from '../components/ChatRoomList';
+import { io, Socket } from 'socket.io-client';
+import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
 const MainContainer = styled.div`
@@ -170,8 +172,40 @@ const MoreMenu = styled.div<{ show: boolean }>`
 const MainPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('friends');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
   const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // 로그인 후 메인 페이지로 왔을 때 웹소켓 연결 확인 및 초기화
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      navigate('/');
+    }
+
+    if (!socket) {
+      const socketInstance = io(`${server_url}`, {
+        auth: { token },
+      });
+
+      socketInstance.on('connect', () => {
+        console.log('Connected to WebSocket');
+      });
+
+      socketInstance.on('disconnect', () => {
+        console.log('Disconnected from WebSocket');
+      });
+
+      setSocket(socketInstance);
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+        setSocket(null);
+      }
+    };
+  }, [socket, navigate]);
 
   // 로그아웃 처리 함수
   const handleLogout = () => {

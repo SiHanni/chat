@@ -30,6 +30,7 @@ const App: React.FC = () => {
         <Route path='/signUp' element={<SignUp />} />
 
         {/* PrivateRoute로 감싸서 /main 경로에 접근을 인증된 사용자로 제한 */}
+
         <Route element={<PrivateRoute />}>
           <Route path='/main' element={<MainPage />} />
           <Route path='/profile' element={<ProfilePage />} />

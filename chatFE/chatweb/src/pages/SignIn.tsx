@@ -146,6 +146,7 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
       handleLogin(data.accessToken);
+
       navigate('/main');
     } else {
       alert('Invalid credentials');

@@ -309,8 +309,11 @@ const ChatPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const socketInstance = io(`${server_url}/chat`);
-    //console.log('Emitting joinRoom:', { room_id, uid, room_type });
+    const token = localStorage.getItem('accessToken');
+
+    const socketInstance = io(`${server_url}/chat`, {
+      auth: { token }, // 인증 토큰을 서버로 전달
+    });
     socketInstance.emit('joinRoom', { uid, room_id, room_type });
 
     socketInstance.on('broadcastMessage', data => {

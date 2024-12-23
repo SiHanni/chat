@@ -6,6 +6,7 @@ import { FaCommentDots } from 'react-icons/fa';
 import { FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { server_url } from '../common/serverConfig';
+
 interface Friend {
   uid: number;
   username: string;

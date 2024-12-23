@@ -20,7 +20,6 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 
   const getFilePreviewIcon = () => {
     const iconPath = () => {
-      console.log('File Type:', fileType); // 파일 타입을 확인해 보세요.
       switch (fileType) {
         case 'jpg':
         case 'jpeg':
