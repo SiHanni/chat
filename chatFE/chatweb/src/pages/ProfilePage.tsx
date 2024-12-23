@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
+import { FiArrowLeft } from 'react-icons/fi';
 
 const ProfileContainer = styled.div`
   display: flex;
@@ -11,7 +12,42 @@ const ProfileContainer = styled.div`
   font-family: 'Roboto', sans-serif;
 
   @media (max-width: 768px) {
-    padding: 10px;
+    padding: 0px;
+  }
+`;
+
+const GoBackButton = styled.button`
+  background-color: #f4d03f;
+  color: white;
+  border: none;
+  padding: -15px;
+  margin-top: -5px;
+  margin-bottom: -55px;
+  transform: translateY(-10px);
+  font-size: 35rem;
+  border-radius: 50%; /* 원형 버튼 */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 40px; /* 버튼 크기 설정 */
+  height: 40px; /* 버튼 크기 설정 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background-color: #0056b3; /* Hover 시 색상 변경 */
+  }
+
+  &:active {
+    background-color: #004085; /* 클릭 시 색상 변경 */
+  }
+
+  @media (max-width: 768px) {
+    width: 35px;
+    height: 35px;
+    font-size: 35px;
+    margin-top: 0px;
+    margin-bottom: -15px;
   }
 `;
 
@@ -125,8 +161,8 @@ const ProfileImageWrapper = styled.div`
 `;
 
 const ProfileImage = styled.img`
-  width: 100px;
-  height: 100px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
   object-fit: cover;
   margin-bottom: 20px;
@@ -137,8 +173,8 @@ const ProfileImage = styled.img`
     opacity: 1;
   }
   @media (max-width: 768px) {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    height: 100px;
     margin-bottom: 15px;
   }
 `;
@@ -221,9 +257,16 @@ const ProfilePage: React.FC = () => {
     return <div>Loading...</div>;
   }
 
+  const handleGoBack = () => {
+    navigate('/main');
+  };
+
   return (
     <ProfileContainer>
       <Content>
+        <GoBackButton onClick={handleGoBack}>
+          <FiArrowLeft />
+        </GoBackButton>
         <ProfileImageWrapper>
           <ProfileImage src={profile_img || '/maruu.jpeg'} alt='Profile' />
         </ProfileImageWrapper>

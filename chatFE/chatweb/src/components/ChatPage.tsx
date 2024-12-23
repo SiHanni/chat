@@ -79,7 +79,6 @@ const ChatContainer = styled.div`
   padding-bottom: 70px;
   background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 
   @media (max-width: 768px) {
     width: 90%;
@@ -95,7 +94,7 @@ const MessageList = styled.div`
   display: flex;
   flex-direction: column;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     padding-right: 0px;
   }
 `;
@@ -108,7 +107,7 @@ const MessageContainer = styled.div.withConfig({
   margin-bottom: 15px;
   align-items: flex-start;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     margin-bottom: 5px; /* 작은 화면에서 메시지 간격 줄이기 */
   }
 `;
@@ -121,9 +120,9 @@ const ProfileImage = styled.img.withConfig({
   border-radius: 50%;
   margin: ${props => (props.isOwnMessage ? '0 0 5px 10px' : '0 10px 5px 0')};
 
-  @media (max-width: 600px) {
-    width: 35px; /* 모바일에서 이미지 크기 줄이기 */
-    height: 35px;
+  @media (max-width: 768px) {
+    width: 33px;
+    height: 33px;
   }
 `;
 
@@ -140,7 +139,7 @@ const MessageContent = styled.div.withConfig({
   flex-direction: column;
   align-items: ${props => (props.isOwnMessage ? 'flex-end' : 'flex-start')};
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     max-width: 40%;
     font-size: 0.75rem;
   }
@@ -151,7 +150,7 @@ const Username = styled.div`
   font-size: 0.8rem;
   margin-bottom: 5px;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     font-size: 0.7rem;
   }
 `;
@@ -159,7 +158,7 @@ const Username = styled.div`
 const MessageText = styled.div`
   font-size: 0.9rem;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     font-size: 0.7rem;
   }
 `;
@@ -170,7 +169,7 @@ const Timestamp = styled.div`
   color: #888;
   align-self: flex-end;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     font-size: 0.6rem;
   }
 `;
@@ -178,16 +177,19 @@ const Timestamp = styled.div`
 const InputContainer = styled.div`
   width: 90%;
   display: flex;
-  padding: 10px;
+  padding: 20px 10px;
   background-color: white;
-  /* box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1); */
   position: absolute;
   bottom: 0;
+  gap: 10px;
 
-  @media (max-width: 600px) {
-    width: 80%;
-    height: 10%;
-    padding: -5px;
+  @media (max-width: 768px) {
+    width: 90%;
+    height: 8%;
+    padding: 5px 10px;
+
+    bottom: -50px;
+    gap: 7px;
   }
 `;
 
@@ -198,7 +200,7 @@ const Input = styled.input`
   border-radius: 5px;
   margin-right: 15px;
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     padding: 9px; /* 작은 화면에서 입력창 여백 줄이기 */
   }
 `;
@@ -217,7 +219,7 @@ const SendButton = styled.button`
     background-color: #e1b347;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     padding: 5px 13px; /* 작은 화면에서 버튼 크기 줄이기 */
     margin-right: 5px;
   }
@@ -231,6 +233,7 @@ const FileButton = styled.button`
   cursor: pointer;
   margin-right: 5px;
   margin-left: -15px;
+  padding-bottom: -10px;
 
   &:hover {
     background-color: #bbb;
