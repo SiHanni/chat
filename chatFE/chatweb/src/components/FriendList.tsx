@@ -15,7 +15,8 @@ interface Friend {
   email: string;
 }
 /** 채팅방으로 이동시 웹소켓 연결을 확인하고 웹소켓 연결을 하기 위한 소켓 */
-const socket = io(server_url, { autoConnect: false });
+//const socket = io(server_url, { autoConnect: false });
+const socket = io(server_url);
 
 const MyContainer = styled.div`
   width: 100%;

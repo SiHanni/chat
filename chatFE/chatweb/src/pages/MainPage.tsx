@@ -189,11 +189,11 @@ const MainPage: React.FC = () => {
       });
 
       socketInstance.on('connect', () => {
-        console.log('Connected to WebSocket');
+        //console.log('Connected to WebSocket');
       });
 
       socketInstance.on('disconnect', () => {
-        console.log('Disconnected from WebSocket');
+        //console.log('Disconnected from WebSocket');
       });
 
       setSocket(socketInstance);
