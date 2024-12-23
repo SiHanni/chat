@@ -85,6 +85,7 @@ export class ChattingGateway
   @SubscribeMessage('ping')
   async handlePing(client: Socket) {
     client.emit('pong', { message: 'pong' });
+    // 추가 로직 필요
     //this.logger.log('ping-pong');
   }
 
