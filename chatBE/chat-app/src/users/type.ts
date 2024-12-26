@@ -4,3 +4,8 @@ export type JWTPayload = {
   iat: number;
   exp: number;
 };
+
+export type ChangePwdInput = {
+  inputedOldPwd: string;
+  newPwd: string;
+};

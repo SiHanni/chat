@@ -21,6 +21,7 @@ import { FriendInfoDto } from './dto/friend.dto';
 import { UserDto } from './dto/user.dto';
 import { CustomLoggerService } from '../common/logger/logger.service';
 import { AuthService } from 'src/auth/auth.service';
+import { ChangePwdInput } from './type';
 @Injectable()
 export class UsersService {
   constructor(
@@ -392,5 +393,41 @@ export class UsersService {
       where: { user: { id: uid }, is_accepted: false, is_request: false },
       relations: ['friend'],
     });
+  }
+
+  /** 비밀번호 수정 */
+  async changePassword(
+    uid: number,
+    pwdDto: ChangePwdInput,
+  ): Promise<{ status: string }> {
+    const user = await this.userRepository.findOne({
+      where: { id: uid },
+    });
+
+    const passwordCheck = await bcrypt.compare(
+      pwdDto.inputedOldPwd,
+      user.password,
+    );
+    if (!passwordCheck) {
+      throw new UnauthorizedException('Invalid password');
+    }
+    if (!pwdDto.newPwd) {
+      throw new BadRequestException('Required Data Missing');
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(pwdDto.newPwd, salt);
+
+    try {
+      const currentTime = new Date();
+      await this.userRepository.update(uid, {
+        password: hashedPassword,
+        updated_at: currentTime,
+      });
+      return { status: 'success' };
+    } catch (error) {
+      this.logger.error(`changePassword Error: ${error}`);
+      throw new InternalServerErrorException();
+    }
   }
 }

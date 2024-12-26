@@ -26,6 +26,7 @@ import { UserFriend } from './entities/user-friend.entity';
 import { Request } from 'express';
 import { CustomLoggerService } from 'src/common/logger/logger.service';
 import { Response } from 'express';
+import { ChangePwdInput } from './type';
 
 interface CustomRequest extends Request {
   user?: {
@@ -139,6 +140,16 @@ export class UsersController {
   async getFriendRequests(@Req() request: Request) {
     const uid = (request as CustomRequest).user?.subject;
     return this.usersService.getFriendRequests(uid);
+  }
+
+  @Post('changePwd')
+  @UseGuards(AuthGuard)
+  async changePassword(
+    @Req() request: Request,
+    @Body() changePwdDto: ChangePwdInput,
+  ) {
+    const uid = (request as CustomRequest).user?.subject;
+    return this.usersService.changePassword(uid, changePwdDto);
   }
   //가드 사용 예시
   //@UseGuards(AuthGuard)

@@ -15,6 +15,7 @@ import { CreateUserDto } from '../dto/create-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
+import { ChangePwdInput } from '../type';
 
 describe('signUp', () => {
   let service: UsersService;
@@ -233,6 +234,103 @@ describe('signIn', () => {
       if (!passwordCheck) {
         throw new UnauthorizedException('Invalid password');
       }
+    });
+  });
+});
+
+describe('changePassword', () => {
+  // 시나리오
+  // 1. 요청 유저 검증 (findOne) (기존 비밀번호 동일 체크)
+  // 2. 요청한 유저가 없을경우 에러 발생 (BadRequest)
+  // 3. 요청 받은 비밀번호 암호화
+  // 4. db 업데이트 (save)Or (update)
+  let service: UsersService;
+
+  const mockUserRepository = {
+    findOne: jest.fn(),
+    update: jest.fn(),
+  };
+
+  const mockBcrypt = {
+    compare: jest.fn(),
+    genSalt: jest.fn(),
+    hash: jest.fn(),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        { provide: getRepositoryToken(User), useValue: mockUserRepository },
+        { provide: bcrypt, useValue: mockBcrypt },
+      ],
+    }).compile();
+    service = module.get<UsersService>(UsersService);
+  });
+
+  // 기존 패스워드 체크
+  it('기존 패스워드 검증', () => {
+    const uid = 1;
+    const mockDto: ChangePwdInput = {
+      inputedOldPwd: 'wrongPassword',
+      newPwd: 'newPassword',
+    };
+
+    mockUserRepository.findOne.mockResolvedValue(uid);
+    mockBcrypt.compare.mockResolvedValue(false);
+
+    await expect(service.changePassword(uid, mockDto)).rejects.toThrow(
+      BadRequestException,
+    );
+    expect(mockBcrypt.compare).toHaveBeenCalled();
+  });
+
+  // 업데이트 에러
+  it('typeorm update error', () => {
+    const uid = 1;
+    const mockDto: ChangePwdInput = {
+      inputedOldPwd: 'wrongPassword',
+      newPwd: 'newPassword',
+    };
+    const mockNewHashedPassword = 'tqweqewfqew=134100001123';
+    mockBcrypt.compare.mockResolvedValue(true);
+    mockBcrypt.genSalt.mockResolvedValue('salt');
+    mockBcrypt.hash.mockResolvedValue('hashedNewPassword');
+    mockUserRepository.update.mockResolvedValue(false);
+
+    await expect(service.changePassword(uid, mockDto)).rejects.toThrow(
+      InternalServerErrorException,
+    );
+    expect(mockUserRepository.update).toHaveBeenCalledWith(uid, {
+      password: 'hashedNewPassword',
+      updated_at: expect.any(Date),
+    });
+  });
+
+  test('green', async () => {
+    const uid = 1;
+    const mockDto: ChangePwdInput = {
+      inputedOldPwd: 'oldPassword',
+      newPwd: 'newPassword',
+    };
+
+    mockUserRepository.findOne.mockResolvedValue(uid);
+    mockBcrypt.compare.mockResolvedValue(true);
+    mockBcrypt.genSalt.mockResolvedValue('salt');
+    mockBcrypt.hash.mockResolvedValue('hashedNewPassword');
+    mockUserRepository.update.mockResolvedValue({ affected: 1 });
+
+    const result = await service.changePassword(uid, mockDto);
+
+    expect(result).toEqual({ status: 'success' });
+    expect(mockBcrypt.compare).toHaveBeenCalledWith(
+      mockDto.inputedOldPwd,
+      'hashedPassword',
+    );
+    expect(mockBcrypt.hash).toHaveBeenCalledWith(mockDto.newPwd, 'salt');
+    expect(mockUserRepository.update).toHaveBeenCalledWith(uid, {
+      password: 'hashedNewPassword',
+      updated_at: expect.any(Date),
     });
   });
 });
