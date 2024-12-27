@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import FriendsList from '../components/FriendList';
@@ -30,6 +30,7 @@ const Header = styled.div`
   justify-content: space-between;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
+  position: relative;
 
   @media (max-width: 768px) {
     flex-direction: column;
@@ -110,62 +111,55 @@ const Content = styled.div`
   }
 `;
 
-const MoreMenu = styled.div<{ show: boolean }>`
+const MoreMenu = styled.div`
   position: absolute;
-  top: 60px;
-  right: 10px;
+  display: flex;
+  flex-direction: column;
   background-color: #f7f6ed;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  z-index: 1000;
   padding: 10px;
-  display: ${({ show }) => (show ? 'block' : 'none')};
-  width: 150px;
-  transition: background-color 0.3s ease;
+  top: 100%;
+  right: 30px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+
+  /* 메뉴 활성화 시 */
+  &.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
 
   @media (max-width: 768px) {
-    top: -40px;
-    right: 0;
-    width: 70px;
-    height: 30px;
-    font-size: 0.8em;
-    margin-right: 35px;
+    top: auto;
+    bottom: calc(100%);
+    right: 5px;
+  }
+`;
+
+const MoreMenuItem = styled.div`
+  padding: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: #1e2a47;
+  border-radius: 5px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+
+  &:hover {
+    background-color: #f2e6b6;
   }
 
-  & > button {
-    width: 100%;
-    padding: 10px;
-    background-color: #f7f6ed; /* 기본 배경색 */
-    color: #1e2a47; /* 텍스트 색상 */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em; /* 글씨 크기 조정 */
-    text-align: center;
-    position: relative;
-    overflow: hidden; /* 자식 요소가 버튼 밖으로 나가지 않도록 */
-    transition: transform 0.3s ease; /* 호버 시 애니메이션 */
-  }
-
-  & > button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(211, 211, 211, 0.3); /* 아주 얕은 회색 */
-    border-radius: 5px;
-    transform: scaleX(0); /* 처음에는 가로 크기를 0으로 설정 */
-    transform-origin: left; /* 왼쪽에서부터 확장되도록 설정 */
-    transition: transform 0.4s ease;
-  }
-
-  & > button:hover {
-    transform: translateY(-2px); /* 버튼 호버 시 살짝 위로 올라가는 효과 */
-  }
-
-  & > button:hover::before {
-    transform: scaleX(1); /* 호버 시 배경이 왼쪽에서부터 오른쪽으로 확장됨 */
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    / &:hover {
+      background-color: #f4d03f;
+      transform: scale(1.03);
+    }
   }
 `;
 
@@ -173,7 +167,6 @@ const MainPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('friends');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
-  const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -214,14 +207,8 @@ const MainPage: React.FC = () => {
     navigate('/'); // 홈 페이지로 이동
   };
 
-  // 탭 클릭 시 activeTab 변경
-  const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  const handleMoreClick = () => {
-    setShowMoreMenu(prevState => !prevState); // 현재 상태의 반대값으로 토글
-  };
+  const handleTabClick = (tab: string) => setActiveTab(tab);
+  const toggleMoreMenu = () => setShowMoreMenu(prev => !prev);
 
   return (
     <MainContainer>
@@ -252,13 +239,28 @@ const MainPage: React.FC = () => {
           >
             친구 요청
           </Tab>
-          <Tab isActive={activeTab === 'more'} onClick={handleMoreClick}>
+          <Tab isActive={activeTab === 'more'} onClick={toggleMoreMenu}>
             더보기
           </Tab>
+          {showMoreMenu && (
+            <MoreMenu className={showMoreMenu ? 'active' : ''}>
+              <MoreMenuItem onClick={() => navigate('/settings')}>
+                환경설정
+              </MoreMenuItem>
+              <MoreMenuItem onClick={handleLogout}>로그아웃</MoreMenuItem>
+              <MoreMenuItem
+                onClick={() =>
+                  window.open(
+                    'https://comic.naver.com/webtoon/list?titleId=796152',
+                    '_blank'
+                  )
+                }
+              >
+                마루는강쥐
+              </MoreMenuItem>
+            </MoreMenu>
+          )}
         </TabContainer>
-        <MoreMenu ref={moreMenuRef} show={showMoreMenu}>
-          <button onClick={handleLogout}>로그아웃</button>
-        </MoreMenu>
       </Header>
 
       <Content>

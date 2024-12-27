@@ -8,6 +8,7 @@ import ProfilePage from './pages/ProfilePage';
 import PrivateRoute from './components/PrivateRoute';
 import ChatPage from './components/ChatPage';
 import TokenManager from './common/tokenManager';
+import SettingsPage from './pages/SettingPage';
 
 const App: React.FC = () => {
   const refreshAuthToken = () => {
@@ -36,6 +37,7 @@ const App: React.FC = () => {
           <Route path='/profile' element={<ProfilePage />} />
           <Route path='/chat' element={<ChatPage />} />
           <Route path='/chat/:id' element={<ChatPage />} />
+          <Route path='/settings' element={<SettingsPage />} />
         </Route>
       </Routes>
     </Router>
