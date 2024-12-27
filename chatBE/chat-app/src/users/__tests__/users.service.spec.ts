@@ -269,7 +269,7 @@ describe('changePassword', () => {
   });
 
   // 기존 패스워드 체크
-  it('기존 패스워드 검증', () => {
+  it('기존 패스워드 검증', async () => {
     const uid = 1;
     const mockDto: ChangePwdInput = {
       inputedOldPwd: 'wrongPassword',
@@ -286,13 +286,13 @@ describe('changePassword', () => {
   });
 
   // 업데이트 에러
-  it('typeorm update error', () => {
+  it('typeorm update error', async () => {
     const uid = 1;
     const mockDto: ChangePwdInput = {
       inputedOldPwd: 'wrongPassword',
       newPwd: 'newPassword',
     };
-    const mockNewHashedPassword = 'tqweqewfqew=134100001123';
+
     mockBcrypt.compare.mockResolvedValue(true);
     mockBcrypt.genSalt.mockResolvedValue('salt');
     mockBcrypt.hash.mockResolvedValue('hashedNewPassword');

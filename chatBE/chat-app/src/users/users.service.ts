@@ -409,7 +409,7 @@ export class UsersService {
       user.password,
     );
     if (!passwordCheck) {
-      throw new UnauthorizedException('Invalid password');
+      throw new BadRequestException('Invalid password');
     }
     if (!pwdDto.newPwd) {
       throw new BadRequestException('Required Data Missing');
