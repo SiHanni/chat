@@ -179,6 +179,28 @@ const ProfileImage = styled.img`
   }
 `;
 
+const ModalBackdrop = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Modal = styled.div`
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+`;
+
 interface UserProfile {
   id: number;
   username: string;
@@ -192,6 +214,10 @@ const ProfilePage: React.FC = () => {
   const [profile_img, setProfileImg] = useState('');
   const [gender, setGender] = useState('');
   const [status_msg, setStatusMsg] = useState('');
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newProfileImg, setNewProfileImg] = useState<File | null>(null);
+
   const navigate = useNavigate();
 
   const getProfile = async () => {
@@ -230,9 +256,9 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    const updateData = { username, profile_img, gender, status_msg };
+    const updateData = { username, gender, status_msg };
 
-    const response = await fetch(`${server_url}/users/update`, {
+    const response = await fetch(`${server_url}/users/updateProfile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -261,6 +287,71 @@ const ProfilePage: React.FC = () => {
     navigate('/main');
   };
 
+  const handleImageClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setNewProfileImg(file);
+    } else {
+      alert('Please select a valid image file');
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!newProfileImg) {
+      alert('No image selected');
+      return;
+    }
+
+    //const reader = new FileReader();
+    //reader.onloadend = async () => {
+    //  const fileData = reader.result as ArrayBuffer;
+
+    const formData = new FormData();
+    formData.append('profile_img_name', newProfileImg.name);
+    formData.append('profile_img_data', newProfileImg);
+    formData.append('profile_img_content_type', newProfileImg.type);
+
+    //console.log(formData);
+
+    const token = localStorage.getItem('accessToken');
+    try {
+      const response = await fetch(`${server_url}/users/updateProfileImg`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const responseData = await response.json(); // 서버에서 반환한 JSON 데이터를 파싱
+
+      if (responseData.status === 'success') {
+        //alert('Profile image updated successfully');
+        setProfileImg(responseData.new_profile_img); // 서버에서 반환된 이미지 URL로 프로필 이미지를 업데이트
+        setIsModalOpen(false);
+      } else {
+        //alert('Failed to update profile image');
+      }
+    } catch (error) {
+      //console.error('Upload image error:', error);
+    }
+    //};
+
+    //reader.readAsArrayBuffer(newProfileImg); // ArrayBuffer로 파일 읽기
+  };
+
   return (
     <ProfileContainer>
       <Content>
@@ -268,7 +359,11 @@ const ProfilePage: React.FC = () => {
           <FiArrowLeft />
         </GoBackButton>
         <ProfileImageWrapper>
-          <ProfileImage src={profile_img || '/maruu.jpeg'} alt='Profile' />
+          <ProfileImage
+            src={profile_img || '/maruu.jpeg'}
+            alt='Profile'
+            onClick={handleImageClick}
+          />
         </ProfileImageWrapper>
         <ProfileForm onSubmit={handleProfileUpdate}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -277,14 +372,6 @@ const ProfilePage: React.FC = () => {
               type='text'
               value={username}
               onChange={e => setUsername(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <Label>이미지url</Label>
-            <ProfileInput
-              type='text'
-              value={profile_img}
-              onChange={e => setProfileImg(e.target.value)}
             />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -309,6 +396,17 @@ const ProfilePage: React.FC = () => {
           <StyledButton type='submit'>프로필 수정</StyledButton>
         </ProfileForm>
       </Content>
+
+      {isModalOpen && (
+        <ModalBackdrop onClick={handleCloseModal}>
+          <Modal onClick={e => e.stopPropagation()}>
+            <h2>프로필 이미지 변경</h2>
+            <input type='file' accept='image/*' onChange={handleImageChange} />
+            <StyledButton onClick={handleUploadImage}>변경</StyledButton>
+            <StyledButton onClick={handleCloseModal}>닫기</StyledButton>
+          </Modal>
+        </ModalBackdrop>
+      )}
     </ProfileContainer>
   );
 };
