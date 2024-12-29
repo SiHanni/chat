@@ -8,6 +8,10 @@ import {
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
+export enum Content {
+  CHAT = 'chat',
+  PROFILE = 'profile',
+}
 @Entity('s3_metadata')
 export class S3Metadata {
   @PrimaryGeneratedColumn()
@@ -21,7 +25,7 @@ export class S3Metadata {
   })
   created_at: Date;
 
-  @Column()
+  @Column({ default: null })
   room_id: number;
 
   @ManyToOne(() => User, { eager: true, nullable: false })
@@ -40,6 +44,13 @@ export class S3Metadata {
   @Column()
   s3_key: string;
 
-  @Column()
+  @Column({ default: null })
   client_id: string;
+
+  @Column({
+    type: 'enum',
+    enum: Content,
+    default: null,
+  })
+  content_type: Content;
 }

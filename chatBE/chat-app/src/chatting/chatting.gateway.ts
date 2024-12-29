@@ -155,11 +155,11 @@ export class ChattingGateway
       file_data,
       content_type,
     } = chatFiledto;
-    //  Buffer로 변환후 fs에 저장
+
     const buffer = Buffer.from(file_data);
     const client_id = client.id;
 
-    const s3Upload = await this.s3Service.uploadFileToS3(
+    const s3Upload = await this.s3Service.uploadChatFileToS3(
       sender_id,
       room_id,
       buffer,

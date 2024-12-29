@@ -9,7 +9,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentDate } from '../time';
 import { InjectRepository } from '@nestjs/typeorm';
-import { S3Metadata } from './entities/s3.entity';
+import { Content, S3Metadata } from './entities/s3.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 @Injectable()
@@ -44,7 +44,9 @@ export class S3Service {
       this.logger.log('development s3 bucket');
     }
   }
-  async uploadFileToS3(
+
+  async uploadToS3() {}
+  async uploadChatFileToS3(
     sender_id: number,
     room_id: number,
     file_buffer: Buffer,
@@ -83,6 +85,49 @@ export class S3Service {
             s3_path: s3PullPath,
             s3_key: s3Path,
             client_id: client_id,
+            content_type: Content.CHAT,
+          });
+          await this.s3Repository.save(s3Metadata);
+          return s3PullPath;
+        }
+      }
+    } catch (error) {
+      this.logger.error(`S3 Upload Error::${error}`);
+    }
+  }
+
+  async uploadProfileImgToS3(
+    uid: number,
+    file_buffer: Buffer,
+    file_name: string,
+    content_type: string,
+  ) {
+    const uuid = uuidv4();
+    const s3Path = `uploads/user_profileImg/${uuid}`;
+
+    const s3Params = {
+      Key: s3Path,
+      Body: file_buffer,
+      Bucket: this.bucketName,
+      ContentType: content_type,
+      ACL: ObjectCannedACL.public_read,
+    };
+    const command = new PutObjectCommand(s3Params);
+    try {
+      const uploadS3 = await this.s3Client.send(command);
+      if (uploadS3) {
+        const user = await this.userRepository.findOne({
+          where: { id: uid },
+        });
+        if (user) {
+          const s3PullPath = `https://${this.bucketName}.s3.ap-northeast-2.amazonaws.com/${s3Path}`;
+          const s3Metadata = await this.s3Repository.create({
+            user: user,
+            original_filename: file_name,
+            uuid: uuid,
+            s3_path: s3PullPath,
+            s3_key: s3Path,
+            content_type: Content.PROFILE,
           });
           await this.s3Repository.save(s3Metadata);
           return s3PullPath;

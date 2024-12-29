@@ -8,11 +8,10 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-//import isImageURL from 'image-url-validator';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
 import { SignInUserDto } from './dto/signIn-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateProfileImageDto, UpdateUserDto } from './dto/update-user.dto';
 import { FriendDto } from './dto/friend.dto';
 import { User } from './entities/user.entity';
 import { UserFriend } from './entities/user-friend.entity';
@@ -22,6 +21,8 @@ import { UserDto } from './dto/user.dto';
 import { CustomLoggerService } from '../common/logger/logger.service';
 import { AuthService } from 'src/auth/auth.service';
 import { ChangePwdInput } from './type';
+import { S3Service } from 'src/common/s3/s3.service';
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -31,7 +32,9 @@ export class UsersService {
     private readonly userFriendRepository: Repository<UserFriend>,
     private readonly logger: CustomLoggerService,
     private authService: AuthService,
+    private readonly s3Service: S3Service,
   ) {}
+
   // 회원가입에는 이메일, 유저네임, 패스워드만 받고 프로필 이미지는 기본이미지, 폰 인증은 추후
   async signUp(createUserDto: CreateUserDto): Promise<User> {
     const { email, username, password } = createUserDto;
@@ -132,11 +135,47 @@ export class UsersService {
     return user;
   }
 
+  async updateProfileImage(
+    uid: number,
+    updateProfileImgDto: UpdateProfileImageDto,
+  ): Promise<{ status: string; new_profile_img: string }> {
+    const { profile_img_name, profile_img_content_type, profile_img_data } =
+      updateProfileImgDto;
+    console.log(profile_img_content_type);
+    console.log(profile_img_name);
+    const user = await this.userRepository.findOne({
+      where: { id: uid },
+    });
+
+    try {
+      if (profile_img_data) {
+        const buffer = Buffer.from(profile_img_data);
+
+        const s3Upload = await this.s3Service.uploadProfileImgToS3(
+          uid,
+          buffer,
+          profile_img_name,
+          profile_img_content_type,
+        );
+        if (s3Upload) {
+          user.profile_img = s3Upload;
+          await this.userRepository.save(user);
+
+          return { status: 'success', new_profile_img: s3Upload };
+        }
+      }
+    } catch (error) {
+      this.logger.error(
+        `error occured in profile image update user:${user.id}, ${error}`,
+      );
+    }
+  }
+
   async updateProfile(
     uid: number,
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
-    const { username, profile_img, gender, status_msg } = updateUserDto;
+    const { username, gender, status_msg } = updateUserDto;
 
     const user = await this.userRepository.findOne({
       where: { id: uid },
@@ -154,31 +193,28 @@ export class UsersService {
       }
       user.username = username;
     }
+    try {
+      if (gender) {
+        console.log(gender, Gender.FEMALE);
+        if (![Gender.MALE, Gender.FEMALE, Gender.ALIEN].includes(gender)) {
+          throw new BadRequestException('Invalid gender value');
+        }
 
-    if (profile_img) {
-      // TODO: TypeError: (0 , image_url_validator_1.default) is not a function 에러 해결
-      //const isValidImageUrl = await isImageURL(profile_img);
-      //if (!isValidImageUrl) {
-      //  throw new BadRequestException('Inavalid image Url');
-      //}
-      user.profile_img = profile_img;
-    }
-
-    if (gender) {
-      console.log(gender, Gender.FEMALE);
-      if (![Gender.MALE, Gender.FEMALE, Gender.ALIEN].includes(gender)) {
-        throw new BadRequestException('Invalid gender value');
+        user.gender = gender;
       }
-      console.log(':ISER', user);
-      user.gender = gender;
-    }
 
-    if (status_msg) {
-      user.status_msg = status_msg;
+      if (status_msg) {
+        user.status_msg = status_msg;
+      }
+      const updatedUser = await this.userRepository.save(user);
+      return updatedUser;
+    } catch (error) {
+      this.logger.error(
+        `error occured in profile update user:${user.id}, ${error}`,
+      );
     }
-    const updatedUser = await this.userRepository.save(user);
-    return updatedUser;
   }
+
   async findFriend({ email }: FriendDto): Promise<FriendInfoDto> {
     const friend = await this.userRepository.findOne({
       where: { email: email },

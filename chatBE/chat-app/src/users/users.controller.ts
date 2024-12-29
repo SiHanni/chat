@@ -13,7 +13,10 @@ import {
   UnauthorizedException,
   BadRequestException,
   Res,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -24,7 +27,7 @@ import { FriendInfoDto } from './dto/friend.dto';
 import { UserFriend } from './entities/user-friend.entity';
 //import { User } from './entities/user.entity';
 import { Request } from 'express';
-import { CustomLoggerService } from 'src/common/logger/logger.service';
+//import { CustomLoggerService } from 'src/common/logger/logger.service';
 import { Response } from 'express';
 import { ChangePwdInput } from './type';
 
@@ -39,7 +42,7 @@ interface CustomRequest extends Request {
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly logger: CustomLoggerService,
+    //private readonly logger: CustomLoggerService,
   ) {}
 
   @Post('signUp')
@@ -68,7 +71,6 @@ export class UsersController {
   @Get('getMyProfile')
   @UseGuards(AuthGuard)
   async getMyProfile(@Req() request: Request) {
-    this.logger.log('Logger TEST');
     const userIdFromJwt = (request as CustomRequest).user?.subject;
     if (!userIdFromJwt) {
       throw new UnauthorizedException('not allowed user request');
@@ -76,7 +78,27 @@ export class UsersController {
     return await this.usersService.getMyProfile(userIdFromJwt);
   }
 
-  @Patch('update')
+  @Patch('updateProfileImg')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('profile_img_data'))
+  async updateProfileImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('profile_img_name') profileImgName: string,
+    @Body('profile_img_content_type') profileImgContentType: string,
+    @Req() request: Request,
+  ) {
+    const userIdFromJwt = (request as CustomRequest).user?.subject;
+    if (!userIdFromJwt) {
+      throw new UnauthorizedException('not allowed user request');
+    }
+    return await this.usersService.updateProfileImage(userIdFromJwt, {
+      profile_img_name: profileImgName,
+      profile_img_content_type: profileImgContentType,
+      profile_img_data: file.buffer, // multer가 파일을 buffer로 변환
+    });
+  }
+
+  @Patch('updateProfile')
   @UseGuards(AuthGuard)
   async updateProfile(
     @Body() updateUserDto: UpdateUserDto,

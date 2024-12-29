@@ -8,10 +8,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserFriend } from './entities/user-friend.entity';
 import { AuthService } from 'src/auth/auth.service';
 import { TokenHistory } from 'src/auth/entities/auth-history.entity';
-
+import { S3Service } from 'src/common/s3/s3.service';
+import { S3Metadata } from 'src/common/s3/entities/s3.entity';
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserFriend, TokenHistory]),
+    TypeOrmModule.forFeature([User, UserFriend, TokenHistory, S3Metadata]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -22,7 +23,7 @@ import { TokenHistory } from 'src/auth/entities/auth-history.entity';
     }),
   ],
   controllers: [UsersController],
-  providers: [UsersService, AuthService],
+  providers: [UsersService, AuthService, S3Service],
   exports: [UsersService],
 })
 export class UsersModule {}

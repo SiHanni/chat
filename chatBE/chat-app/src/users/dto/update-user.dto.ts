@@ -5,15 +5,10 @@ export enum Gender {
   FEMALE = 'female',
   ALIEN = 'alien',
 }
-
 export class UpdateUserDto {
   @IsOptional()
   @IsString()
   username?: string;
-
-  @IsOptional()
-  @IsString()
-  profile_img?: string;
 
   @IsOptional()
   @IsString()
@@ -26,4 +21,18 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   status_msg?: string;
+}
+
+export class UpdateProfileImageDto {
+  @IsOptional()
+  @IsString()
+  profile_img_name?: string;
+
+  @IsOptional()
+  @IsString()
+  profile_img_data?: Buffer;
+
+  @IsOptional()
+  @IsString()
+  profile_img_content_type?: string;
 }
