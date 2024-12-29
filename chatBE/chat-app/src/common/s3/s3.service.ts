@@ -9,7 +9,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentDate } from '../time';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Content, S3Metadata } from './entities/s3.entity';
+import { S3Content, S3Metadata } from './entities/s3.entity';
 import { Repository } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 @Injectable()
@@ -85,7 +85,7 @@ export class S3Service {
             s3_path: s3PullPath,
             s3_key: s3Path,
             client_id: client_id,
-            content_type: Content.CHAT,
+            content_type: S3Content.CHAT,
           });
           await this.s3Repository.save(s3Metadata);
           return s3PullPath;
@@ -127,7 +127,7 @@ export class S3Service {
             uuid: uuid,
             s3_path: s3PullPath,
             s3_key: s3Path,
-            content_type: Content.PROFILE,
+            content_type: S3Content.PROFILE,
           });
           await this.s3Repository.save(s3Metadata);
           return s3PullPath;

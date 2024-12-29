@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { TokenHistory } from './entities/auth-history.entity';
 import { checkTimeDiff } from 'src/common/time';
+import { S3Content } from 'src/common/s3/entities/s3.entity';
 
 @Injectable()
 export class AuthService {
@@ -145,5 +146,11 @@ export class AuthService {
       this.logger.error(`Error updating tokens :refreshToken: uid: ${error}`);
       throw new Error('Error updating tokens');
     }
+  }
+  /** 유저 등급에 따라 S3 upload 횟수 제한을 확인 */
+  async fileUploadValidator(uid: number, content_type: S3Content) {
+    // 유저 정보 찾아오기 (join해서 s3 metadata 오늘 날짜로 파라메터 타입에 몇번 했는지)
+    // 유저 등급이 admin, 결제자이면 무제한, 일반 유저면 프로필 5회, 채팅 파일전송 10회 제한
+    console.log(uid, content_type);
   }
 }

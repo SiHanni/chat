@@ -6,10 +6,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { User } from 'src/users/entities/user.entity';
 import { TokenHistory } from './entities/auth-history.entity';
+import { S3Metadata } from 'src/common/s3/entities/s3.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, TokenHistory]),
+    TypeOrmModule.forFeature([User, TokenHistory, S3Metadata]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

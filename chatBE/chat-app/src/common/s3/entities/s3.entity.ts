@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
-export enum Content {
+export enum S3Content {
   CHAT = 'chat',
   PROFILE = 'profile',
 }
@@ -49,8 +49,8 @@ export class S3Metadata {
 
   @Column({
     type: 'enum',
-    enum: Content,
+    enum: S3Content,
     default: null,
   })
-  content_type: Content;
+  content_type: S3Content;
 }
