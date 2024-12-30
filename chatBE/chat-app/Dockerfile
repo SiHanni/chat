@@ -1,5 +1,12 @@
 FROM node:18-alpine
 
+# Install tzdata for time zone management
+RUN apk add --no-cache tzdata
+
+# Set the timezone to Asia/Seoul (Korea Standard Time)
+RUN cp /usr/share/zoneinfo/Asia/Seoul /etc/localtime && \
+    echo "Asia/Seoul" > /etc/timezone
+
 WORKDIR /app
 
 COPY package*.json ./

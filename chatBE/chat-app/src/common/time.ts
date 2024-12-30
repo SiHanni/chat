@@ -3,6 +3,13 @@
 // Unix는 1970년 1월 1일 00:00:00 UTC를 기준으로, 이를 EPOCH TIME이라고 정의했다.
 // 이후 Unix 시스템에서 모든 시간이 이 기준부터 경과된 초 단위의 숫자로 표현되게 된 것이다.
 // 유닉스타임은 이 전통에서 비롯되어진 이름이다.
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 export const checkTimeDiff = (reqUnixTime: number) => {
   const currentTime = Math.floor(Date.now() / 1000);
   const timediff = reqUnixTime - currentTime;
@@ -17,4 +24,9 @@ export const getCurrentDate = () => {
   const day = String(now.getDate()).padStart(2, '0');
 
   return `${year}${month}${day}`;
+};
+
+export const getKSTUnixTimestampMs = () => {
+  console.log('GET', dayjs().tz('Asia/Seoul'));
+  return dayjs().tz('Asia/Seoul').valueOf();
 };

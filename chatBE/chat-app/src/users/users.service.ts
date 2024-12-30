@@ -22,6 +22,7 @@ import { CustomLoggerService } from '../common/logger/logger.service';
 import { AuthService } from 'src/auth/auth.service';
 import { ChangePwdInput } from './type';
 import { S3Service } from 'src/common/s3/s3.service';
+import { getKSTUnixTimestampMs } from 'src/common/time';
 
 @Injectable()
 export class UsersService {
@@ -234,19 +235,17 @@ export class UsersService {
 
   /** 친구 요청 */
   async sendFriendRequest(uid, { email }: FriendDto): Promise<UserFriend[]> {
-    console.log('USER:', uid);
-    console.log('EMAIL F', email);
     const user = await this.userRepository.findOne({ where: { id: uid } });
     const friend = await this.userRepository.findOne({
       where: { email: email },
     });
 
     if (uid === friend.id) {
-      throw new BadRequestException('Inavalid request');
+      throw new BadRequestException('Invalid request');
     }
 
     if (!user || !friend) {
-      throw new BadRequestException('Inavalid request:: No target');
+      throw new BadRequestException('Invalid request:: No target');
     }
 
     const alreadyFriend = await this.userFriendRepository.find({
@@ -264,7 +263,7 @@ export class UsersService {
       ],
     });
     if (alreadyFriend.length > 0) {
-      throw new BadRequestException('Inavalid request:: Already friend');
+      throw new BadRequestException('Invalid request:: Already friend');
     }
 
     const existingRequest = await this.userFriendRepository.find({
@@ -281,13 +280,20 @@ export class UsersService {
         //},
       ],
     });
+    console.log(existingRequest.length);
     if (existingRequest.length > 0) {
       // 10초 제한
+      const reqLimitSecond = 10;
       const lastRequestTime = existingRequest[0].created_at;
+      console.log(lastRequestTime);
+      const kst = getKSTUnixTimestampMs();
+      console.log('kls', kst);
       const currentTime = new Date();
-      const timeDiff =
-        (currentTime.getTime() - lastRequestTime.getTime()) / 1000;
-      if (timeDiff < 10) {
+      console.log('CUrrenmt', currentTime.getTime());
+      console.log('?', lastRequestTime);
+      const timeDiff = (kst - lastRequestTime.getTime()) / 1000;
+      console.log('timediff', timeDiff);
+      if (timeDiff < reqLimitSecond) {
         throw new BadRequestException(
           'Too many requests. Please try again later.',
         );

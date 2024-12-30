@@ -10,6 +10,9 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('SERVER_PORT');
   const logger = app.get(CustomLoggerService);
+  const timeZone = configService.get<string>('TZ') || 'Asia/Seoul';
+  process.env.TZ = timeZone;
+  console.log(process.env.TZ);
 
   app.enableCors({
     origin: [

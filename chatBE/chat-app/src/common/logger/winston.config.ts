@@ -1,5 +1,6 @@
 import * as winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
+import moment from 'moment-timezone';
 
 winston.addColors({
   error: 'bold red',
@@ -15,7 +16,9 @@ export const winstonConfig = {
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
-        winston.format.timestamp(),
+        winston.format.timestamp({
+          format: () => moment().tz('Asia/Seoul').format('YYYY-MM-DD HH:mm:ss'), // 한국 시간으로 포맷 설정
+        }),
         winston.format.colorize(),
         winston.format.printf(({ level, message, timestamp }) => {
           return `[${timestamp}] ${level}: ${message}`;
