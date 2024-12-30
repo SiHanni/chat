@@ -284,7 +284,13 @@ export class UsersService {
       if (existingRequest.length > 0) {
         // 10초 제한
         const reqLimitSecond = 5;
-        const lastRequestTime = existingRequest[0].updated_at;
+        let lastRequestTime: Date | any;
+        if (existingRequest[0].updated_at === null) {
+          lastRequestTime = existingRequest[0].created_at;
+        } else {
+          lastRequestTime = existingRequest[0].updated_at;
+        }
+
         const kstMs = getKSTUnixTimestampMs();
         const timeDiff = (kstMs - lastRequestTime.getTime()) / 1000;
         if (timeDiff < reqLimitSecond) {
