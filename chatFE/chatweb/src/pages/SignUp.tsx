@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
+import axios from 'axios';
 
 // 스타일 정의
 const SignUpContainer = styled.div`
@@ -124,30 +125,32 @@ const SignUp: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch(`${server_url}/users/signUp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, email, password }),
-    });
+    try {
+      const response = await axios.post(`${server_url}/users/signUp`, {
+        username,
+        email,
+        password,
+      });
 
-    if (response.ok) {
-      alert('회원가입 완료');
-      navigate('/'); // 회원가입 후 로그인 화면으로 이동
-    } else {
-      const errorData = await response.json();
-      setErrorMessage(errorData.message);
+      if (response.status === 201) {
+        alert('회원가입 완료');
+        navigate('/');
+      }
+    } catch (error: any) {
+      if (error.response) {
+        const errorMessage = error.response.data.message;
 
-      if (errorData.message === 'Email already exists') {
-        alert('이미 가입된 이메일입니다.');
+        if (errorMessage === 'Email already exists') {
+          alert('이미 가입된 이메일입니다.');
+        } else if (errorMessage === 'Username already exists') {
+          alert('이미 가입된 유저네임입니다.');
+        }
       } else {
-        alert('Invalid credentials');
+        alert('회원가입 중 문제가 발생했습니다.');
       }
     }
   };
@@ -197,7 +200,6 @@ const SignUp: React.FC = () => {
             <StyledButton type='submit'>회원 가입</StyledButton>
           </Buttons>
         </form>
-        {errorMessage && <div style={{ color: '#FFD700' }}>{errorMessage}</div>}
       </FormContainer>
     </SignUpContainer>
   );

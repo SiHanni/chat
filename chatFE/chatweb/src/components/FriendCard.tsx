@@ -79,7 +79,7 @@ const FriendButton = styled.button`
 const FriendCard: React.FC<{ friend: FindFriend }> = ({ friend }) => {
   const handleSendRequest = async () => {
     try {
-      await axios.post(
+      const response = await axios.post(
         `${server_url}/users/send/friend-request`,
         { email: friend.email },
         {
@@ -88,9 +88,14 @@ const FriendCard: React.FC<{ friend: FindFriend }> = ({ friend }) => {
           },
         }
       );
-      alert('친구 요청이 보내졌습니다!');
+      if (response.data.msg === 'success') {
+        alert('친구 요청 완료');
+      } else if (response.data.msg === 'too many request') {
+        alert('잠시 후 다시 시도해주세요');
+      }
     } catch (err) {
-      alert('친구 요청에 실패했습니다.');
+      // 상세화 필요
+      alert('친구 요청 실패');
     }
   };
 

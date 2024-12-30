@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import axios from 'axios';
 import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
@@ -130,17 +131,14 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const response = await fetch(`${server_url}/users/signIn`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-      credentials: 'include',
-    });
+    try {
+      const response = await axios.post(
+        `${server_url}/users/signIn`,
+        { email, password },
+        { withCredentials: true } // 쿠키 포함
+      );
 
-    if (response.ok) {
-      const data = await response.json();
+      const data = await response.data;
 
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
@@ -148,8 +146,13 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
       handleLogin(data.accessToken);
 
       navigate('/main');
-    } else {
-      alert('Invalid credentials');
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        // HTTP 상태 코드를 기반으로 에러 처리
+        alert('Invalid credentials');
+      } else {
+        console.error('Unexpected error:', error);
+      }
     }
   };
 
