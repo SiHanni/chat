@@ -22,7 +22,7 @@ import { CustomLoggerService } from '../common/logger/logger.service';
 import { AuthService } from 'src/auth/auth.service';
 import { ChangePwdInput } from './type';
 import { S3Service } from 'src/common/s3/s3.service';
-import { getKSTUnixTimestampMs } from 'src/common/time';
+import { getKSTUnixTimestampMs, getKST } from 'src/common/time';
 
 @Injectable()
 export class UsersService {
@@ -57,9 +57,12 @@ export class UsersService {
           message: 'Email already exists',
         });
       }
-      //if (checkUser.username === username) {
-      //  throw new ConflictException('Username already exists');
-      //}
+      if (checkUser.username === username) {
+        throw new ConflictException({
+          statusCode: 409,
+          message: 'Username already exists',
+        });
+      }
     }
 
     const salt = await bcrypt.genSalt(12);
@@ -75,9 +78,7 @@ export class UsersService {
       return savedUser;
     } catch {
       this.logger.error(`Save User Error :: ${JSON.stringify(newUser)}`);
-      throw new InternalServerErrorException(
-        'An error occurred while saving the user',
-      );
+      throw new InternalServerErrorException();
     }
   }
   async signIn(signInUserDto: SignInUserDto): Promise<{
@@ -220,7 +221,6 @@ export class UsersService {
     const friend = await this.userRepository.findOne({
       where: { email: email },
     });
-    console.log('QWE', friend);
     if (!friend) {
       throw new BadRequestException('Invalid User');
     }
@@ -234,7 +234,7 @@ export class UsersService {
   }
 
   /** 친구 요청 */
-  async sendFriendRequest(uid, { email }: FriendDto): Promise<UserFriend[]> {
+  async sendFriendRequest(uid, { email }: FriendDto): Promise<{ msg: string }> {
     const user = await this.userRepository.findOne({ where: { id: uid } });
     const friend = await this.userRepository.findOne({
       where: { email: email },
@@ -280,52 +280,51 @@ export class UsersService {
         //},
       ],
     });
-    console.log(existingRequest.length);
-    if (existingRequest.length > 0) {
-      // 10초 제한
-      const reqLimitSecond = 10;
-      const lastRequestTime = existingRequest[0].created_at;
-      console.log(lastRequestTime);
-      const kst = getKSTUnixTimestampMs();
-      console.log('kls', kst);
-      const currentTime = new Date();
-      console.log('CUrrenmt', currentTime.getTime());
-      console.log('?', lastRequestTime);
-      const timeDiff = (kst - lastRequestTime.getTime()) / 1000;
-      console.log('timediff', timeDiff);
-      if (timeDiff < reqLimitSecond) {
-        throw new BadRequestException(
-          'Too many requests. Please try again later.',
+    try {
+      if (existingRequest.length > 0) {
+        // 10초 제한
+        const reqLimitSecond = 5;
+        const lastRequestTime = existingRequest[0].updated_at;
+        const kstMs = getKSTUnixTimestampMs();
+        const timeDiff = (kstMs - lastRequestTime.getTime()) / 1000;
+        if (timeDiff < reqLimitSecond) {
+          return { msg: 'too many request' };
+        }
+        const kst = getKST();
+        await this.userFriendRepository.update(
+          { id: existingRequest[0].id },
+          {
+            updated_at: kst,
+          },
         );
+        return { msg: 'success' };
       }
-      await this.userFriendRepository.remove(existingRequest);
       const userToFriend = this.userFriendRepository.create({
         user: user,
         friend: friend,
         is_accepted: false,
         is_request: true,
       });
-      return await this.userFriendRepository.save([userToFriend]);
+      const friendToUser = this.userFriendRepository.create({
+        user: friend,
+        friend: user,
+        is_accepted: false,
+      });
+      await this.userFriendRepository.save([userToFriend, friendToUser]);
+      return { msg: 'success' };
+    } catch (error) {
+      this.logger.error(`error occured friend request: ${error}`);
+      throw new InternalServerErrorException();
     }
-    const userToFriend = this.userFriendRepository.create({
-      user: user,
-      friend: friend,
-      is_accepted: false,
-      is_request: true,
-    });
-    const friendToUser = this.userFriendRepository.create({
-      user: friend,
-      friend: user,
-      is_accepted: false,
-    });
-
-    return await this.userFriendRepository.save([userToFriend, friendToUser]);
   }
   /** 친구 수락 */
   // 자기 자신이 보낸 요청에 대해선 수락이 되면 안됌
   // 애초에 클라이언트는 나에게 요청이 들어온 것만 확인할 수 있을거라 괜찮긴 할 것
   // 뭔가 리팩토링이 필요할 것 같긴함.
-  async acceptFriendRequest(uid, { email }: FriendDto): Promise<UserFriend[]> {
+  async acceptFriendRequest(
+    uid,
+    { email }: FriendDto,
+  ): Promise<{ msg: string }> {
     const reqProducer = await this.userFriendRepository.findOne({
       where: {
         user: { email: email },
@@ -333,7 +332,7 @@ export class UsersService {
         is_accepted: false,
       },
     });
-    console.log('A', reqProducer);
+
     const reqSubscriber = await this.userFriendRepository.findOne({
       where: {
         user: { id: uid },
@@ -344,19 +343,24 @@ export class UsersService {
     if (uid === reqProducer.id) {
       throw new BadRequestException('Inavalid request');
     }
-    console.log('R', reqSubscriber);
+
     if (!reqProducer || !reqSubscriber) {
       throw new BadRequestException(
         'Friend request not found or already accepted.',
       );
     }
-    const currentTime = new Date();
-    reqProducer.is_accepted = true;
-    reqProducer.accepted_at = currentTime;
-    reqSubscriber.is_accepted = true;
-    reqSubscriber.accepted_at = currentTime;
+    try {
+      const currentTime = new Date();
+      reqProducer.is_accepted = true;
+      reqProducer.accepted_at = currentTime;
+      reqSubscriber.is_accepted = true;
+      reqSubscriber.accepted_at = currentTime;
 
-    return await this.userFriendRepository.save([reqProducer, reqSubscriber]);
+      await this.userFriendRepository.save([reqProducer, reqSubscriber]);
+      return { msg: 'success' };
+    } catch (error) {
+      this.logger.error(`accept Friend Error: ${error}`);
+    }
   }
 
   async refuseFriendRequest(uid, { email }: FriendDto): Promise<boolean> {
@@ -432,7 +436,7 @@ export class UsersService {
   /** 나에게 들어온 친구 추가 요청 목록 */
   async getFriendRequests(uid: number): Promise<UserFriend[]> {
     return this.userFriendRepository.find({
-      where: { user: { id: uid }, is_accepted: false, is_request: false },
+      where: { user: { id: uid }, is_accepted: false },
       relations: ['friend'],
     });
   }

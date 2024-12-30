@@ -24,10 +24,7 @@ import { SignInUserDto } from './dto/signIn-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { FriendDto } from './dto/friend.dto';
 import { FriendInfoDto } from './dto/friend.dto';
-import { UserFriend } from './entities/user-friend.entity';
-//import { User } from './entities/user.entity';
 import { Request } from 'express';
-//import { CustomLoggerService } from 'src/common/logger/logger.service';
 import { Response } from 'express';
 import { ChangePwdInput } from './type';
 
@@ -122,7 +119,7 @@ export class UsersController {
   async sendFriendRequest(
     @Req() request: Request,
     @Body() friendDto: FriendDto,
-  ): Promise<UserFriend[]> {
+  ): Promise<{ msg: string }> {
     const uid = (request as CustomRequest).user?.subject;
     return this.usersService.sendFriendRequest(uid, friendDto);
   }
@@ -132,7 +129,7 @@ export class UsersController {
   async acceptFriendRequest(
     @Req() request: Request,
     @Body() friendDto: FriendDto,
-  ): Promise<UserFriend[]> {
+  ): Promise<{ msg: string }> {
     const uid = (request as CustomRequest).user?.subject;
     return this.usersService.acceptFriendRequest(uid, friendDto);
   }

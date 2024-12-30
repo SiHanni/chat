@@ -24,6 +24,15 @@ export class UserFriend {
   })
   created_at: Date;
 
+  @Column({
+    name: 'updated_at',
+    type: 'timestamp',
+    nullable: true,
+    default: null,
+    precision: 0,
+  })
+  updated_at: Date;
+
   @Column({ default: false })
   is_request: boolean;
 
