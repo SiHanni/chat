@@ -18,7 +18,7 @@ async function bootstrap() {
     origin: [
       'https://www.marutalk.com',
       'https://marutalk.com',
-      'http://marutalk-build.s3-website.ap-northeast-2.amazonaws.com',
+      'https://api.marutalk.com',
       'http://localhost:3000',
       'http://localhost:3001',
     ],
