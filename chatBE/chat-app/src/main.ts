@@ -16,9 +16,8 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-      'https://www.marutalk.com',
-      'https://marutalk.com',
-      'https://api.marutalk.com',
+      `${process.env.MAIN_DOMAIN}`,
+      `${process.env.ALB_ROUTE_RECORD}`,
       'http://localhost:3000',
       'http://localhost:3001',
     ],

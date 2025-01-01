@@ -29,7 +29,8 @@ import { Readable } from 'stream';
   namespace: 'chat',
   cors: {
     origin: [
-      'http://marutalk-build.s3-website.ap-northeast-2.amazonaws.com',
+      `${process.env.MAIN_DOMAIN}`,
+      `${process.env.ALB_ROUTE_RECORD}`,
       'http://localhost:3000',
       'http://localhost:3001',
     ],
