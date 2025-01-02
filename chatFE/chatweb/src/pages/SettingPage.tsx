@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import PwdChangePage from '../components/PwdChangePage';
+import UpdateLogsPage from './UpdateLogsPage';
 
 const SettingsPageContainer = styled.div`
   display: flex;
@@ -149,6 +150,12 @@ const SettingsPage: React.FC = () => {
           >
             화면
           </Tab>
+          <Tab
+            isActive={activeTab === 'update'}
+            onClick={() => handleTabClick('update')}
+          >
+            업데이트 일지
+          </Tab>
         </TabContainer>
       </Header>
 
@@ -158,6 +165,7 @@ const SettingsPage: React.FC = () => {
         {activeTab === 'security' && <div>보안 설정 화면</div>}
         {activeTab === 'notifications' && <div>알림 설정 화면</div>}
         {activeTab === 'screen' && <div>화면 설정 화면</div>}
+        {activeTab === 'update' && <UpdateLogsPage />}
       </Content>
     </SettingsPageContainer>
   );

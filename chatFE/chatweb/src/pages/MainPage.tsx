@@ -258,6 +258,9 @@ const MainPage: React.FC = () => {
               >
                 마루는강쥐
               </MoreMenuItem>
+              <MoreMenuItem onClick={() => navigate('/update-logs')}>
+                업데이트 일지
+              </MoreMenuItem>
             </MoreMenu>
           )}
         </TabContainer>
