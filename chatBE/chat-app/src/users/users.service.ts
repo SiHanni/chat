@@ -186,7 +186,6 @@ export class UsersService {
     updateUserDto: UpdateUserDto,
   ): Promise<User> {
     const { username, gender, status_msg } = updateUserDto;
-
     const user = await this.userRepository.findOne({
       where: { id: uid },
     });
@@ -194,16 +193,17 @@ export class UsersService {
       throw new NotFoundException('user not found');
     }
 
-    if (username) {
-      const checkUsername = await this.userRepository.findOne({
-        where: { username },
-      });
-      if (checkUsername && checkUsername.id !== user.id) {
-        throw new BadRequestException('Already used username');
-      }
-      user.username = username;
-    }
     try {
+      if (username) {
+        const checkUsername = await this.userRepository.findOne({
+          where: { username },
+        });
+        if (checkUsername && checkUsername.id !== user.id) {
+          throw new BadRequestException('Already used username');
+        }
+        user.username = username;
+      }
+
       if (gender) {
         if (![Gender.MALE, Gender.FEMALE, Gender.ALIEN].includes(gender)) {
           throw new BadRequestException('Invalid gender value');
@@ -213,9 +213,10 @@ export class UsersService {
       }
 
       if (status_msg) {
-        console.log(status_msg);
         user.status_msg = status_msg;
       }
+      const currentTime = new Date();
+      user.updated_at = currentTime;
       const updatedUser = await this.userRepository.save(user);
       return updatedUser;
     } catch (error) {

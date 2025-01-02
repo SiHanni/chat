@@ -44,7 +44,7 @@ import { S3Content } from 'src/common/s3/entities/s3.entity';
 export class ChattingGateway
   implements OnGatewayConnection, OnGatewayDisconnect
 {
-  @WebSocketServer()
+  @WebSocketServer() // 해당 데코레이터가 웹소켓 서버 인스턴스를 자동 주입함.(초기화 필요 x)
   server: Server;
   private s3Client: S3Client;
 
@@ -134,7 +134,7 @@ export class ChattingGateway
     });
     try {
       await newMessage.save();
-      console.log('MONGO SAVE TEST ');
+      //console.log('MONGO SAVE TEST ');
     } catch (error) {
       this.logger.error(`Error saving message to MongoDB:, ${error}`);
     }
@@ -187,7 +187,6 @@ export class ChattingGateway
         content_type,
         client_id,
       );
-      console.log('TESTS#', s3Upload);
 
       // TODO: uploadFileToS3에서 s3 경로 받아와서 몽고에 저장해야함
       const newMessage = new this.chatMessageModel({
@@ -203,8 +202,8 @@ export class ChattingGateway
       });
       console.log('QWE', newMessage);
       try {
-        const m = await newMessage.save();
-        console.log('mongoose:', m);
+        await newMessage.save();
+        //console.log('mongoose:', m);
       } catch (error) {
         console.log('mongoose:', error);
       }
@@ -221,7 +220,8 @@ export class ChattingGateway
     } else {
       client.emit('fileUploadStatus', {
         status: 'failed',
-        message: '횟수 초과',
+        message: `일일 파일전송 횟수 초과
+        (5회)`,
       });
     }
   }
