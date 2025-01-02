@@ -23,6 +23,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { ChangePwdInput } from './type';
 import { S3Service } from 'src/common/s3/s3.service';
 import { getKSTUnixTimestampMs, getKST } from 'src/common/time';
+import { S3Content } from 'src/common/s3/entities/s3.entity';
 
 @Injectable()
 export class UsersService {
@@ -140,7 +141,7 @@ export class UsersService {
   async updateProfileImage(
     uid: number,
     updateProfileImgDto: UpdateProfileImageDto,
-  ): Promise<{ status: string; new_profile_img: string }> {
+  ): Promise<{ status: string; new_profile_img?: string }> {
     const { profile_img_name, profile_img_content_type, profile_img_data } =
       updateProfileImgDto;
     console.log(profile_img_content_type);
@@ -148,28 +149,36 @@ export class UsersService {
     const user = await this.userRepository.findOne({
       where: { id: uid },
     });
+    const uploadValidator = await this.authService.fileUploadValidator(
+      uid,
+      S3Content.PROFILE,
+    );
 
-    try {
-      if (profile_img_data) {
-        const buffer = Buffer.from(profile_img_data);
+    if (uploadValidator) {
+      try {
+        if (profile_img_data) {
+          const buffer = Buffer.from(profile_img_data);
 
-        const s3Upload = await this.s3Service.uploadProfileImgToS3(
-          uid,
-          buffer,
-          profile_img_name,
-          profile_img_content_type,
-        );
-        if (s3Upload) {
-          user.profile_img = s3Upload;
-          await this.userRepository.save(user);
+          const s3Upload = await this.s3Service.uploadProfileImgToS3(
+            uid,
+            buffer,
+            profile_img_name,
+            profile_img_content_type,
+          );
+          if (s3Upload) {
+            user.profile_img = s3Upload;
+            await this.userRepository.save(user);
 
-          return { status: 'success', new_profile_img: s3Upload };
+            return { status: 'success', new_profile_img: s3Upload };
+          }
         }
+      } catch (error) {
+        this.logger.error(
+          `error occured in profile image update user:${user.id}, ${error}`,
+        );
       }
-    } catch (error) {
-      this.logger.error(
-        `error occured in profile image update user:${user.id}, ${error}`,
-      );
+    } else {
+      return { status: 'failed' };
     }
   }
 
@@ -197,7 +206,6 @@ export class UsersService {
     }
     try {
       if (gender) {
-        console.log(gender, Gender.FEMALE);
         if (![Gender.MALE, Gender.FEMALE, Gender.ALIEN].includes(gender)) {
           throw new BadRequestException('Invalid gender value');
         }
@@ -206,6 +214,7 @@ export class UsersService {
       }
 
       if (status_msg) {
+        console.log(status_msg);
         user.status_msg = status_msg;
       }
       const updatedUser = await this.userRepository.save(user);

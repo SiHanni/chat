@@ -56,7 +56,17 @@ export class ChattingGateway
     private readonly logger: CustomLoggerService,
     private configService: ConfigService,
     private readonly s3Service: S3Service,
-  ) {}
+  ) {
+    this.s3Client = new S3Client({
+      credentials: {
+        accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY'),
+        secretAccessKey: this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY',
+        ),
+      },
+      region: this.configService.get<string>('AWS_REGION'),
+    });
+  }
 
   /** NestJS 모듈이 초기화 될 때 호출 */
   onModuleInit() {
@@ -86,7 +96,7 @@ export class ChattingGateway
   @SubscribeMessage('ping')
   async handlePing(client: Socket) {
     client.emit('pong', { message: 'pong' });
-    // 추가 로직 필요
+
     //this.logger.log('ping-pong');
   }
 
@@ -212,15 +222,17 @@ export class ChattingGateway
       const metadata = await this.s3Repository.findOne({
         where: { s3_path: file_url },
       });
+
       if (metadata) {
         const s3_key = metadata.s3_key;
         const s3Params = {
           Bucket: this.configService.get<string>('S3_BUCKET'),
           Key: s3_key,
         };
+
         const command = new GetObjectCommand(s3Params);
+
         const fileData = await this.s3Client.send(command);
-        console.log('FILE FROM S3', fileData);
 
         // S3에서 가져온 Stream을 Buffer로 변환
         if (fileData.Body instanceof Readable) {
@@ -239,7 +251,7 @@ export class ChattingGateway
         }
       }
     } catch (error) {
-      console.log(error);
+      this.logger.log(error);
     }
   }
 

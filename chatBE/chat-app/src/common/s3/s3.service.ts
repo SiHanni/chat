@@ -45,7 +45,6 @@ export class S3Service {
     }
   }
 
-  async uploadToS3() {}
   async uploadChatFileToS3(
     sender_id: number,
     room_id: number,

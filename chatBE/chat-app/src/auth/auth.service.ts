@@ -13,7 +13,7 @@ import { Repository } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { TokenHistory } from './entities/auth-history.entity';
 import { checkTimeDiff } from 'src/common/time';
-import { S3Content } from 'src/common/s3/entities/s3.entity';
+import { S3Content, S3Metadata } from 'src/common/s3/entities/s3.entity';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +21,9 @@ export class AuthService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(TokenHistory)
-    private readonly tokenHistory: Repository<TokenHistory>,
+    private readonly tokenHistoryRepository: Repository<TokenHistory>,
+    @InjectRepository(S3Metadata)
+    private readonly s3MetadataRepository: Repository<S3Metadata>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private readonly logger: CustomLoggerService,
@@ -69,12 +71,12 @@ export class AuthService {
         secret: secretKey,
         expiresIn: expiresIn,
       });
-      const newTokenHistory = this.tokenHistory.create({
+      const newTokenHistory = this.tokenHistoryRepository.create({
         uid: uid,
         email: email,
         refresh_token: refreshToken,
       });
-      this.tokenHistory.save(newTokenHistory);
+      this.tokenHistoryRepository.save(newTokenHistory);
       this.logger.log(`generate refresh token :: user info = {uid: ${uid}}`);
       return refreshToken;
     } catch (error) {
@@ -148,9 +150,47 @@ export class AuthService {
     }
   }
   /** 유저 등급에 따라 S3 upload 횟수 제한을 확인 */
-  async fileUploadValidator(uid: number, content_type: S3Content) {
-    // 유저 정보 찾아오기 (join해서 s3 metadata 오늘 날짜로 파라메터 타입에 몇번 했는지)
-    // 유저 등급이 admin, 결제자이면 무제한, 일반 유저면 프로필 5회, 채팅 파일전송 10회 제한
-    console.log(uid, content_type);
+  async fileUploadValidator(
+    uid: number,
+    content_type: S3Content,
+  ): Promise<boolean> {
+    try {
+      const user = await this.userRepository.findOne({ where: { id: uid } });
+
+      const userGrade = user.user_grade;
+      const uploadCnt = await this.s3MetadataRepository
+        .createQueryBuilder('s3_metadata')
+        .select('COUNT(s3_metadata.content_type)', 'cnt')
+        .where('s3_metadata.user.id = :senderId', { senderId: uid })
+        .andWhere('s3_metadata.created_at >= CURDATE()')
+        .andWhere('s3_metadata.content_type = :contentType', {
+          contentType: content_type,
+        })
+        .getRawOne();
+      this.logger.log(
+        `[${userGrade} user]:${uid} [today ${content_type} upload cnt]: ${uploadCnt.cnt}`,
+      );
+      if (userGrade === 'normal') {
+        if (
+          content_type === S3Content.PROFILE &&
+          uploadCnt.cnt >=
+            this.configService.get<string>('NORMAL_USER_PROFILE_UPDATE_CNT')
+        ) {
+          return false;
+        }
+
+        if (
+          content_type === S3Content.CHAT &&
+          uploadCnt.cnt >=
+            this.configService.get<string>('NORMAL_USER_FILE_UPLOAD_CNT')
+        ) {
+          return false;
+        }
+      }
+      return true;
+    } catch (error) {
+      this.logger.error(`error occured in file upload validator: ${error}`);
+      throw new InternalServerErrorException();
+    }
   }
 }

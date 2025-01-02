@@ -5,6 +5,13 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 
+export enum UserGrade {
+  NORMAL = 'normal',
+  PREMIUM = 'premium',
+  ADMIN = 'admin',
+  MARU = 'maru',
+}
+
 @Entity('user')
 export class User {
   @PrimaryGeneratedColumn()
@@ -59,4 +66,11 @@ export class User {
 
   @Column({ nullable: true })
   refresh_token: string;
+
+  @Column({
+    type: 'enum',
+    enum: UserGrade,
+    default: UserGrade.NORMAL,
+  })
+  user_grade: UserGrade;
 }
