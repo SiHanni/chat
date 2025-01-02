@@ -170,7 +170,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [modalMsg, setModalMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (showModal) {
@@ -193,7 +193,7 @@ const SignUp: React.FC = () => {
       });
 
       if (response.status === 201) {
-        setMessage('회원가입 완료');
+        setModalMsg('회원가입 완료');
         navigate('/');
       }
     } catch (error: any) {
@@ -201,18 +201,18 @@ const SignUp: React.FC = () => {
         const errorMessage = error.response.data.message;
 
         if (errorMessage === 'Email already exists') {
-          setMessage('회원가입 실패\n이미 가입된 이메일입니다.');
+          setModalMsg('회원가입 실패\n이미 가입된 이메일입니다.');
         } else if (errorMessage === 'Username already exists') {
-          setMessage('회원가입 실패\n이미 가입된 유저네임입니다.');
+          setModalMsg('회원가입 실패\n이미 가입된 유저네임입니다.');
         }
       } else {
-        setMessage('회원가입 중 문제가 발생했습니다.');
+        setModalMsg('회원가입 중 문제가 발생했습니다.');
       }
     }
   };
 
   const handleCloseModal = () => {
-    setMessage(null); // 모달 닫기
+    setModalMsg(null); // 모달 닫기
   };
 
   return (
@@ -270,7 +270,9 @@ const SignUp: React.FC = () => {
           사용할 수 없습니다
         </QuestionModal>
       </SignUpContainer>
-      {message && <BasicModal modalMsg={message} onClose={handleCloseModal} />}
+      {modalMsg && (
+        <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
+      )}
     </div>
   );
 };

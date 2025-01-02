@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
 import PwdChangeModal from './PwdChangeModal';
+import BasicModal from './BasicModal';
 
 const PwdChangeContainer = styled.div`
   display: flex;
@@ -105,8 +106,7 @@ const StyledButton = styled.button`
 const PwdChangePage: React.FC = () => {
   const [oldPwd, setOldPwd] = useState('');
   const [newPwd, setNewPwd] = useState('');
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태
-  const [modalMessage, setModalMessage] = useState('');
+  const [modalMsg, setModalMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
@@ -119,14 +119,12 @@ const PwdChangePage: React.FC = () => {
     }
 
     if (!oldPwd) {
-      setModalMessage('현재 비밀번호를 입력해주세요.');
-      setIsModalOpen(true);
+      setModalMsg('현재 비밀번호를 입력해주세요.');
       return;
     }
 
     if (!newPwd) {
-      setModalMessage('새 비밀번호를 입력해주세요.');
-      setIsModalOpen(true);
+      setModalMsg('새 비밀번호를 입력해주세요.');
       return;
     }
 
@@ -144,52 +142,56 @@ const PwdChangePage: React.FC = () => {
     if (response.ok) {
       setOldPwd('');
       setNewPwd('');
-      setModalMessage('비밀번호 변경에 성공했습니다!');
-      setIsModalOpen(true);
+      setModalMsg('비밀번호 변경에 성공했습니다!');
     } else {
       const error = await response.json();
       if (error.message === 'Invalid password') {
-        setModalMessage('현재 비밀번호를 확인해주세요');
+        setModalMsg('현재 비밀번호를 확인해주세요');
       } else if (error.message === 'Required Data Missing') {
-        setModalMessage('새 비밀번호를 입력해야 합니다.');
+        setModalMsg('새 비밀번호를 입력해야 합니다.');
       } else {
-        setModalMessage('비밀번호 변경 실패');
+        setModalMsg('비밀번호 변경 실패');
       }
-      setIsModalOpen(true);
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const handleCloseModal = () => {
+    setModalMsg(null); // 모달 닫기
   };
 
   return (
-    <PwdChangeContainer>
-      <Content>
-        <PwdChangeForm onSubmit={handlePasswordChange}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <Label>현재 비밀번호</Label>
-            <PwdInput
-              type='password'
-              value={oldPwd}
-              onChange={e => setOldPwd(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <Label>새 비밀번호</Label>
-            <PwdInput
-              type='password'
-              value={newPwd}
-              onChange={e => setNewPwd(e.target.value)}
-            />
-          </div>
-          <StyledButton type='submit'>비밀번호 변경</StyledButton>
-        </PwdChangeForm>
-      </Content>
-      {isModalOpen && (
-        <PwdChangeModal message={modalMessage} onClose={closeModal} />
+    <div>
+      <PwdChangeContainer>
+        <Content>
+          <PwdChangeForm onSubmit={handlePasswordChange}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
+            >
+              <Label>현재 비밀번호</Label>
+              <PwdInput
+                type='password'
+                value={oldPwd}
+                onChange={e => setOldPwd(e.target.value)}
+              />
+            </div>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
+            >
+              <Label>새 비밀번호</Label>
+              <PwdInput
+                type='password'
+                value={newPwd}
+                onChange={e => setNewPwd(e.target.value)}
+              />
+            </div>
+            <StyledButton type='submit'>비밀번호 변경</StyledButton>
+          </PwdChangeForm>
+        </Content>
+      </PwdChangeContainer>
+      {modalMsg && (
+        <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
       )}
-    </PwdChangeContainer>
+    </div>
   );
 };
 

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
 import { FiArrowLeft } from 'react-icons/fi';
 import BasicModal from '../components/BasicModal';
+import axios from 'axios';
 
 const ProfileContainer = styled.div`
   display: flex;
@@ -332,20 +333,29 @@ const ProfilePage: React.FC = () => {
     const status_msg = statusMsg;
     const updateData = { username, gender, status_msg };
 
-    const response = await fetch(`${server_url}/users/updateProfile`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updateData),
-    });
+    try {
+      const response = await axios.patch(
+        `${server_url}/users/updateProfile`,
+        updateData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    if (response.ok) {
-      setModalMsg('프로필수정 완료');
-      getProfile();
-    } else {
+      if (response.status === 200) {
+        const data = await response.data;
+        localStorage.setItem('user', JSON.stringify(data));
+        getProfile();
+        setModalMsg('프로필수정 완료');
+      } else {
+        setModalMsg('서버 에러');
+      }
+    } catch (error) {
       setModalMsg('서버 에러');
+      console.error(error);
     }
   };
 
@@ -368,6 +378,7 @@ const ProfilePage: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setImagePreview(null);
+    setModalMsg(null);
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -406,11 +417,18 @@ const ProfilePage: React.FC = () => {
         setModalMsg('서버 에러\n잠시 후 다시 시도해주세요');
       }
 
-      const responseData = await response.json(); // 서버에서 반환한 JSON 데이터를 파싱
+      const responseData = await response.json();
 
       if (responseData.status === 'success') {
-        setProfileImg(responseData.new_profile_img); // 서버에서 반환된 이미지 URL로 프로필 이미지를 업데이트
-        setIsModalOpen(false);
+        const localUserStr = localStorage.getItem('user');
+        if (localUserStr) {
+          const localUserObj = JSON.parse(localUserStr);
+
+          localUserObj.profile_img = responseData.new_profile_img;
+          setProfileImg(responseData.new_profile_img);
+          localStorage.setItem('user', JSON.stringify(localUserObj));
+          setIsModalOpen(false);
+        }
       } else {
         setProfileImgModalMsg('오늘 변경 횟수를 다 사용했어요');
       }

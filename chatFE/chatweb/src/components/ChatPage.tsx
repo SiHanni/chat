@@ -155,9 +155,11 @@ const Username = styled.div`
     font-size: 0.7rem;
   }
 `;
-
+/** overflow-wrap: 컨테이너 크기를 넘어서면 줄바꿈 발생 */
 const MessageText = styled.div`
   font-size: 0.9rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
 
   @media (max-width: 768px) {
     font-size: 0.7rem;
@@ -269,10 +271,6 @@ const DownloadButton = styled.button`
 const ChatPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  //const queryParams = new URLSearchParams(location.search);
-  //const uid = queryParams.get('uid');
-  //const room_type = queryParams.get('room_type');
-  //const room_id = queryParams.get('room_id');
   const { room_type, room_id, uid } = location.state || {};
   const [user, setUser] = useState<User | null>(null);
   const [roomName, setRoomName] = useState<string>('');
@@ -348,7 +346,7 @@ const ChatPage: React.FC = () => {
       pingInterval = setInterval(() => {
         //console.log('Sending ping...');
         socket.emit('ping');
-      }, 5000); // 5초
+      }, 10000); // 10초
 
       socket.on('pong', data => {
         //console.log('Received pong:', data);
@@ -472,6 +470,25 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (!socket) return;
+
+    // 서버에서 fileUploadStatus 이벤트를 받는 리스너 설정
+    const handleFileUploadStatus = (statusData: any) => {
+      const { status, message } = statusData;
+      if (status === 'failed') {
+        setModalMessage(message); // 서버에서 받은 메시지를 모달에 표시
+      }
+    };
+
+    socket.on('fileUploadStatus', handleFileUploadStatus);
+
+    // 컴포넌트가 언마운트될 때 이벤트 리스너 정리
+    return () => {
+      socket.off('fileUploadStatus', handleFileUploadStatus);
+    };
+  }, [socket]);
+
   const handleFileClick = (fileUrl: string) => {
     if (socket) {
       socket.emit('downloadFile', { file_url: fileUrl }); // 다운로드 요청
@@ -539,6 +556,11 @@ const ChatPage: React.FC = () => {
     setModalMessage(null); // 모달 닫기
   };
 
+  const getFileExtension = (filename: string) => {
+    const match = filename.match(/\.(jpg|jpeg|png|gif|webp|pdf)$/i);
+    return match ? match[0] : null; // 이미지 확장자일 경우 확장자 반환, 아니면 null 반환
+  };
+
   return (
     <div>
       <ChatContainer>
@@ -554,42 +576,37 @@ const ChatPage: React.FC = () => {
               key={index}
               isOwnMessage={msg.sender_id === user?.id}
             >
-              <ProfileImage
-                src={
-                  msg.sender_profile_img && msg.sender_profile_img.trim() !== ''
-                    ? msg.sender_profile_img
-                    : '/maruu.jpeg'
-                }
-                alt='profile'
-                isOwnMessage={msg.sender_id === user?.id}
-              />
+              {msg.sender_id !== user?.id && (
+                <ProfileImage
+                  src={
+                    msg.sender_profile_img &&
+                    msg.sender_profile_img.trim() !== ''
+                      ? msg.sender_profile_img
+                      : '/maruu.jpeg'
+                  }
+                  alt='profile'
+                  isOwnMessage={msg.sender_id === user?.id}
+                />
+              )}
               <MessageContent isOwnMessage={msg.sender_id === user?.id}>
                 <Username>{msg.sender_username}</Username>
                 <MessageText>{msg.message}</MessageText>
                 {msg.file_path && (
                   <div>
-                    {msg.file_path.endsWith('.jpg') ||
-                    msg.file_path.endsWith('.jpeg') ||
-                    msg.file_path.endsWith('.webp') ||
-                    msg.file_path.endsWith('.png') ? (
-                      <>
-                        <img
-                          src={msg.file_path}
-                          alt='file preview'
-                          style={{
-                            width: '100px',
-                            height: 'auto',
-                            cursor: 'pointer',
-                          }}
-                          onClick={() => handleFileClick(msg.file_path)}
-                        />
-                        <DownloadButton
-                          onClick={() => handleFileClick(msg.file_path)}
-                        >
-                          {msg.file_path}
-                        </DownloadButton>
-                      </>
+                    {getFileExtension(msg.file_name) ? (
+                      // 이미지 파일인 경우
+                      <img
+                        src={msg.file_path}
+                        alt='file preview'
+                        style={{
+                          width: '100px',
+                          height: 'auto',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => handleFileClick(msg.file_path)} // 파일 클릭 시 다운로드 처리
+                      />
                     ) : (
+                      // 이미지 파일이 아닌 경우 파일명 표시
                       <DownloadButton
                         onClick={() => handleFileClick(msg.file_path)}
                       >
@@ -598,6 +615,7 @@ const ChatPage: React.FC = () => {
                     )}
                   </div>
                 )}
+
                 <Timestamp>
                   {new Date(msg.timestamp).toLocaleTimeString()}
                 </Timestamp>

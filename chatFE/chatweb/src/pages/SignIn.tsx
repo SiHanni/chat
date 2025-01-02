@@ -140,7 +140,7 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
       );
 
       const data = await response.data;
-      console.log('data', data);
+
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
@@ -150,7 +150,7 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const errorMsg = error.response.data.message;
-        console.log(errorMsg);
+
         if (errorMsg === 'Invalid email') {
           setErrorMessage('로그인 실패\n이메일을 확인해주세요');
         } else if (errorMsg === 'Invalid password') {

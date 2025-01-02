@@ -59,7 +59,7 @@ const ModalContainer = styled.div`
 
 const ModalContent = styled.div`
   font-size: 18px;
-  margin: 30px 20px;
+  margin: 50px 20px;
   color: #333;
   flex-grow: 1;
   white-space: pre-line;
