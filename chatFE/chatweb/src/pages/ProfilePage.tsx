@@ -122,14 +122,14 @@ const ProfileSelect = styled.select`
 const StyledButton = styled.button`
   background-color: #ffe787; /* 버튼 색상 */
   color: #fff;
-  font-size: 1rem;
-  padding: 15px;
+  font-size: 0.9rem;
+  padding: 10px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-weight: bold;
-  width: 150px;
+  width: 100px;
   max-width: 100%;
 
   &:hover {
@@ -193,12 +193,80 @@ const ModalBackdrop = styled.div`
 
 const Modal = styled.div`
   background-color: white;
-  padding: 20px;
+  padding: 15px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 15px;
+  width: 250px; /* 기본 모달 크기 */
+
+  /* 모바일 대응 */
+  @media (max-width: 600px) {
+    width: 80%; /* 화면 크기가 작으면 모달을 더 작게 */
+    padding: 10px; /* 여백 줄이기 */
+  }
+`;
+
+const FileInput = styled.input`
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-top: -10px;
+  cursor: pointer;
+  width: 82%; /* 모바일에서 더 넓게 표시되도록 */
+
+  &:hover {
+    border-color: #007bff;
+  }
+
+  @media (max-width: 600px) {
+    margin-top: -10px;
+  }
+`;
+
+const ModalButtonContainer = styled.div`
+  display: flex;
+  gap: 10px; /* 버튼 간 간격 */
+  justify-content: center;
+  width: 100%;
   gap: 20px;
+
+  /* 모바일 대응 */
+  @media (max-width: 600px) {
+    margin-top: -15px;
+    gap: 15px; /* 버튼 간 간격을 좀 더 넓게 */
+  }
+`;
+
+const StyledModalButton = styled.button`
+  background-color: #ffe787; /* 버튼 색상 */
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  width: 100px;
+  max-width: 100%;
+
+  &:hover {
+    background-color: #f4d03f;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 0.8rem; /* 작은 화면에서 글씨 크기 축소 */
+    padding: 10px;
+  }
 `;
 
 interface UserProfile {
@@ -211,12 +279,15 @@ interface UserProfile {
 const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [username, setUsername] = useState('');
-  const [profile_img, setProfileImg] = useState('');
+  const [profileImg, setProfileImg] = useState('');
   const [gender, setGender] = useState('');
-  const [status_msg, setStatusMsg] = useState('');
+  const [statusMsg, setStatusMsg] = useState('');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProfileImg, setNewProfileImg] = useState<File | null>(null);
+  const [modalMsg, setModalMsg] = useState('');
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -255,7 +326,7 @@ const ProfilePage: React.FC = () => {
       navigate('/');
       return;
     }
-
+    const status_msg = statusMsg;
     const updateData = { username, gender, status_msg };
 
     const response = await fetch(`${server_url}/users/updateProfile`, {
@@ -268,7 +339,7 @@ const ProfilePage: React.FC = () => {
     });
 
     if (response.ok) {
-      alert('Profile updated successfully');
+      alert('프로필수정 완료');
       getProfile();
     } else {
       alert('Failed to update profile');
@@ -280,7 +351,7 @@ const ProfilePage: React.FC = () => {
   }, []);
 
   if (!user) {
-    return <div>Loading...</div>;
+    navigate('/');
   }
 
   const handleGoBack = () => {
@@ -293,12 +364,15 @@ const ProfilePage: React.FC = () => {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setImagePreview(null);
   };
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       setNewProfileImg(file);
+      const previewUrl = URL.createObjectURL(file); // 미리보기 URL 생성
+      setImagePreview(previewUrl); // 미리보기 이미지 업데이트
     } else {
       alert('Please select a valid image file');
     }
@@ -306,20 +380,14 @@ const ProfilePage: React.FC = () => {
 
   const handleUploadImage = async () => {
     if (!newProfileImg) {
-      alert('No image selected');
+      setModalMsg('선택된 이미지가 없어요');
       return;
     }
-
-    //const reader = new FileReader();
-    //reader.onloadend = async () => {
-    //  const fileData = reader.result as ArrayBuffer;
 
     const formData = new FormData();
     formData.append('profile_img_name', newProfileImg.name);
     formData.append('profile_img_data', newProfileImg);
     formData.append('profile_img_content_type', newProfileImg.type);
-
-    //console.log(formData);
 
     const token = localStorage.getItem('accessToken');
     try {
@@ -332,17 +400,17 @@ const ProfilePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error('업데이트 실패');
       }
 
       const responseData = await response.json(); // 서버에서 반환한 JSON 데이터를 파싱
-
+      console.log(responseData.status);
       if (responseData.status === 'success') {
         //alert('Profile image updated successfully');
         setProfileImg(responseData.new_profile_img); // 서버에서 반환된 이미지 URL로 프로필 이미지를 업데이트
         setIsModalOpen(false);
       } else {
-        //alert('Failed to update profile image');
+        setModalMsg('오늘 변경 횟수를 다 사용했어요');
       }
     } catch (error) {
       //console.error('Upload image error:', error);
@@ -360,7 +428,7 @@ const ProfilePage: React.FC = () => {
         </GoBackButton>
         <ProfileImageWrapper>
           <ProfileImage
-            src={profile_img || '/maruu.jpeg'}
+            src={profileImg || '/maruu.jpeg'}
             alt='Profile'
             onClick={handleImageClick}
           />
@@ -378,7 +446,7 @@ const ProfilePage: React.FC = () => {
             <Label>상태 메시지</Label>
             <ProfileInput
               type='text'
-              value={status_msg}
+              value={statusMsg}
               onChange={e => setStatusMsg(e.target.value)}
             />
           </div>
@@ -400,10 +468,25 @@ const ProfilePage: React.FC = () => {
       {isModalOpen && (
         <ModalBackdrop onClick={handleCloseModal}>
           <Modal onClick={e => e.stopPropagation()}>
-            <h2>프로필 이미지 변경</h2>
-            <input type='file' accept='image/*' onChange={handleImageChange} />
-            <StyledButton onClick={handleUploadImage}>변경</StyledButton>
-            <StyledButton onClick={handleCloseModal}>닫기</StyledButton>
+            {imagePreview && (
+              <div style={{ margin: '20px 0' }}>
+                <ProfileImage src={imagePreview} alt='Profile Preview' />
+              </div>
+            )}
+            <FileInput
+              type='file'
+              accept='image/*'
+              onChange={handleImageChange}
+            />
+            {modalMsg && <p>{modalMsg}</p>}
+            <ModalButtonContainer>
+              <StyledModalButton onClick={handleUploadImage}>
+                변경
+              </StyledModalButton>
+              <StyledModalButton onClick={handleCloseModal}>
+                닫기
+              </StyledModalButton>
+            </ModalButtonContainer>
           </Modal>
         </ModalBackdrop>
       )}
