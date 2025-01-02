@@ -3,6 +3,7 @@ import axios from 'axios';
 import styled from 'styled-components';
 import FriendCard from '../components/FriendCard';
 import { server_url } from '../common/serverConfig';
+import BasicModal from '../components/BasicModal';
 
 // 스타일 정의
 const FindFriendContainer = styled.div`
@@ -69,11 +70,11 @@ const StyledButton = styled.button`
 const FindFriendPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [friends, setFriends] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [modalMsg, setModalMsg] = useState<string | null>(null);
 
   const handleSearch = async () => {
     if (!email) {
-      setError('이메일을 입력해주세요.');
+      setModalMsg('이메일을 입력해주세요.');
       return;
     }
 
@@ -85,31 +86,38 @@ const FindFriendPage: React.FC = () => {
         },
       });
       setFriends([response.data]);
-      setError(null);
+      setModalMsg(null);
     } catch (err) {
-      setError('친구를 찾을 수 없습니다.');
+      setModalMsg('친구를 찾을 수 없습니다.');
       setFriends([]);
     }
   };
 
+  const handleCloseModal = () => {
+    setModalMsg(null); // 모달 닫기
+  };
+
   return (
-    <FindFriendContainer>
-      <SearchInput
-        type='email'
-        placeholder='이메일로 친구 찾기'
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      />
-      <StyledButton onClick={handleSearch}>친구 찾기</StyledButton>
+    <div>
+      <FindFriendContainer>
+        <SearchInput
+          type='email'
+          placeholder='이메일로 친구 찾기'
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+        <StyledButton onClick={handleSearch}>친구 찾기</StyledButton>
 
-      {error && <div>{error}</div>}
-
-      <FriendListContainer>
-        {friends.map((friend, index) => (
-          <FriendCard key={index} friend={friend} />
-        ))}
-      </FriendListContainer>
-    </FindFriendContainer>
+        <FriendListContainer>
+          {friends.map((friend, index) => (
+            <FriendCard key={index} friend={friend} />
+          ))}
+        </FriendListContainer>
+      </FindFriendContainer>
+      {modalMsg && (
+        <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
+      )}
+    </div>
   );
 };
 

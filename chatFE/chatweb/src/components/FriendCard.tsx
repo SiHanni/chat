@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import { server_url } from '../common/serverConfig';
 import { FindFriend } from '../type/user';
+import BasicModal from './BasicModal';
 
 const FriendCardContainer = styled.div`
   width: 200px;
@@ -77,6 +78,8 @@ const FriendButton = styled.button`
 `;
 
 const FriendCard: React.FC<{ friend: FindFriend }> = ({ friend }) => {
+  const [modalMsg, setModalMsg] = useState<string | null>(null);
+
   const handleSendRequest = async () => {
     try {
       const response = await axios.post(
@@ -89,23 +92,32 @@ const FriendCard: React.FC<{ friend: FindFriend }> = ({ friend }) => {
         }
       );
       if (response.data.msg === 'success') {
-        alert('친구 요청 완료');
+        setModalMsg('친구 요청 완료');
       } else if (response.data.msg === 'too many request') {
-        alert('잠시 후 다시 시도해주세요');
+        setModalMsg('잠시 후 다시 시도해주세요');
       }
     } catch (err) {
       // 상세화 필요
-      alert('친구 요청 실패');
+      setModalMsg('친구 요청 실패');
     }
   };
 
+  const handleCloseModal = () => {
+    setModalMsg(null); // 모달 닫기
+  };
+
   return (
-    <FriendCardContainer>
-      <ProfileImage src={friend.profile_img || '/maruu.jpeg'} alt='Profile' />
-      <Username>{friend.username}</Username>
-      <StatusMsg>{friend.status_msg}</StatusMsg>
-      <FriendButton onClick={handleSendRequest}>친구 요청</FriendButton>
-    </FriendCardContainer>
+    <div>
+      <FriendCardContainer>
+        <ProfileImage src={friend.profile_img || '/maruu.jpeg'} alt='Profile' />
+        <Username>{friend.username}</Username>
+        <StatusMsg>{friend.status_msg}</StatusMsg>
+        <FriendButton onClick={handleSendRequest}>친구 요청</FriendButton>
+      </FriendCardContainer>
+      {modalMsg && (
+        <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
+      )}
+    </div>
   );
 };
 

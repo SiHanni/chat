@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
 import axios from 'axios';
 import { FaQuestionCircle } from 'react-icons/fa';
+import BasicModal from '../components/BasicModal';
 
 // 스타일 정의
 const SignUpContainer = styled.div`
@@ -140,7 +141,7 @@ const QuestionMarkIcon = styled.div`
   top: 10px;
 `;
 
-const Modal = styled.div<{ show: boolean }>`
+const QuestionModal = styled.div<{ show: boolean }>`
   position: absolute;
   top: 36%;
   left: 60%;
@@ -169,6 +170,7 @@ const SignUp: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (showModal) {
@@ -191,7 +193,7 @@ const SignUp: React.FC = () => {
       });
 
       if (response.status === 201) {
-        alert('회원가입 완료');
+        setMessage('회원가입 완료');
         navigate('/');
       }
     } catch (error: any) {
@@ -199,70 +201,77 @@ const SignUp: React.FC = () => {
         const errorMessage = error.response.data.message;
 
         if (errorMessage === 'Email already exists') {
-          alert('이미 가입된 이메일입니다.');
+          setMessage('회원가입 실패\n이미 가입된 이메일입니다.');
         } else if (errorMessage === 'Username already exists') {
-          alert('이미 가입된 유저네임입니다.');
+          setMessage('회원가입 실패\n이미 가입된 유저네임입니다.');
         }
       } else {
-        alert('회원가입 중 문제가 발생했습니다.');
+        setMessage('회원가입 중 문제가 발생했습니다.');
       }
     }
   };
 
+  const handleCloseModal = () => {
+    setMessage(null); // 모달 닫기
+  };
+
   return (
-    <SignUpContainer>
-      <ImageContainer>
-        <img src='/marusi.png' alt='signin Banner' />
-      </ImageContainer>
-      <FormContainer>
-        <Title></Title>
-        <form onSubmit={handleSubmit}>
-          <InputGroup>
-            {/*<Label>Username:</Label> */}
-            <Input
-              type='text'
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder='이름'
-              required
-            />
-            <QuestionMarkIcon onClick={() => setShowModal(true)}>
-              <FaQuestionCircle />
-            </QuestionMarkIcon>
-          </InputGroup>
+    <div>
+      <SignUpContainer>
+        <ImageContainer>
+          <img src='/marusi.png' alt='signin Banner' />
+        </ImageContainer>
+        <FormContainer>
+          <Title></Title>
+          <form onSubmit={handleSubmit}>
+            <InputGroup>
+              {/*<Label>Username:</Label> */}
+              <Input
+                type='text'
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+                placeholder='이름'
+                required
+              />
+              <QuestionMarkIcon onClick={() => setShowModal(true)}>
+                <FaQuestionCircle />
+              </QuestionMarkIcon>
+            </InputGroup>
 
-          <InputGroup>
-            {/*<Label>Email:</Label> */}
-            <Input
-              type='email'
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder='이메일'
-              required
-            />
-          </InputGroup>
+            <InputGroup>
+              {/*<Label>Email:</Label> */}
+              <Input
+                type='email'
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder='이메일'
+                required
+              />
+            </InputGroup>
 
-          <InputGroup>
-            {/*<Label>Password:</Label> */}
-            <Input
-              type='password'
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder='비밀번호'
-              required
-            />
-          </InputGroup>
+            <InputGroup>
+              {/*<Label>Password:</Label> */}
+              <Input
+                type='password'
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder='비밀번호'
+                required
+              />
+            </InputGroup>
 
-          <Buttons>
-            <StyledButton type='submit'>회원 가입</StyledButton>
-          </Buttons>
-        </form>
-      </FormContainer>
-      <Modal show={showModal}>
-        정책상 중복된 이름은 <br />
-        사용할 수 없습니다
-      </Modal>
-    </SignUpContainer>
+            <Buttons>
+              <StyledButton type='submit'>회원 가입</StyledButton>
+            </Buttons>
+          </form>
+        </FormContainer>
+        <QuestionModal show={showModal}>
+          정책상 중복된 이름은 <br />
+          사용할 수 없습니다
+        </QuestionModal>
+      </SignUpContainer>
+      {message && <BasicModal modalMsg={message} onClose={handleCloseModal} />}
+    </div>
   );
 };
 

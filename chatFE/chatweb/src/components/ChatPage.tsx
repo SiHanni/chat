@@ -8,6 +8,7 @@ import { server_url } from '../common/serverConfig';
 import { Message } from '../type/chat';
 import FilePreviewModal from './FilePreviewModal';
 import { FiArrowLeft } from 'react-icons/fi';
+import BasicModal from './BasicModal';
 
 const ChatHeader = styled.div`
   display: flex;
@@ -287,13 +288,7 @@ const ChatPage: React.FC = () => {
   const [showFilePreviewModal, setShowFilePreviewModal] = useState<
     boolean | null
   >(null);
-  const [uploadStatus, setUploadStatus] = useState<{
-    status: string;
-    message: string;
-  }>({
-    status: '',
-    message: '',
-  });
+  const [modalMessage, setModalMessage] = useState<string | null>(null);
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
 
@@ -428,14 +423,15 @@ const ChatPage: React.FC = () => {
     setFileName(null);
 
     if (file.size > 5 * 1024 * 1024) {
-      alert('파일 크기가 너무 큽니다. 5MB 이하의 파일만 업로드 가능합니다.');
+      setModalMessage(
+        '파일 크기가 너무 큽니다.\n5MB 이하의 파일만 가능합니다.'
+      );
       return;
     }
-    //console.log('TYPE:', file.type);
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setFilePreview(reader.result as string); // 이미지 미리보기 설정
+      setFilePreview(reader.result as string);
       setFileName(file.name);
     };
     reader.readAsDataURL(file);
@@ -472,7 +468,7 @@ const ChatPage: React.FC = () => {
       reader.readAsArrayBuffer(selectedFile); // ArrayBuffer로 파일 읽기
       setShowFilePreviewModal(false); // 전송 후 모달 닫기
     } catch (error) {
-      console.error('파일 전송 중 오류가 발생했습니다.', error);
+      setModalMessage('파일 전송 중 오류가 발생했습니다.');
     }
   };
 
@@ -488,26 +484,6 @@ const ChatPage: React.FC = () => {
     setFileName(null); // 초기화
     setSelectedFile(null); //초기화
   };
-
-  useEffect(() => {
-    if (socket) {
-      socket.on('fileUploadStatus', response => {
-        if (response.status === 'failed') {
-          setUploadStatus({
-            status: 'failed',
-            message: response.message || '파일 전송에 실패했습니다.',
-          });
-        }
-      });
-    }
-
-    // cleanup 시 이벤트 리스너 제거
-    return () => {
-      if (socket) {
-        socket.off('fileUploadStatus');
-      }
-    };
-  }, [socket]);
 
   useEffect(() => {
     if (socket) {
@@ -559,109 +535,118 @@ const ChatPage: React.FC = () => {
     navigate('/main');
   };
 
+  const handleCloseModal = () => {
+    setModalMessage(null); // 모달 닫기
+  };
+
   return (
-    <ChatContainer>
-      <ChatHeader>
-        <GoBackButton onClick={handleGoBack}>
-          <FiArrowLeft />
-        </GoBackButton>
-        <RoomName>{roomName}</RoomName> {/* 채팅방 이름을 표시 */}
-      </ChatHeader>
-      <MessageList ref={messageListRef}>
-        {messages.map((msg, index) => (
-          <MessageContainer
-            key={index}
-            isOwnMessage={msg.sender_id === user?.id}
-          >
-            <ProfileImage
-              src={
-                msg.sender_profile_img && msg.sender_profile_img.trim() !== ''
-                  ? msg.sender_profile_img
-                  : '/maruu.jpeg'
-              }
-              alt='profile'
+    <div>
+      <ChatContainer>
+        <ChatHeader>
+          <GoBackButton onClick={handleGoBack}>
+            <FiArrowLeft />
+          </GoBackButton>
+          <RoomName>{roomName}</RoomName>
+        </ChatHeader>
+        <MessageList ref={messageListRef}>
+          {messages.map((msg, index) => (
+            <MessageContainer
+              key={index}
               isOwnMessage={msg.sender_id === user?.id}
-            />
-            <MessageContent isOwnMessage={msg.sender_id === user?.id}>
-              <Username>{msg.sender_username}</Username>
-              <MessageText>{msg.message}</MessageText>
-              {msg.file_path && (
-                <div>
-                  {msg.file_path.endsWith('.jpg') ||
-                  msg.file_path.endsWith('.jpeg') ||
-                  msg.file_path.endsWith('.webp') ||
-                  msg.file_path.endsWith('.png') ? (
-                    <>
-                      <img
-                        src={msg.file_path}
-                        alt='file preview'
-                        style={{
-                          width: '100px',
-                          height: 'auto',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => handleFileClick(msg.file_path)}
-                      />
+            >
+              <ProfileImage
+                src={
+                  msg.sender_profile_img && msg.sender_profile_img.trim() !== ''
+                    ? msg.sender_profile_img
+                    : '/maruu.jpeg'
+                }
+                alt='profile'
+                isOwnMessage={msg.sender_id === user?.id}
+              />
+              <MessageContent isOwnMessage={msg.sender_id === user?.id}>
+                <Username>{msg.sender_username}</Username>
+                <MessageText>{msg.message}</MessageText>
+                {msg.file_path && (
+                  <div>
+                    {msg.file_path.endsWith('.jpg') ||
+                    msg.file_path.endsWith('.jpeg') ||
+                    msg.file_path.endsWith('.webp') ||
+                    msg.file_path.endsWith('.png') ? (
+                      <>
+                        <img
+                          src={msg.file_path}
+                          alt='file preview'
+                          style={{
+                            width: '100px',
+                            height: 'auto',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => handleFileClick(msg.file_path)}
+                        />
+                        <DownloadButton
+                          onClick={() => handleFileClick(msg.file_path)}
+                        >
+                          {msg.file_path}
+                        </DownloadButton>
+                      </>
+                    ) : (
                       <DownloadButton
                         onClick={() => handleFileClick(msg.file_path)}
                       >
-                        {msg.file_path}
+                        {msg.file_name}
                       </DownloadButton>
-                    </>
-                  ) : (
-                    <DownloadButton
-                      onClick={() => handleFileClick(msg.file_path)}
-                    >
-                      {msg.file_name}
-                    </DownloadButton>
-                  )}
-                </div>
-              )}
-              <Timestamp>
-                {new Date(msg.timestamp).toLocaleTimeString()}
-              </Timestamp>
-            </MessageContent>
-          </MessageContainer>
-        ))}
-      </MessageList>
-      <InputContainer>
-        {/* FileButton을 label로 감싸서 클릭 시 input이 트리거되도록 */}
-        <label htmlFor='fileInput'>
-          <FileButton onClick={handleFileButtonClick}>+</FileButton>
-        </label>
-        <input
-          type='file'
-          id='fileInput'
-          style={{ display: 'none' }} // input을 숨기고 label로 대체
-          onChange={handleFileChange}
-        />
-        <Input
-          type='text'
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          onCompositionStart={handleCompositionStart}
-          onCompositionEnd={handleCompositionEnd}
-        />
-        <SendButton
-          onClick={() => {
-            if (input.trim()) sendMessage();
-            //if (selectedFile) handleSendFile();
-          }}
-        >
-          전송
-        </SendButton>
-      </InputContainer>
+                    )}
+                  </div>
+                )}
+                <Timestamp>
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </Timestamp>
+              </MessageContent>
+            </MessageContainer>
+          ))}
+        </MessageList>
+        <InputContainer>
+          {/* FileButton을 label로 감싸서 클릭 시 input이 트리거되도록 */}
+          <label htmlFor='fileInput'>
+            <FileButton onClick={handleFileButtonClick}>+</FileButton>
+          </label>
+          <input
+            type='file'
+            id='fileInput'
+            style={{ display: 'none' }} // input을 숨기고 label로 대체
+            onChange={handleFileChange}
+          />
+          <Input
+            type='text'
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+          />
+          <SendButton
+            onClick={() => {
+              if (input.trim()) sendMessage();
+              //if (selectedFile) handleSendFile();
+            }}
+          >
+            전송
+          </SendButton>
+        </InputContainer>
 
-      {showFilePreviewModal && (
-        <FilePreviewModal
-          filePreview={filePreview}
-          fileName={fileName}
-          onClose={handleCancelFilePreview}
-          onSend={handleSendFile}
-        />
+        {showFilePreviewModal && (
+          <FilePreviewModal
+            filePreview={filePreview}
+            fileName={fileName}
+            onClose={handleCancelFilePreview}
+            onSend={handleSendFile}
+          />
+        )}
+      </ChatContainer>
+      {modalMessage && (
+        <BasicModal modalMsg={modalMessage} onClose={handleCloseModal} />
       )}
-    </ChatContainer>
+    </div>
   );
 };
 

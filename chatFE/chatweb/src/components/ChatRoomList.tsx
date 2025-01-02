@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { ChatRoom } from '../type/chat';
 import io from 'socket.io-client';
 import { server_url } from '../common/serverConfig';
+import BasicModal from '../components/BasicModal';
 
 // 스타일 정의
 const ChatRoomListContainer = styled.div`
@@ -82,6 +83,7 @@ const LeaveButton = styled.button`
 const ChatRoomsList: React.FC = () => {
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [uid, setUid] = useState<number>();
+  const [modalMsg, setModalMsg] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const token = localStorage.getItem('accessToken');
@@ -143,11 +145,11 @@ const ChatRoomsList: React.FC = () => {
           );
           navigate('/main');
         } else {
-          alert('채팅방 나가기 실패');
+          setModalMsg('채팅방 나가기 실패');
         }
       } catch (error) {
         //console.error('Error leaving chat:', error);
-        alert('오류가 발생했습니다.');
+        setModalMsg('오류가 발생했습니다.');
       }
     }
   };
@@ -163,28 +165,37 @@ const ChatRoomsList: React.FC = () => {
     };
   }, []);
 
+  const handleCloseModal = () => {
+    setModalMsg(null); // 모달 닫기
+  };
+
   return (
-    <ChatRoomListContainer>
-      <ChatTitle>채팅</ChatTitle>
-      <ChatRoomList>
-        {chatRooms.map(room => (
-          <li
-            key={room.id}
-            onClick={() => handleRoomClick(room.id, room.room_type)}
-          >
-            <ChatRoomItem>
-              <ProfileImage src={'/marunotwe.png'} alt='Profile' />
-              <RoomName>{room.name}</RoomName>
-              {room.room_type !== 'open' && (
-                <LeaveButton onClick={e => handleLeaveClick(e, room.id)}>
-                  나가기
-                </LeaveButton>
-              )}
-            </ChatRoomItem>
-          </li>
-        ))}
-      </ChatRoomList>
-    </ChatRoomListContainer>
+    <div>
+      <ChatRoomListContainer>
+        <ChatTitle>채팅</ChatTitle>
+        <ChatRoomList>
+          {chatRooms.map(room => (
+            <li
+              key={room.id}
+              onClick={() => handleRoomClick(room.id, room.room_type)}
+            >
+              <ChatRoomItem>
+                <ProfileImage src={'/marunotwe.png'} alt='Profile' />
+                <RoomName>{room.name}</RoomName>
+                {room.room_type !== 'open' && (
+                  <LeaveButton onClick={e => handleLeaveClick(e, room.id)}>
+                    나가기
+                  </LeaveButton>
+                )}
+              </ChatRoomItem>
+            </li>
+          ))}
+        </ChatRoomList>
+      </ChatRoomListContainer>
+      {modalMsg && (
+        <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
+      )}
+    </div>
   );
 };
 

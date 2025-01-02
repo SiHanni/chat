@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
 import { FiArrowLeft } from 'react-icons/fi';
+import BasicModal from '../components/BasicModal';
 
 const ProfileContainer = styled.div`
   display: flex;
@@ -285,16 +286,18 @@ const ProfilePage: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newProfileImg, setNewProfileImg] = useState<File | null>(null);
-  const [modalMsg, setModalMsg] = useState('');
+  const [profileImgModalMsg, setProfileImgModalMsg] = useState('');
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const [modalMsg, setModalMsg] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
   const getProfile = async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      alert('Please log in first');
+      setModalMsg('로그인 만료');
       navigate('/');
       return;
     }
@@ -313,7 +316,7 @@ const ProfilePage: React.FC = () => {
       setGender(data.gender);
       setStatusMsg(data.status_msg);
     } else {
-      alert('Failed to fetch profile');
+      setModalMsg('서버 에러\n잠시 후 다시 시도해주세요');
     }
   };
 
@@ -322,7 +325,7 @@ const ProfilePage: React.FC = () => {
 
     const token = localStorage.getItem('accessToken');
     if (!token) {
-      alert('Please log in first');
+      setModalMsg('로그인 만료');
       navigate('/');
       return;
     }
@@ -339,10 +342,10 @@ const ProfilePage: React.FC = () => {
     });
 
     if (response.ok) {
-      alert('프로필수정 완료');
+      setModalMsg('프로필수정 완료');
       getProfile();
     } else {
-      alert('Failed to update profile');
+      setModalMsg('서버 에러');
     }
   };
 
@@ -374,13 +377,13 @@ const ProfilePage: React.FC = () => {
       const previewUrl = URL.createObjectURL(file); // 미리보기 URL 생성
       setImagePreview(previewUrl); // 미리보기 이미지 업데이트
     } else {
-      alert('Please select a valid image file');
+      setModalMsg('이미지를 확인해주세요');
     }
   };
 
   const handleUploadImage = async () => {
     if (!newProfileImg) {
-      setModalMsg('선택된 이미지가 없어요');
+      setProfileImgModalMsg('선택된 이미지가 없어요');
       return;
     }
 
@@ -400,20 +403,19 @@ const ProfilePage: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('업데이트 실패');
+        setModalMsg('서버 에러\n잠시 후 다시 시도해주세요');
       }
 
       const responseData = await response.json(); // 서버에서 반환한 JSON 데이터를 파싱
-      console.log(responseData.status);
+
       if (responseData.status === 'success') {
-        //alert('Profile image updated successfully');
         setProfileImg(responseData.new_profile_img); // 서버에서 반환된 이미지 URL로 프로필 이미지를 업데이트
         setIsModalOpen(false);
       } else {
-        setModalMsg('오늘 변경 횟수를 다 사용했어요');
+        setProfileImgModalMsg('오늘 변경 횟수를 다 사용했어요');
       }
     } catch (error) {
-      //console.error('Upload image error:', error);
+      setModalMsg('서버 에러\n잠시 후 다시 시도해주세요');
     }
     //};
 
@@ -421,76 +423,87 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <ProfileContainer>
-      <Content>
-        <GoBackButton onClick={handleGoBack}>
-          <FiArrowLeft />
-        </GoBackButton>
-        <ProfileImageWrapper>
-          <ProfileImage
-            src={profileImg || '/maruu.jpeg'}
-            alt='Profile'
-            onClick={handleImageClick}
-          />
-        </ProfileImageWrapper>
-        <ProfileForm onSubmit={handleProfileUpdate}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <Label>이름</Label>
-            <ProfileInput
-              type='text'
-              value={username}
-              onChange={e => setUsername(e.target.value)}
+    <div>
+      <ProfileContainer>
+        <Content>
+          <GoBackButton onClick={handleGoBack}>
+            <FiArrowLeft />
+          </GoBackButton>
+          <ProfileImageWrapper>
+            <ProfileImage
+              src={profileImg || '/maruu.jpeg'}
+              alt='Profile'
+              onClick={handleImageClick}
             />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <Label>상태 메시지</Label>
-            <ProfileInput
-              type='text'
-              value={statusMsg}
-              onChange={e => setStatusMsg(e.target.value)}
-            />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <Label>성별</Label>
-            <ProfileSelect
-              value={gender}
-              onChange={e => setGender(e.target.value)}
+          </ProfileImageWrapper>
+          <ProfileForm onSubmit={handleProfileUpdate}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
             >
-              <option value='male'>남자</option>
-              <option value='female'>여자</option>
-              <option value='alien'>외계인</option>
-            </ProfileSelect>
-          </div>
-          <StyledButton type='submit'>프로필 수정</StyledButton>
-        </ProfileForm>
-      </Content>
+              <Label>이름</Label>
+              <ProfileInput
+                type='text'
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+              />
+            </div>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
+            >
+              <Label>상태 메시지</Label>
+              <ProfileInput
+                type='text'
+                value={statusMsg}
+                onChange={e => setStatusMsg(e.target.value)}
+              />
+            </div>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}
+            >
+              <Label>성별</Label>
+              <ProfileSelect
+                value={gender}
+                onChange={e => setGender(e.target.value)}
+              >
+                <option value='male'>남자</option>
+                <option value='female'>여자</option>
+                <option value='alien'>외계인</option>
+              </ProfileSelect>
+            </div>
+            <StyledButton type='submit'>프로필 수정</StyledButton>
+          </ProfileForm>
+        </Content>
 
-      {isModalOpen && (
-        <ModalBackdrop onClick={handleCloseModal}>
-          <Modal onClick={e => e.stopPropagation()}>
-            {imagePreview && (
-              <div style={{ margin: '20px 0' }}>
-                <ProfileImage src={imagePreview} alt='Profile Preview' />
-              </div>
-            )}
-            <FileInput
-              type='file'
-              accept='image/*'
-              onChange={handleImageChange}
-            />
-            {modalMsg && <p>{modalMsg}</p>}
-            <ModalButtonContainer>
-              <StyledModalButton onClick={handleUploadImage}>
-                변경
-              </StyledModalButton>
-              <StyledModalButton onClick={handleCloseModal}>
-                닫기
-              </StyledModalButton>
-            </ModalButtonContainer>
-          </Modal>
-        </ModalBackdrop>
+        {isModalOpen && (
+          <ModalBackdrop onClick={handleCloseModal}>
+            <Modal onClick={e => e.stopPropagation()}>
+              {imagePreview && (
+                <div style={{ margin: '20px 0' }}>
+                  <ProfileImage src={imagePreview} alt='Profile Preview' />
+                </div>
+              )}
+              <FileInput
+                type='file'
+                accept='image/*'
+                onChange={handleImageChange}
+              />
+              {profileImgModalMsg && <p>{profileImgModalMsg}</p>}
+              <ModalButtonContainer>
+                <StyledModalButton onClick={handleUploadImage}>
+                  변경
+                </StyledModalButton>
+                <StyledModalButton onClick={handleCloseModal}>
+                  닫기
+                </StyledModalButton>
+              </ModalButtonContainer>
+            </Modal>
+          </ModalBackdrop>
+        )}
+      </ProfileContainer>
+      {modalMsg && (
+        <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
       )}
-    </ProfileContainer>
+    </div>
   );
 };
 

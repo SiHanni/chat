@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import axios from 'axios';
 import { server_url } from '../common/serverConfig';
+import BasicModal from '../components/BasicModal';
 
 // 스타일 정의
 const SignInContainer = styled.div`
@@ -126,6 +127,7 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,7 +140,7 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
       );
 
       const data = await response.data;
-
+      console.log('data', data);
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
@@ -147,50 +149,66 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
       navigate('/main');
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        // HTTP 상태 코드를 기반으로 에러 처리
-        alert('Invalid credentials');
+        const errorMsg = error.response.data.message;
+        console.log(errorMsg);
+        if (errorMsg === 'Invalid email') {
+          setErrorMessage('로그인 실패\n이메일을 확인해주세요');
+        } else if (errorMsg === 'Invalid password') {
+          setErrorMessage('로그인 실패\n패스워드를 확인해주세요');
+        }
       } else {
-        console.error('Unexpected error:', error);
+        setErrorMessage(
+          '로그인 실패\n로그인서버 접속 실패\n잠시 후 다시 시도해주세요'
+        );
       }
     }
   };
 
+  const handleCloseModal = () => {
+    setErrorMessage(null); // 모달 닫기
+  };
+
   return (
-    <SignInContainer>
-      <ImageContainer>
-        <img src='/maruhi.png' alt='Login Banner' />
-      </ImageContainer>
-      <FormContainer>
-        <Title></Title>
-        <form onSubmit={handleSubmit}>
-          <InputGroup>
-            {/* <Label>Email:</Label>*/}
-            <Input
-              type='email'
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder='이메일'
-              required
-            />
-          </InputGroup>
+    <div>
+      <SignInContainer>
+        <ImageContainer>
+          <img src='/maruhi.png' alt='Login Banner' />
+        </ImageContainer>
+        <FormContainer>
+          <Title></Title>
+          <form onSubmit={handleSubmit}>
+            <InputGroup>
+              {/* <Label>Email:</Label>*/}
+              <Input
+                type='email'
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder='이메일'
+                required
+              />
+            </InputGroup>
 
-          <InputGroup>
-            {/*<Label>Password:</Label>*/}
-            <Input
-              type='password'
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder='비밀번호'
-              required
-            />
-          </InputGroup>
+            <InputGroup>
+              {/*<Label>Password:</Label>*/}
+              <Input
+                type='password'
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder='비밀번호'
+                required
+              />
+            </InputGroup>
 
-          <Buttons>
-            <StyledButton type='submit'>로그인</StyledButton>
-          </Buttons>
-        </form>
-      </FormContainer>
-    </SignInContainer>
+            <Buttons>
+              <StyledButton type='submit'>로그인</StyledButton>
+            </Buttons>
+          </form>
+        </FormContainer>
+      </SignInContainer>
+      {errorMessage && (
+        <BasicModal modalMsg={errorMessage} onClose={handleCloseModal} />
+      )}
+    </div>
   );
 };
 
