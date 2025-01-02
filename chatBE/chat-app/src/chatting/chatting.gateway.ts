@@ -24,6 +24,8 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
 import { S3Metadata } from 'src/common/s3/entities/s3.entity';
 import { Readable } from 'stream';
+import { AuthService } from 'src/auth/auth.service';
+import { S3Content } from 'src/common/s3/entities/s3.entity';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -56,6 +58,7 @@ export class ChattingGateway
     private readonly logger: CustomLoggerService,
     private configService: ConfigService,
     private readonly s3Service: S3Service,
+    private readonly authService: AuthService,
   ) {
     this.s3Client = new S3Client({
       credentials: {
@@ -170,45 +173,57 @@ export class ChattingGateway
     const buffer = Buffer.from(file_data);
     const client_id = client.id;
 
-    const s3Upload = await this.s3Service.uploadChatFileToS3(
+    const uploadValidator = await this.authService.fileUploadValidator(
       sender_id,
-      room_id,
-      buffer,
-      file_name,
-      content_type,
-      client_id,
+      S3Content.CHAT,
     );
-    console.log('TESTS#', s3Upload);
+    console.log(uploadValidator);
+    if (uploadValidator) {
+      const s3Upload = await this.s3Service.uploadChatFileToS3(
+        sender_id,
+        room_id,
+        buffer,
+        file_name,
+        content_type,
+        client_id,
+      );
+      console.log('TESTS#', s3Upload);
 
-    // TODO: uploadFileToS3에서 s3 경로 받아와서 몽고에 저장해야함
-    const newMessage = new this.chatMessageModel({
-      client_id: client.id,
-      room_id: room_id,
-      sender_id: sender_id,
-      sender_email: sender_email,
-      sender_username: sender_username,
-      sender_profile_img: sender_profile_img,
-      timestamp: new Date(),
-      file_name: file_name,
-      file_path: s3Upload,
-    });
-    console.log('QWE', newMessage);
-    try {
-      const m = await newMessage.save();
-      console.log('mongoose:', m);
-    } catch (error) {
-      console.log('mongoose:', error);
+      // TODO: uploadFileToS3에서 s3 경로 받아와서 몽고에 저장해야함
+      const newMessage = new this.chatMessageModel({
+        client_id: client.id,
+        room_id: room_id,
+        sender_id: sender_id,
+        sender_email: sender_email,
+        sender_username: sender_username,
+        sender_profile_img: sender_profile_img,
+        timestamp: new Date(),
+        file_name: file_name,
+        file_path: s3Upload,
+      });
+      console.log('QWE', newMessage);
+      try {
+        const m = await newMessage.save();
+        console.log('mongoose:', m);
+      } catch (error) {
+        console.log('mongoose:', error);
+      }
+
+      this.server.to(`room-${room_id}`).emit('broadcastFile', {
+        sender_id: sender_id,
+        sender_username: sender_username,
+        sender_email: sender_email,
+        sender_profile_img: sender_profile_img,
+        file_path: s3Upload,
+        file_name: file_name,
+        timestamp: new Date(),
+      });
+    } else {
+      client.emit('fileUploadStatus', {
+        status: 'failed',
+        message: '횟수 초과',
+      });
     }
-
-    this.server.to(`room-${room_id}`).emit('broadcastFile', {
-      sender_id: sender_id,
-      sender_username: sender_username,
-      sender_email: sender_email,
-      sender_profile_img: sender_profile_img,
-      file_path: s3Upload,
-      file_name: file_name,
-      timestamp: new Date(),
-    });
   }
 
   @SubscribeMessage('downloadFile')

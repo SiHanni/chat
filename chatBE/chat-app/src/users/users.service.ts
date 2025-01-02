@@ -144,8 +144,7 @@ export class UsersService {
   ): Promise<{ status: string; new_profile_img?: string }> {
     const { profile_img_name, profile_img_content_type, profile_img_data } =
       updateProfileImgDto;
-    console.log(profile_img_content_type);
-    console.log(profile_img_name);
+
     const user = await this.userRepository.findOne({
       where: { id: uid },
     });

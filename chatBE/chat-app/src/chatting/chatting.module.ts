@@ -12,11 +12,19 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ChatMessage, ChatMessageSchema } from './mongo/chat-message.schema';
 import { S3Metadata } from 'src/common/s3/entities/s3.entity';
 import { S3Service } from 'src/common/s3/s3.service';
+import { AuthService } from 'src/auth/auth.service';
+import { TokenHistory } from 'src/auth/entities/auth-history.entity';
 
 // TODO: Auth 모듈 분리
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Chatting, UserChatting, User, S3Metadata]),
+    TypeOrmModule.forFeature([
+      Chatting,
+      UserChatting,
+      User,
+      S3Metadata,
+      TokenHistory,
+    ]),
     MongooseModule.forFeature([
       { name: ChatMessage.name, schema: ChatMessageSchema },
     ]),
@@ -33,6 +41,6 @@ import { S3Service } from 'src/common/s3/s3.service';
     }),
   ],
   controllers: [ChattingController], // REST API 컨트롤러
-  providers: [ChattingService, ChattingGateway, S3Service], // 웹소켓 게이트웨이
+  providers: [ChattingService, ChattingGateway, S3Service, AuthService], // 웹소켓 게이트웨이
 })
 export class ChattingModule {}
