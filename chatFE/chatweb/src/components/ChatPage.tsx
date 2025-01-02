@@ -287,6 +287,13 @@ const ChatPage: React.FC = () => {
   const [showFilePreviewModal, setShowFilePreviewModal] = useState<
     boolean | null
   >(null);
+  const [uploadStatus, setUploadStatus] = useState<{
+    status: string;
+    message: string;
+  }>({
+    status: '',
+    message: '',
+  });
 
   const messageListRef = useRef<HTMLDivElement | null>(null);
 
@@ -484,6 +491,26 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     if (socket) {
+      socket.on('fileUploadStatus', response => {
+        if (response.status === 'failed') {
+          setUploadStatus({
+            status: 'failed',
+            message: response.message || '파일 전송에 실패했습니다.',
+          });
+        }
+      });
+    }
+
+    // cleanup 시 이벤트 리스너 제거
+    return () => {
+      if (socket) {
+        socket.off('fileUploadStatus');
+      }
+    };
+  }, [socket]);
+
+  useEffect(() => {
+    if (socket) {
       socket.on('fileDownload', data => {
         const { file_data, file_url, original_file_name } = data;
 
@@ -619,7 +646,7 @@ const ChatPage: React.FC = () => {
         <SendButton
           onClick={() => {
             if (input.trim()) sendMessage();
-            if (selectedFile) handleSendFile();
+            //if (selectedFile) handleSendFile();
           }}
         >
           전송
