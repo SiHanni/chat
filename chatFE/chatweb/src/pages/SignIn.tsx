@@ -10,18 +10,17 @@ const SignInContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 110vh;
-
-  background-color: #f9f5ee;
+  height: 100vh;
+  background-color: #f5f3e7;
   color: #333;
   font-family: 'Roboto', sans-serif;
 `;
 
 const FormContainer = styled.div`
-  background-color: #fff;
+  background-color: #f5f3e7;
   padding: 30px;
   border-radius: 15px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+
   width: 80%;
   max-width: 300px;
   text-align: center;
@@ -29,14 +28,14 @@ const FormContainer = styled.div`
 
   @media (max-width: 768px) {
     padding: 20px;
-    margin-top: -30px; /* 모바일에서 여백 조정 */
+    margin-top: -30px;
   }
 `;
 
 const ImageContainer = styled.div`
   width: 30%;
   max-width: 90px;
-  margin-top: -70px; /* 이미지 아래로 이동 */
+  margin-top: -70px;
   position: relative;
   left: -130px;
 
@@ -46,7 +45,7 @@ const ImageContainer = styled.div`
     border-top-right-radius: 15px;
 
     @media (max-width: 768px) {
-      width: 90%; /* 작은 화면에서 이미지 크기 조정 */
+      width: 90%;
       position: relative;
       transform: translate(45px, 15px);
     }
@@ -59,8 +58,7 @@ const Title = styled.h2`
   margin-bottom: 30px;
 
   @media (max-width: 768px) {
-    font-size: 1.5rem; /* 제목 크기 축소 */
-  }
+    font-size: 1.5rem; 
 `;
 
 const InputGroup = styled.div`
@@ -70,19 +68,20 @@ const InputGroup = styled.div`
 const Input = styled.input`
   width: 100%;
   padding: 15px;
+  background-color: transparent;
   font-size: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: none;
+  border-bottom: 2px solid #ddd;
   box-sizing: border-box;
   margin-top: 5px;
   outline: none;
 
   &:focus {
-    border-color: #1f3c73; /* 남색으로 포커스 시 색상 변경 */
+    border-color: #1f3c73;
   }
 
   @media (max-width: 768px) {
-    padding: 12px; /* 모바일에서 입력 필드 패딩 축소 */
+    padding: 12px;
   }
 `;
 
@@ -94,7 +93,7 @@ const Buttons = styled.div`
 `;
 
 const StyledButton = styled.button`
-  background-color: #ffe787; /* 버튼 색상 */
+  background-color: #ffe787;
   color: #fff;
   font-size: 1rem;
   padding: 15px;
@@ -116,7 +115,7 @@ const StyledButton = styled.button`
   }
 
   @media (max-width: 768px) {
-    font-size: 0.9rem; /* 작은 화면에서 글씨 크기 축소 */
+    font-size: 0.9rem;
     padding: 12px;
   }
 `;

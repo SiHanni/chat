@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
 import axios from 'axios';
+import { FaQuestionCircle } from 'react-icons/fa';
 
 // 스타일 정의
 const SignUpContainer = styled.div`
@@ -11,16 +12,16 @@ const SignUpContainer = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f5f3e7; /* 아주 연한 베이지색 */
+  background-color: #f5f3e7;
   color: #333;
   font-family: 'Roboto', sans-serif;
 `;
 
 const FormContainer = styled.div`
-  background-color: #fff;
+  background-color: #f5f3e7;
   padding: 30px;
   border-radius: 15px;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+
   width: 80%;
   max-width: 300px;
   text-align: center;
@@ -28,14 +29,14 @@ const FormContainer = styled.div`
 
   @media (max-width: 768px) {
     padding: 20px;
-    margin-top: -30px; /* 모바일에서 여백 조정 */
+    margin-top: -30px;
   }
 `;
 
 const ImageContainer = styled.div`
   width: 30%;
   max-width: 90px;
-  margin-top: -70px; /* 이미지 아래로 이동 */
+  margin-top: -70px;
   position: relative;
   left: -130px;
 
@@ -45,7 +46,7 @@ const ImageContainer = styled.div`
     border-top-right-radius: 15px;
 
     @media (max-width: 768px) {
-      width: 90%; /* 작은 화면에서 이미지 크기 조정 */
+      width: 90%;
       position: relative;
       transform: translate(45px, 15px);
     }
@@ -58,30 +59,32 @@ const Title = styled.h2`
   margin-bottom: 30px;
 
   @media (max-width: 768px) {
-    font-size: 1.5rem; /* 제목 크기 축소 */
+    font-size: 1.5rem;
   }
 `;
 
 const InputGroup = styled.div`
   margin-bottom: 15px;
+  position: relative;
 `;
 
 const Input = styled.input`
   width: 100%;
   padding: 15px;
+  background-color: transparent;
   font-size: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: none;
+  border-bottom: 2px solid #ddd;
   box-sizing: border-box;
   margin-top: 5px;
   outline: none;
 
   &:focus {
-    border-color: #1f3c73; /* 남색으로 포커스 시 색상 변경 */
+    border-color: #1f3c73;
   }
 
   @media (max-width: 768px) {
-    padding: 12px; /* 모바일에서 입력 필드 패딩 축소 */
+    padding: 12px;
   }
 `;
 
@@ -93,7 +96,7 @@ const Buttons = styled.div`
 `;
 
 const StyledButton = styled.button`
-  background-color: #ffe787; /* 버튼 색상 */
+  background-color: #ffe787;
   color: #fff;
   font-size: 1rem;
   padding: 15px;
@@ -115,8 +118,48 @@ const StyledButton = styled.button`
   }
 
   @media (max-width: 768px) {
-    font-size: 0.9rem; /* 작은 화면에서 글씨 크기 축소 */
+    font-size: 0.9rem;
     padding: 12px;
+  }
+`;
+
+const QuestionMarkIcon = styled.div`
+  position: relative;
+  display: inline-block;
+  color: #ddd;
+  font-size: 20px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+`;
+
+const Modal = styled.div<{ show: boolean }>`
+  position: absolute;
+  top: 36%;
+  left: 60%;
+  transform: translate(-50%, -50%);
+  background-color: #ddd;
+  opacity: ${({ show }) => (show ? 0.6 : 0)};
+  visibility: ${({ show }) => (show ? 'visible' : 'hidden')};
+  color: #333;
+  padding: 15px; /* 여백 조정 */
+  border-radius: 10px;
+  display: ${({ show }) => (show ? 'block' : 'none')};
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  font-size: 0.7rem; /* 글씨 크기 작게 */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 모달 그림자 */
+  white-space: nowrap;
+
+  @media (max-width: 768px) {
+    top: 30%;
+    left: 60%;
   }
 `;
 
@@ -125,6 +168,17 @@ const SignUp: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (showModal) {
+      const timer = setTimeout(() => {
+        setShowModal(false);
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [showModal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,9 +223,12 @@ const SignUp: React.FC = () => {
               type='text'
               value={username}
               onChange={e => setUsername(e.target.value)}
-              placeholder='Nickname'
+              placeholder='이름'
               required
             />
+            <QuestionMarkIcon onClick={() => setShowModal(true)}>
+              <FaQuestionCircle />
+            </QuestionMarkIcon>
           </InputGroup>
 
           <InputGroup>
@@ -180,7 +237,7 @@ const SignUp: React.FC = () => {
               type='email'
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder='Email'
+              placeholder='이메일'
               required
             />
           </InputGroup>
@@ -191,7 +248,7 @@ const SignUp: React.FC = () => {
               type='password'
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder='Password'
+              placeholder='비밀번호'
               required
             />
           </InputGroup>
@@ -201,6 +258,10 @@ const SignUp: React.FC = () => {
           </Buttons>
         </form>
       </FormContainer>
+      <Modal show={showModal}>
+        정책상 중복된 이름은 <br />
+        사용할 수 없습니다
+      </Modal>
     </SignUpContainer>
   );
 };
