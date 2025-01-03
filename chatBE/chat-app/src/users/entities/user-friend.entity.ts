@@ -11,7 +11,7 @@ import {
 import { User } from './user.entity';
 
 @Entity('user_friends')
-@Unique(['user', 'friend'])
+@Unique(['requester', 'friend'])
 export class UserFriend {
   @PrimaryGeneratedColumn()
   id: number;
@@ -37,8 +37,8 @@ export class UserFriend {
   is_request: boolean;
 
   @ManyToOne(() => User, { eager: true, nullable: false })
-  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: User;
+  @JoinColumn({ name: 'requester_id', referencedColumnName: 'id' })
+  requester: User;
 
   @ManyToOne(() => User, { eager: true, nullable: false })
   @JoinColumn({ name: 'friend_id', referencedColumnName: 'id' })

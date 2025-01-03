@@ -1,8 +1,12 @@
-import { IsString } from 'class-validator';
+import { IsString, IsNumber } from 'class-validator';
 
 export class FriendDto {
+  @IsNumber()
+  friend_id?: number;
   @IsString()
-  email: string;
+  email?: string;
+  @IsString()
+  username?: string;
 }
 
 export class FriendInfoDto {

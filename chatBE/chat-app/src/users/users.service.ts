@@ -226,10 +226,21 @@ export class UsersService {
     }
   }
 
-  async findFriend({ email }: FriendDto): Promise<FriendInfoDto> {
-    const friend = await this.userRepository.findOne({
-      where: { email: email },
-    });
+  async findFriend(friendDto: FriendDto): Promise<FriendInfoDto> {
+    const { email, username } = friendDto;
+
+    let friend: FriendInfoDto;
+    if (email) {
+      friend = await this.userRepository.findOne({
+        where: { email: email },
+      });
+    }
+    if (username) {
+      friend = await this.userRepository.findOne({
+        where: { username: username },
+      });
+    }
+
     if (!friend) {
       throw new BadRequestException('Invalid User');
     }
@@ -260,25 +271,25 @@ export class UsersService {
     const alreadyFriend = await this.userFriendRepository.find({
       where: [
         {
-          user: { id: uid },
+          requester: { id: uid },
           friend: { id: friend.id },
           is_accepted: true,
         },
         {
-          user: { id: friend.id },
+          requester: { id: friend.id },
           friend: { id: uid },
           is_accepted: true,
         },
       ],
     });
     if (alreadyFriend.length > 0) {
-      throw new BadRequestException('Invalid request:: Already friend');
+      return { msg: 'already friend' };
     }
 
     const existingRequest = await this.userFriendRepository.find({
       where: [
         {
-          user: { id: uid },
+          requester: { id: uid },
           friend: { id: friend.id },
           is_accepted: false,
         },
@@ -310,18 +321,19 @@ export class UsersService {
           { id: existingRequest[0].id },
           {
             updated_at: kst,
+            is_request: true,
           },
         );
         return { msg: 'success' };
       }
       const userToFriend = this.userFriendRepository.create({
-        user: user,
+        requester: user,
         friend: friend,
         is_accepted: false,
         is_request: true,
       });
       const friendToUser = this.userFriendRepository.create({
-        user: friend,
+        requester: friend,
         friend: user,
         is_accepted: false,
       });
@@ -338,24 +350,25 @@ export class UsersService {
   // 뭔가 리팩토링이 필요할 것 같긴함.
   async acceptFriendRequest(
     uid,
-    { email }: FriendDto,
+    { friend_id }: FriendDto,
   ): Promise<{ msg: string }> {
+    // 친구 요청한 사람
     const reqProducer = await this.userFriendRepository.findOne({
       where: {
-        user: { email: email },
+        requester: { id: friend_id },
         friend: { id: uid },
         is_accepted: false,
       },
     });
-
+    // 나
     const reqSubscriber = await this.userFriendRepository.findOne({
       where: {
-        user: { id: uid },
-        friend: { email: email },
+        requester: { id: uid },
+        friend: { id: friend_id },
         is_accepted: false,
       },
     });
-    if (uid === reqProducer.id) {
+    if (uid === reqProducer.requester.id) {
       throw new BadRequestException('Inavalid request');
     }
 
@@ -378,22 +391,25 @@ export class UsersService {
     }
   }
 
-  async refuseFriendRequest(uid, { email }: FriendDto): Promise<boolean> {
+  async refuseFriendRequest(uid, { friend_id }: FriendDto): Promise<boolean> {
+    console.log('eeeee', friend_id);
     const reqProducer = await this.userFriendRepository.findOne({
       where: {
-        user: { email: email },
+        requester: { id: friend_id },
         friend: { id: uid },
         is_accepted: false,
       },
     });
     const reqSubscriber = await this.userFriendRepository.findOne({
       where: {
-        user: { id: uid },
-        friend: { email: email },
+        requester: { id: uid },
+        friend: { id: friend_id },
         is_accepted: false,
       },
     });
-    if (uid === reqProducer.id) {
+    console.log('RE', reqProducer);
+    console.log('SB', reqSubscriber);
+    if (uid === reqProducer.requester.id) {
       throw new BadRequestException('Inavalid request');
     }
     if (!reqProducer || !reqSubscriber) {
@@ -421,10 +437,10 @@ export class UsersService {
     });
     const userFriends = await this.userFriendRepository.find({
       where: [
-        { user: { id: uid }, is_accepted: true, is_blacklist: false },
+        { requester: { id: uid }, is_accepted: true, is_blacklist: false },
         //{ friend: { id: uid }, is_accepted: true, is_blacklist: false },
       ],
-      relations: ['user', 'friend'],
+      relations: ['requester', 'friend'],
     });
     const friendCnt = userFriends.length;
     const userInfo = {
@@ -450,10 +466,11 @@ export class UsersService {
   }
   /** 나에게 들어온 친구 추가 요청 목록 */
   async getFriendRequests(uid: number): Promise<UserFriend[]> {
-    return this.userFriendRepository.find({
-      where: { user: { id: uid }, is_accepted: false },
-      relations: ['friend'],
+    const res = await this.userFriendRepository.find({
+      where: { friend: { id: uid }, is_accepted: false, is_request: true },
     });
+
+    return res;
   }
 
   /** 비밀번호 수정 */
