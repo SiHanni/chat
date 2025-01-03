@@ -80,7 +80,7 @@ const SearchTypeSelector = styled.div`
     font-weight: bold;
     border: none;
     background-color: #ddd;
-    color: #333;
+    color: #ababab;
     cursor: pointer;
     transition: all 0.3s ease;
     border-radius: 0;
@@ -100,7 +100,7 @@ const SearchTypeSelector = styled.div`
 
     &.active {
       background-color: #ffe787;
-      color: #7d7d7d;
+      color: #403f3f;
       border-color: #f4d03f;
     }
   }
