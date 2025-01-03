@@ -19,8 +19,8 @@ const FriendCardContainer = styled.div`
   align-items: center;
 
   @media (max-width: 600px) {
-    width: 150px;
-    height: 200px;
+    width: 160px;
+    height: 210px;
     padding: 10px;
   }
 `;
@@ -73,7 +73,7 @@ const FriendButton = styled.button`
   }
 
   @media (max-width: 768px) {
-    padding: 7px;
+    padding: 6px;
   }
 `;
 
@@ -95,6 +95,8 @@ const FriendCard: React.FC<{ friend: FindFriend }> = ({ friend }) => {
         setModalMsg('친구 요청 완료');
       } else if (response.data.msg === 'too many request') {
         setModalMsg('잠시 후 다시 시도해주세요');
+      } else if (response.data.msg === 'already friend') {
+        setModalMsg('이미 등록된 친구입니다');
       }
     } catch (err) {
       // 상세화 필요

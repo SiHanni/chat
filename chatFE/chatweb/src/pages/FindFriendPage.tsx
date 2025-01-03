@@ -48,6 +48,7 @@ const StyledButton = styled.button`
   transition: all 0.3s ease;
   font-weight: bold;
   margin-bottom: 15px;
+  white-space: nowrap;
 
   &:hover {
     background-color: #f4d03f;
@@ -67,24 +68,70 @@ const StyledButton = styled.button`
   }
 `;
 
+const SearchTypeSelector = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+
+  button {
+    width: 70px; /* 고정된 너비 설정 */
+    padding: 5px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    background-color: #ddd;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 0;
+    white-space: nowrap;
+
+    &:first-child {
+      border-radius: 5px 0 0 5px; /* 왼쪽 버튼 둥근 모서리 */
+    }
+
+    &:last-child {
+      border-radius: 0 5px 5px 0; /* 오른쪽 버튼 둥근 모서리 */
+    }
+
+    &:hover {
+      background-color: #e9ecef;
+    }
+
+    &.active {
+      background-color: #ffe787;
+      color: #7d7d7d;
+      border-color: #f4d03f;
+    }
+  }
+
+  button + button {
+    border-left: none; /* 버튼 간 경계 제거 */
+  }
+`;
+
 const FindFriendPage: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
+  const [searchType, setSearchType] = useState<string>('email'); // 'email' or 'username'
+  const [searchValue, setSearchValue] = useState<string>('');
   const [friends, setFriends] = useState<any[]>([]);
   const [modalMsg, setModalMsg] = useState<string | null>(null);
 
   const handleSearch = async () => {
-    if (!email) {
+    if (!searchValue && searchType === 'email') {
       setModalMsg('이메일을 입력해주세요.');
       return;
+    } else if (!searchValue && searchType === 'username') {
+      setModalMsg('닉네임을 입력해주세요.');
     }
 
     try {
       const response = await axios.get(`${server_url}/users/find-friend`, {
-        params: { email },
+        params: { [searchType]: searchValue },
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
+      console.log(response.data);
       setFriends([response.data]);
       setModalMsg(null);
     } catch (err) {
@@ -94,26 +141,55 @@ const FindFriendPage: React.FC = () => {
   };
 
   const handleCloseModal = () => {
-    setModalMsg(null); // 모달 닫기
+    setModalMsg(null);
+  };
+
+  const handleSearchTypeChange = (type: string) => {
+    setSearchType(type);
+    setSearchValue('');
   };
 
   return (
     <div>
       <FindFriendContainer>
+        {/* 검색 타입 선택 */}
+        <SearchTypeSelector>
+          <button
+            className={searchType === 'email' ? 'active' : ''}
+            onClick={() => handleSearchTypeChange('email')}
+          >
+            이메일
+          </button>
+          <button
+            className={searchType === 'username' ? 'active' : ''}
+            onClick={() => handleSearchTypeChange('username')}
+          >
+            이름
+          </button>
+        </SearchTypeSelector>
+
+        {/* 검색 입력창 */}
         <SearchInput
-          type='email'
-          placeholder='이메일로 친구 찾기'
-          value={email}
-          onChange={e => setEmail(e.target.value)}
+          type='text'
+          placeholder={
+            searchType === 'email'
+              ? '이메일로 친구 찾기'
+              : '닉네임으로 친구 찾기'
+          }
+          value={searchValue}
+          onChange={e => setSearchValue(e.target.value)}
         />
         <StyledButton onClick={handleSearch}>친구 찾기</StyledButton>
 
+        {/* 친구 목록 */}
         <FriendListContainer>
           {friends.map((friend, index) => (
             <FriendCard key={index} friend={friend} />
           ))}
         </FriendListContainer>
       </FindFriendContainer>
+
+      {/* 모달 */}
       {modalMsg && (
         <BasicModal modalMsg={modalMsg} onClose={handleCloseModal} />
       )}

@@ -126,7 +126,7 @@ const TimeAgo = styled.span`
 interface FriendRequest {
   id: number;
   created_at: string;
-  friend: {
+  requester: {
     id: number;
     username: string;
     profile_img: string;
@@ -148,10 +148,10 @@ const FriendRequestsList: React.FC = () => {
             },
           }
         );
-
+        console.log(response.data);
         setFriendRequests(response.data);
       } catch (error) {
-        console.error('Failed to fetch friend requests', error);
+        console.error('Failed to fetch friend requests');
       }
     };
 
@@ -170,7 +170,7 @@ const FriendRequestsList: React.FC = () => {
         }
       );
       setFriendRequests(prev =>
-        prev.filter(request => request.friend.id !== friendId)
+        prev.filter(request => request.requester.id !== friendId)
       );
     } catch (error) {
       console.error('Failed to accept friend request', error);
@@ -186,7 +186,7 @@ const FriendRequestsList: React.FC = () => {
         data: { friend_id: friendId },
       });
       setFriendRequests(prev =>
-        prev.filter(request => request.friend.id !== friendId)
+        prev.filter(request => request.requester.id !== friendId)
       );
     } catch (error) {
       console.error('Failed to refuse friend request', error);
@@ -199,25 +199,25 @@ const FriendRequestsList: React.FC = () => {
         <EmptyMessage>친구 요청이 없습니다.</EmptyMessage>
       ) : (
         friendRequests.map(request => (
-          <RequestItem key={request.friend.id}>
+          <RequestItem key={request.requester.id}>
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <ProfileImage
-                src={request.friend.profile_img || '/maruu.jpeg'}
-                alt={request.friend.username}
+                src={request.requester.profile_img || '/maruu.jpeg'}
+                alt={request.requester.username}
               />
-              <Username>{request.friend.username}</Username>
+              <Username>{request.requester.username}</Username>
               <TimeAgo>{calculateTimeAgo(request.created_at)}</TimeAgo>
             </div>
             <ButtonContainer>
               <Button
                 variant='accept'
-                onClick={() => handleAccept(request.friend.id)}
+                onClick={() => handleAccept(request.requester.id)}
               >
                 수락
               </Button>
               <Button
                 variant='reject'
-                onClick={() => handleReject(request.friend.id)}
+                onClick={() => handleReject(request.requester.id)}
               >
                 거절
               </Button>
