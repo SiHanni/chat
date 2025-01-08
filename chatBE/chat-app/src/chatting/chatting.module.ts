@@ -14,6 +14,7 @@ import { S3Metadata } from 'src/common/s3/entities/s3.entity';
 import { S3Service } from 'src/common/s3/s3.service';
 import { AuthService } from 'src/auth/auth.service';
 import { TokenHistory } from 'src/auth/entities/auth-history.entity';
+import { ChattingHistory } from './entities/chatting-history.entity';
 
 // TODO: Auth 모듈 분리
 @Module({
@@ -24,6 +25,8 @@ import { TokenHistory } from 'src/auth/entities/auth-history.entity';
       User,
       S3Metadata,
       TokenHistory,
+      ChattingHistory,
+      Chatting,
     ]),
     MongooseModule.forFeature([
       { name: ChatMessage.name, schema: ChatMessageSchema },

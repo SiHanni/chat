@@ -12,7 +12,6 @@ async function bootstrap() {
   const logger = app.get(CustomLoggerService);
   const timeZone = configService.get<string>('TZ') || 'Asia/Seoul';
   process.env.TZ = timeZone;
-  console.log(process.env.TZ);
 
   app.enableCors({
     origin: [
@@ -27,7 +26,6 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useWebSocketAdapter(new IoAdapter(app));
   await app.listen(port ?? 3000);
-  logger.log(`Server is starting in port ${port}!`);
-  logger.log('test for action6');
+  logger.log(`Server is starting in port ${port}:: ${process.env.TZ}`);
 }
 bootstrap();

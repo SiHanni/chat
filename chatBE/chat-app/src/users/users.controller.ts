@@ -170,6 +170,19 @@ export class UsersController {
     const uid = (request as CustomRequest).user?.subject;
     return this.usersService.changePassword(uid, changePwdDto);
   }
+
+  @Post('logOut')
+  @UseGuards(AuthGuard)
+  async logOut(@Req() request: Request, @Res() response: Response) {
+    const uid = (request as CustomRequest).user?.subject;
+    console.log(`${uid} request logout`);
+    response.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+    });
+    return response.status(200).json({ message: 'Successfully logged out' });
+  }
   //가드 사용 예시
   //@UseGuards(AuthGuard)
   //@Get('profile')

@@ -15,7 +15,7 @@ import { Model } from 'mongoose';
 import { ChatMessage } from './mongo/chat-message.schema';
 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { AuthChatDto } from './dto/join-chatting.dto';
 import { BadRequestException } from '@nestjs/common';
 import { CustomLoggerService } from 'src/common/logger/logger.service';
@@ -26,6 +26,9 @@ import { S3Metadata } from 'src/common/s3/entities/s3.entity';
 import { Readable } from 'stream';
 import { AuthService } from 'src/auth/auth.service';
 import { S3Content } from 'src/common/s3/entities/s3.entity';
+import { ChattingHistory } from './entities/chatting-history.entity';
+import { User } from 'src/users/entities/user.entity';
+import { jwtDecode } from 'src/common/jsonDecoder';
 
 @WebSocketGateway({
   namespace: 'chat',
@@ -47,10 +50,16 @@ export class ChattingGateway
   @WebSocketServer() // 해당 데코레이터가 웹소켓 서버 인스턴스를 자동 주입함.(초기화 필요 x)
   server: Server;
   private s3Client: S3Client;
+  // TODO: 중요:: 이건 테스트 끝나면 바로 zookeeper znode 또는 redis로 꼭 대체할 것
+  clientMap = new Map<number, any>();
 
   constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     @InjectRepository(UserChatting)
     private readonly userChatting: Repository<UserChatting>,
+    @InjectRepository(ChattingHistory)
+    private readonly chattingHistory: Repository<ChattingHistory>,
     @InjectModel(ChatMessage.name)
     private readonly chatMessageModel: Model<ChatMessage>,
     @InjectRepository(S3Metadata)
@@ -75,29 +84,38 @@ export class ChattingGateway
   onModuleInit() {
     this.logger.log('WebSocket server initialized');
   }
-  /** ws 서버에 연결될 떄 호출 (클라이언트가 서버에 연결을 시도할 때 실행) */
-  handleConnection(client: Socket) {
+  /** 클라이언트가 WebSocket에 연결되었을 때 실행할 코드를 정의. */
+  async handleConnection(client: Socket) {
     const authToken = client.handshake.auth.token;
-    this.logger.log(`ws conn auth token:${authToken}`);
+    //this.logger.log(`ws conn auth token:${authToken}`);
+
     if (!authToken) {
-      this.logger.error(
-        `No authentication token provided is WS  :${client.id}`,
-      );
+      this.logger.error(`No authentication token :: ${client.id}`);
       throw new BadRequestException('No authentication token provided');
     }
-    this.logger.log(
-      `Client Connected: id:${client.id}, room:${JSON.stringify(client.rooms)}`,
-    );
+    const userInfo = await jwtDecode(authToken);
+    //console.log(userInfo.subject);
+    //const clientId = { clientId: client.id };
+    this.clientMap.set(userInfo.subject, client);
+    this.logger.log(`Client Connected: id:${client.id}`);
   }
-  /** 클라이언트가 ws 서버와의 연결을 끊을 때 혹은 종료되었을 때(네트워크 이슈) 호출 */
-  handleDisconnect(client: Socket) {
-    this.logger.log(
-      `Client disconnected: ${client.id}, room:${JSON.stringify(client.rooms)}`,
-    );
+  /** 클라이언트가 WebSocket 연결을 해제했을 때 실행할 코드를 정의. */
+  async handleDisconnect(client: Socket) {
+    const authToken = client.handshake.auth.token;
+    //this.logger.log(`ws conn auth token:${authToken}`);
+
+    if (!authToken) {
+      this.logger.error(`No authentication token :: ${client.id}`);
+      throw new BadRequestException('No authentication token provided');
+    }
+    const userInfo = await jwtDecode(authToken);
+    this.clientMap.delete(userInfo.subject);
+    this.logger.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('ping')
   async handlePing(client: Socket) {
+    //this.logger.log(`client: [${client.id}], chatting healt check`);
     client.emit('pong', { message: 'pong' });
 
     //this.logger.log('ping-pong');
@@ -149,6 +167,25 @@ export class ChattingGateway
       });
     } catch (error) {
       console.log('err', error);
+    }
+    const userInRoom = await this.userChatting.find({
+      where: { chatting: { id: room_id }, user: { id: Not(sender_id) } },
+    });
+    for (const member of userInRoom) {
+      const chatMemberId = member.user.id;
+      const client = this.clientMap.get(chatMemberId);
+
+      // TODO: client.emit('newMessage', { 서버 - 서버 꼭 다시 시도하기
+      if (client) {
+        try {
+          this.server.emit('newMessage', {
+            room_id,
+            chatMemberId,
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      }
     }
 
     console.log(`Message from ${sender_id}: ${message}`);
@@ -278,12 +315,33 @@ export class ChattingGateway
     const { room_type, room_id, uid } = authChatDto;
     // open이면 그냥 들여보내고, private면 체크가 필요함
 
-    const userCheck = await this.userChatting.find({
+    const userCheck = await this.userChatting.findOne({
       where: { chatting: { id: room_id }, user: { id: uid } },
     });
+    const user = await this.userRepository.findOne({
+      where: { id: uid },
+    });
+    // history check
+    const chatHistory = await this.chattingHistory.findOne({
+      where: { chatting: { id: room_id }, user: { id: uid } },
+    });
+    const currentTime = new Date();
+
+    if (!chatHistory) {
+      const newChatHistory = await this.chattingHistory.create({
+        user: user,
+        chatting: userCheck.chatting,
+        last_enter: currentTime,
+      });
+      await this.chattingHistory.save(newChatHistory);
+    }
+    await this.chattingHistory.update(
+      { user: { id: uid }, chatting: { id: room_id } },
+      { last_enter: currentTime },
+    );
     if (room_type === 'private') {
       client.join(`room-${room_id}`);
-    } else if (userCheck.length < 1) {
+    } else if (userCheck) {
       throw new BadRequestException('Invalid User');
     }
 
@@ -292,12 +350,54 @@ export class ChattingGateway
   }
 
   @SubscribeMessage('leaveRoom')
-  handleLeaveRoom(
-    @MessageBody() room_id: number,
+  async handleLeaveRoom(
+    @MessageBody() authChatDto: AuthChatDto,
     @ConnectedSocket() client: Socket,
   ) {
+    const { room_id, uid } = authChatDto;
     client.leave(`room-${room_id}`);
+    try {
+      const currentTime = new Date();
+      await this.chattingHistory.update(
+        { user: { id: uid }, chatting: { id: room_id } },
+        { last_exit: currentTime },
+      );
+    } catch (error) {
+      this.logger.error(error);
+    }
     console.log(`Client ${client.id} left room ${room_id}`);
     client.to(`room-${room_id}`).emit('roomLeft', { room_id });
+  }
+
+  @SubscribeMessage('unReadChatInfo')
+  async handleChatInfo(
+    @MessageBody() data: { room_id: number; chatMemberId: number },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const { room_id, chatMemberId } = data;
+
+    const chattingHistory = await this.chattingHistory.findOne({
+      where: { user: { id: chatMemberId }, chatting: { id: room_id } },
+    });
+    const lastExitTime = chattingHistory.last_exit;
+    const messageCnt = await this.chatMessageModel.countDocuments({
+      room_id: room_id.toString(),
+      timestamp: { $gt: lastExitTime },
+    });
+
+    const lastMessageQuery = await this.chatMessageModel
+      .findOne({
+        room_id: room_id.toString(),
+        timestamp: { $gt: lastExitTime },
+      })
+      .sort({ timestamp: -1 })
+      .exec();
+    const lastMessage = lastMessageQuery.message;
+
+    client.emit('newChatRoomInfo', {
+      room_id,
+      messageCnt,
+      lastMessage,
+    });
   }
 }

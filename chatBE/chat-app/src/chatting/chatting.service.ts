@@ -13,11 +13,11 @@ import { CreateChattingDto } from './dto/create-chatting.dto';
 
 import { Model } from 'mongoose';
 import { ChatMessage } from './mongo/chat-message.schema';
-import { ChatMessageDto } from './dto/talk-chatting.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { RoomType } from './entities/chatting.entity';
 import { LeaveChattingDto } from './dto/leave-chatting.dto';
 import { CustomLoggerService } from 'src/common/logger/logger.service';
+import { ChattingHistory } from './entities/chatting-history.entity';
 
 @Injectable()
 export class ChattingService {
@@ -26,6 +26,8 @@ export class ChattingService {
     private readonly chattingRepository: Repository<Chatting>,
     @InjectRepository(UserChatting)
     private readonly userChattingRepository: Repository<UserChatting>,
+    @InjectRepository(ChattingHistory)
+    private readonly chattingHistory: Repository<ChattingHistory>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectModel(ChatMessage.name)
@@ -125,10 +127,6 @@ export class ChattingService {
       throw new InternalServerErrorException('error occured at leave chat');
     }
   }
-  async saveMessage(messageDto: ChatMessageDto): Promise<ChatMessage> {
-    const message = new this.chatMessageModel(messageDto);
-    return message.save();
-  }
 
   async getUserChatRooms(uid: number) {
     const openChats = await this.chattingRepository.find({
@@ -141,9 +139,46 @@ export class ChattingService {
       .andWhere('uc.user_id=:uid', { uid })
       .andWhere('uc.is_active=:isActive', { isActive: true })
       .getMany();
-    //console.log(openChats);
-    //console.log(privateChats);
-    return { uid: uid, chat: [...openChats, ...privateChats] };
+    const chatRoomList = [...openChats, ...privateChats];
+
+    const chatRoomIds = chatRoomList.map((chatRoom) => chatRoom.id);
+
+    const unReadInfo = [];
+    try {
+      for (const id of chatRoomIds) {
+        const chattingHistory = await this.chattingHistory.findOne({
+          where: { user: { id: uid }, chatting: { id: id } },
+        });
+        const lastExitTime = chattingHistory.last_exit;
+        const messageCnt = await this.chatMessageModel.countDocuments({
+          room_id: id.toString(),
+          timestamp: { $gt: lastExitTime },
+        });
+
+        const lastMessageQuery = await this.chatMessageModel
+          .findOne({
+            room_id: id.toString(),
+          })
+          .sort({ timestamp: -1 })
+          .exec();
+
+        const lastMessage = lastMessageQuery.message;
+
+        unReadInfo.push({
+          room_id: id,
+          unread_message_cnt: messageCnt,
+          last_message: lastMessage,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
+    return {
+      uid: uid,
+      chat: [...openChats, ...privateChats],
+      unread_info: unReadInfo,
+    };
   }
 
   async getMessages(uid: number, room_id: number) {

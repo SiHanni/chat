@@ -74,6 +74,7 @@ export class UsersService {
       password: hashedPassword,
       is_active: true,
     });
+
     try {
       const savedUser = await this.userRepository.save(newUser);
       return savedUser;
@@ -392,7 +393,6 @@ export class UsersService {
   }
 
   async refuseFriendRequest(uid, { friend_id }: FriendDto): Promise<boolean> {
-    console.log('eeeee', friend_id);
     const reqProducer = await this.userFriendRepository.findOne({
       where: {
         requester: { id: friend_id },
@@ -407,8 +407,7 @@ export class UsersService {
         is_accepted: false,
       },
     });
-    console.log('RE', reqProducer);
-    console.log('SB', reqSubscriber);
+
     if (uid === reqProducer.requester.id) {
       throw new BadRequestException('Inavalid request');
     }

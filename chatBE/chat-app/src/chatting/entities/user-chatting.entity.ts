@@ -28,7 +28,4 @@ export class UserChatting {
 
   @Column({ nullable: true })
   joined_at: Date; // 참가 일시
-
-  @Column({ default: 0 })
-  unreadMessageCount: number;
 }
