@@ -9,7 +9,7 @@ import PrivateRoute from './components/PrivateRoute';
 import ChatPage from './components/ChatPage';
 import TokenManager from './common/tokenManager';
 import SettingsPage from './pages/SettingPage';
-import UpdateLogsPage from './pages/UpdateLogsPage';
+import { WebSocketProvider } from './common/WebSocketContext';
 
 const App: React.FC = () => {
   const refreshAuthToken = () => {
@@ -22,27 +22,28 @@ const App: React.FC = () => {
   };
 
   return (
-    <Router>
-      <Routes>
-        <Route path='/' element={<Home />} />
-        <Route
-          path='/signIn'
-          element={<SignIn handleLogin={refreshAuthToken} />}
-        />
-        <Route path='/signUp' element={<SignUp />} />
+    <WebSocketProvider>
+      <Router>
+        <Routes>
+          <Route path='/' element={<Home />} />
+          <Route
+            path='/signIn'
+            element={<SignIn handleLogin={refreshAuthToken} />}
+          />
+          <Route path='/signUp' element={<SignUp />} />
 
-        {/* PrivateRoute로 감싸서 /main 경로에 접근을 인증된 사용자로 제한 */}
+          {/* PrivateRoute로 감싸서 /main 경로에 접근을 인증된 사용자로 제한 */}
 
-        <Route element={<PrivateRoute />}>
-          <Route path='/main' element={<MainPage />} />
-          <Route path='/profile' element={<ProfilePage />} />
-          <Route path='/chat' element={<ChatPage />} />
-          <Route path='/chat/:id' element={<ChatPage />} />
-          <Route path='/settings' element={<SettingsPage />} />
-          <Route path='/update-logs' element={<UpdateLogsPage />} />
-        </Route>
-      </Routes>
-    </Router>
+          <Route element={<PrivateRoute />}>
+            <Route path='/main' element={<MainPage />} />
+            <Route path='/profile' element={<ProfilePage />} />
+            <Route path='/chat' element={<ChatPage />} />
+            <Route path='/chat/:id' element={<ChatPage />} />
+            <Route path='/settings' element={<SettingsPage />} />
+          </Route>
+        </Routes>
+      </Router>
+    </WebSocketProvider>
   );
 };
 

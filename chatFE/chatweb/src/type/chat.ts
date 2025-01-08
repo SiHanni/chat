@@ -59,3 +59,9 @@ export interface Message {
   file_path: string;
   file_preview?: string;
 }
+
+export interface UnreadInfo {
+  room_id: number;
+  unread_message_cnt: number;
+  last_message: number;
+}

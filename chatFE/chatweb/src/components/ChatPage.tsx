@@ -314,6 +314,7 @@ const ChatPage: React.FC = () => {
     const socketInstance = io(`${server_url}/chat`, {
       auth: { token },
     });
+
     socketInstance.emit('joinRoom', { uid, room_id, room_type });
 
     socketInstance.on('broadcastMessage', data => {
@@ -333,7 +334,7 @@ const ChatPage: React.FC = () => {
     setSocket(socketInstance);
 
     return () => {
-      socketInstance.emit('leaveRoom', room_id);
+      socketInstance.emit('leaveRoom', { uid, room_id, room_type });
       socketInstance.disconnect();
       //console.log('DISCONNECT');
     };

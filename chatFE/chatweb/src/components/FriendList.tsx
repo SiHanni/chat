@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
-import io from 'socket.io-client';
 import { FaCommentDots } from 'react-icons/fa';
 import { FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { server_url } from '../common/serverConfig';
+import { useWebSocket } from '../common/WebSocketContext';
 
 interface Friend {
   uid: number;
@@ -14,9 +14,6 @@ interface Friend {
   status_msg: string;
   email: string;
 }
-/** 채팅방으로 이동시 웹소켓 연결을 확인하고 웹소켓 연결을 하기 위한 소켓 */
-//const socket = io(server_url, { autoConnect: false });
-const socket = io(server_url);
 
 const MyContainer = styled.div`
   width: 100%;
@@ -235,7 +232,10 @@ const FriendsList: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [uid, setUid] = useState<number>();
   const [friendCnt, setFriendCnt] = useState<number>();
+  const { socket, isConnected } = useWebSocket();
+
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchFriends = async () => {
       try {
@@ -269,17 +269,16 @@ const FriendsList: React.FC = () => {
       );
       const { id, room_type } = response.data;
       const room_id = id;
-      if (!socket.connected) {
-        socket.connect();
+      if (socket) {
+        socket.emit('joinRoom', { room_id: room_id, room_type, uid });
+        navigate('/chat', {
+          state: {
+            room_type,
+            room_id,
+            uid,
+          },
+        });
       }
-      socket.emit('joinRoom', { room_id: room_id, room_type, uid });
-      navigate('/chat', {
-        state: {
-          room_type,
-          room_id,
-          uid,
-        },
-      });
     } catch (error) {
       console.error('Failed to create or fetch chat', error);
     }

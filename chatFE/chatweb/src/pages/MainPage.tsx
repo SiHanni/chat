@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import FriendsList from '../components/FriendList';
 import FriendRequestsList from '../components/FriendRequestList';
 import FindFriendPage from './FindFriendPage';
 import ChatRoomsList from '../components/ChatRoomList';
-import { io, Socket } from 'socket.io-client';
+import { useWebSocket } from '../common/WebSocketContext';
+import axios from 'axios';
 import { server_url } from '../common/serverConfig';
 
 // 스타일 정의
@@ -166,45 +167,38 @@ const MoreMenuItem = styled.div`
 const MainPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('friends');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const [socket, setSocket] = useState<Socket | null>(null);
+  const { connectWebSocket } = useWebSocket();
+
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // 로그인 후 메인 페이지로 왔을 때 웹소켓 연결 확인 및 초기화
-    const token = localStorage.getItem('accessToken');
-    if (!token) {
-      navigate('/');
-    }
-
-    if (!socket) {
-      const socketInstance = io(`${server_url}`, {
-        auth: { token },
-      });
-
-      socketInstance.on('connect', () => {
-        //console.log('Connected to WebSocket');
-      });
-
-      socketInstance.on('disconnect', () => {
-        //console.log('Disconnected from WebSocket');
-      });
-
-      setSocket(socketInstance);
-    }
-
-    return () => {
-      if (socket) {
-        socket.disconnect();
-        setSocket(null);
-      }
-    };
-  }, [socket, navigate]);
+  const userAuthToken = localStorage.getItem('accessToken');
+  if (userAuthToken) {
+    connectWebSocket(userAuthToken);
+  }
 
   // 로그아웃 처리 함수
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    navigate('/'); // 홈 페이지로 이동
+  const handleLogout = async () => {
+    try {
+      navigate('/');
+      await axios.post(
+        `${server_url}/users/logOut`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+          withCredentials: true,
+        }
+      );
+
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('last_login');
+      localStorage.removeItem('socketState');
+      localStorage.removeItem('user');
+    } catch (error) {
+      //console.log(error);
+    }
   };
 
   const handleTabClick = (tab: string) => setActiveTab(tab);

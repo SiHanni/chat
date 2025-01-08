@@ -144,7 +144,9 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('last_login', data.last_login);
+
       handleLogin(data.accessToken);
+      // SignIn 컴포넌트가 로그인에 성공하면 handleLogin을 호출, accessToken을 상위 컴포넌트에 전달
 
       navigate('/main');
     } catch (error) {
