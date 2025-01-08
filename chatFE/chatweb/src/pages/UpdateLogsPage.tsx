@@ -84,12 +84,15 @@ const GoBackButton = styled.button`
 const UpdateLogsPage: React.FC = () => {
   const [logs, setLogs] = useState<any[]>([]);
   const navigate = useNavigate();
-
+  console.log('UpdateLogsPage mounted');
   useEffect(() => {
     // JSON 파일을 public 폴더에서 fetch 가능
-    fetch('/updateLogs.json')
+    fetch('./updateLogs.json')
       .then(response => response.json())
-      .then(data => setLogs(data))
+      .then(data => {
+        console.log(data);
+        setLogs(data);
+      })
       .catch(error => console.error('Error loading update logs:', error));
   }, []);
 
