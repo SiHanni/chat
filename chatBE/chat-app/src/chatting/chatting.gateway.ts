@@ -355,8 +355,8 @@ export class ChattingGateway
     @ConnectedSocket() client: Socket,
   ) {
     const { room_id, uid } = authChatDto;
-    client.leave(`room-${room_id}`);
     try {
+      client.leave(`room-${room_id}`);
       const currentTime = new Date();
       await this.chattingHistory.update(
         { user: { id: uid }, chatting: { id: room_id } },
