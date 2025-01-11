@@ -19,6 +19,11 @@ jobs:
         with:
           node-version: 18
 
+      - name: Decode and write .env.production to correct directory
+        run: |
+          mkdir -p chatFE/chatweb 
+          echo "${{ secrets.ENV_PROD_FRONT }}" | base64 --decode > chatFE/chatweb/.env.production
+
       - name: Install dependencies
         run: npm install
         working-directory: chatFE/chatweb
