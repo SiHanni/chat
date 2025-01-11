@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
-import PwdChangeModal from './PwdChangeModal';
 import BasicModal from './BasicModal';
 
 const PwdChangeContainer = styled.div`

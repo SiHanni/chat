@@ -361,7 +361,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     getProfile();
-  }, []);
+  });
 
   if (!user) {
     navigate('/');
