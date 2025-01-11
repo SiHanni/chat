@@ -94,8 +94,10 @@ export class ChattingGateway
       throw new BadRequestException('No authentication token provided');
     }
     const userInfo = await jwtDecode(authToken);
-    //console.log(userInfo.subject);
-    //const clientId = { clientId: client.id };
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (currentTime > userInfo.exp) {
+      this.logger.error(`Token expired :: ${client.id}`);
+    }
     this.clientMap.set(userInfo.subject, client);
     this.logger.log(`Client Connected: id:${client.id}`);
   }
@@ -237,7 +239,7 @@ export class ChattingGateway
         file_name: file_name,
         file_path: s3Upload,
       });
-      console.log('QWE', newMessage);
+
       try {
         await newMessage.save();
         //console.log('mongoose:', m);
@@ -254,6 +256,26 @@ export class ChattingGateway
         file_name: file_name,
         timestamp: new Date(),
       });
+
+      const userInRoom = await this.userChatting.find({
+        where: { chatting: { id: room_id }, user: { id: Not(sender_id) } },
+      });
+      for (const member of userInRoom) {
+        const chatMemberId = member.user.id;
+        const client = this.clientMap.get(chatMemberId);
+
+        // TODO: client.emit('newMessage', { 서버 - 서버 꼭 다시 시도하기
+        if (client) {
+          try {
+            this.server.emit('newMessage', {
+              room_id,
+              chatMemberId,
+            });
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      }
     } else {
       client.emit('fileUploadStatus', {
         status: 'failed',
@@ -375,7 +397,7 @@ export class ChattingGateway
     @ConnectedSocket() client: Socket,
   ) {
     const { room_id, chatMemberId } = data;
-
+    console.log('qwe');
     const chattingHistory = await this.chattingHistory.findOne({
       where: { user: { id: chatMemberId }, chatting: { id: room_id } },
     });
@@ -392,7 +414,12 @@ export class ChattingGateway
       })
       .sort({ timestamp: -1 })
       .exec();
-    const lastMessage = lastMessageQuery.message;
+    let lastMessage: string;
+    if (lastMessageQuery.message) {
+      lastMessage = lastMessageQuery.message;
+    } else if (lastMessageQuery.file_name) {
+      lastMessage = '파일이 전송되었습니다.';
+    }
 
     client.emit('newChatRoomInfo', {
       room_id,

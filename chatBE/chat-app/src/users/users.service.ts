@@ -89,6 +89,7 @@ export class UsersService {
     last_login: Date;
     user: UserDto;
   }> {
+    console.log('SERVIER TIME', new Date());
     const { email, password } = signInUserDto;
     if (!email || !password) {
       throw new BadRequestException('Required Data Missing');

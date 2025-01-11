@@ -149,6 +149,7 @@ export class ChattingService {
         const chattingHistory = await this.chattingHistory.findOne({
           where: { user: { id: uid }, chatting: { id: id } },
         });
+        //console.log('TT', chattingHistory);
         const lastExitTime = chattingHistory.last_exit;
         const messageCnt = await this.chatMessageModel.countDocuments({
           room_id: id.toString(),
@@ -162,7 +163,12 @@ export class ChattingService {
           .sort({ timestamp: -1 })
           .exec();
 
-        const lastMessage = lastMessageQuery.message;
+        let lastMessage: string;
+        if (lastMessageQuery.message) {
+          lastMessage = lastMessageQuery.message;
+        } else if (lastMessageQuery.file_name) {
+          lastMessage = '파일이 전송되었습니다.';
+        }
 
         unReadInfo.push({
           room_id: id,

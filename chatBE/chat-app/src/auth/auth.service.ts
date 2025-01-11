@@ -31,7 +31,7 @@ export class AuthService {
 
   generateAccessToken = (uid: number, email: string) => {
     try {
-      const expiresIn = 30 * 60; //(30분)
+      const expiresIn = 10 * 60; //(10분)
       const tokenType = this.configService.get<string>('JWT_TOKEN_TYPE');
       const secretKey = this.configService.get<string>('JWT_SECRET');
 
@@ -57,7 +57,7 @@ export class AuthService {
 
   generateRefreshToken = (uid: number, email: string) => {
     try {
-      const expiresIn = 60 * 60 * 24 * 7; // 1주
+      const expiresIn = 60 * 60 * 24 * 1; // 하루
       const tokenType = this.configService.get<string>('JWT_TOKEN_TYPE');
       const secretKey = this.configService.get<string>('JWT_REFRESH_SECRET');
 
