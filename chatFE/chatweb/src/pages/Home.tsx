@@ -171,6 +171,12 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const [showDescription, setShowDescription] = useState(false);
 
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('last_login');
+  localStorage.removeItem('socketState');
+  localStorage.removeItem('user');
+
   const handleLogin = () => {
     navigate('/signin'); // 로그인 페이지로 이동
   };

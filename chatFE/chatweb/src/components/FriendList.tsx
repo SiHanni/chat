@@ -232,7 +232,7 @@ const FriendsList: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [uid, setUid] = useState<number>();
   const [friendCnt, setFriendCnt] = useState<number>();
-  const { socket, isConnected } = useWebSocket();
+  const { socket } = useWebSocket();
 
   const navigate = useNavigate();
 

@@ -31,10 +31,10 @@ class TokenManager {
   }
 
   async startTokenUpdate() {
-    // 15분마다 한 번씩 토큰 갱신 요청
+    // 7분마다 한 번씩 토큰 갱신 요청
     setInterval(() => {
       this.updateToken();
-    }, 15 * 60 * 1000);
+    }, 7 * 60 * 1000);
   }
 
   async stopTokenUpdate() {

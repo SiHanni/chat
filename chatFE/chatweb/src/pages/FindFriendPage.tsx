@@ -131,7 +131,7 @@ const FindFriendPage: React.FC = () => {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
       });
-      console.log(response.data);
+
       setFriends([response.data]);
       setModalMsg(null);
     } catch (err) {

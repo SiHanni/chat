@@ -167,7 +167,7 @@ const MoreMenuItem = styled.div`
 const MainPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('friends');
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const { connectWebSocket } = useWebSocket();
+  const { connectWebSocket, socket } = useWebSocket();
 
   const navigate = useNavigate();
 
@@ -196,6 +196,9 @@ const MainPage: React.FC = () => {
       localStorage.removeItem('last_login');
       localStorage.removeItem('socketState');
       localStorage.removeItem('user');
+      if (socket) {
+        socket.disconnect();
+      }
     } catch (error) {
       //console.log(error);
     }

@@ -23,29 +23,34 @@ const App: React.FC = () => {
   };
 
   return (
-    <WebSocketProvider>
-      <Router>
-        <Routes>
-          <Route path='/' element={<Home />} />
+    <Router>
+      <Routes>
+        <Route path='/' element={<Home />} />
+        <Route
+          path='/signIn'
+          element={<SignIn handleLogin={refreshAuthToken} />}
+        />
+        <Route path='/signUp' element={<SignUp />} />
+
+        {/* PrivateRoute로 감싸서 /main 경로에 접근을 인증된 사용자로 제한 */}
+
+        <Route element={<PrivateRoute />}>
           <Route
-            path='/signIn'
-            element={<SignIn handleLogin={refreshAuthToken} />}
+            path='/main'
+            element={
+              <WebSocketProvider>
+                <MainPage />
+              </WebSocketProvider>
+            }
           />
-          <Route path='/signUp' element={<SignUp />} />
-
-          {/* PrivateRoute로 감싸서 /main 경로에 접근을 인증된 사용자로 제한 */}
-
-          <Route element={<PrivateRoute />}>
-            <Route path='/main' element={<MainPage />} />
-            <Route path='/profile' element={<ProfilePage />} />
-            <Route path='/chat' element={<ChatPage />} />
-            <Route path='/chat/:id' element={<ChatPage />} />
-            <Route path='/settings' element={<SettingsPage />} />
-            <Route path='/update-logs' element={<UpdateLogsPage />} />
-          </Route>
-        </Routes>
-      </Router>
-    </WebSocketProvider>
+          <Route path='/profile' element={<ProfilePage />} />
+          <Route path='/chat' element={<ChatPage />} />
+          <Route path='/chat/:id' element={<ChatPage />} />
+          <Route path='/settings' element={<SettingsPage />} />
+          <Route path='/update-logs' element={<UpdateLogsPage />} />
+        </Route>
+      </Routes>
+    </Router>
   );
 };
 

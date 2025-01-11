@@ -26,10 +26,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
   const socketRef = useRef<Socket | null>(null);
 
   const connectWebSocket = (token: string) => {
-    //if (socketRef.current) {
-    //  socketRef.current.disconnect(); // 기존 소켓 연결 해제
-    //}
-
     if (socketRef.current) return;
 
     const socket = io(`${server_url}/chat`, {
@@ -50,6 +46,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     });
 
     // Heartbeat (Ping-Pong)
+    // 소켓이 연결되있어야 보내는 핑퐁이기 떄문에 재연결 정책이 제대로 되어 있지 않은듯 하다.
     const interval = setInterval(() => {
       if (socket.connected) {
         socket.emit('ping', 'heartbeat');
@@ -73,7 +70,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     return () => {
-      // 여기서는 `disconnect()`를 하지 않음
+      // 컴포넌트 언마운트 시 소켓 연결 해제
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
     };
   }, []);
 

@@ -304,7 +304,7 @@ const ChatPage: React.FC = () => {
         setUser(JSON.parse(storedUser));
       }
     } catch (error) {
-      console.error('Parsing error:', error);
+      //console.error('Parsing error:', error);
     }
   }, []);
 

@@ -97,6 +97,9 @@ const UnreadInfoContainer = styled.div`
   margin-left: 10px;
   font-size: 0.9rem;
   color: gray;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 `;
 
 const UnreadMessageCount = styled.div`
@@ -128,6 +131,10 @@ const LastMessage = styled.div`
   color: #777;
   margin-top: 28px;
   margin-left: -75px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
 
   @media (max-width: 768px) {
     font-size: 0.7rem;
@@ -141,7 +148,7 @@ const ChatRoomsList: React.FC = () => {
   const [unReadInfos, setUnreadInfos] = useState<UnreadInfo[]>([]);
   const [uid, setUid] = useState<number | any>();
   const [modalMsg, setModalMsg] = useState<string | null>(null);
-  const { socket, isConnected } = useWebSocket();
+  const { socket } = useWebSocket();
 
   const navigate = useNavigate();
 
@@ -180,7 +187,6 @@ const ChatRoomsList: React.FC = () => {
             chatMemberId: chatMemberId,
           });
         }
-
         // UI에서 채팅방 리스트 업데이트 (안 읽은 메시지 수, 마지막 메시지 표시)
       });
     }
