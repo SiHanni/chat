@@ -6,24 +6,15 @@
 
 # 프론트엔드 : react, TypeScript
 
-# 서버 배포 과정
+# 서버 배포
 
-1. GitHub Action
+- git Actions -> AWS ECR
 
-- 소스 코드 테스트, 도커 이미지 빌드, ECR에 푸시
+- alb BlueGreen 무중단배포
 
-2. ECS
+# 프론트 배포
 
-- EC2 인스턴스에서 새 버전의 컨테이너를 생성
-- 새 컨테이너 에러 체크
-
-// deprecated 3. Caddy
-
-- 리버스프록시로 외부의 기존 서버 포트로 들어오는 요청을 새 서버 컨테이너 포트로 갈 수 있게 포트포워딩
-
-# 프론트
-
-npm build:production 후 빌드디렉토리 s3에 올려 정적 웹 호스팅
+- git action -> s3 정적 웹호스팅, cloudwatch 무효화
 
 # 업데이트 일지
 
