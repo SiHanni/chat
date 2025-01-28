@@ -129,7 +129,7 @@ const PwdChangePage: React.FC = () => {
 
     const changePwdData = { inputedOldPwd: oldPwd, newPwd };
 
-    const response = await fetch(`${server_url}/users/changePwd`, {
+    const response = await fetch(`${server_url}/users/change-pwd`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

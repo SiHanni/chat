@@ -134,11 +134,11 @@ const SignIn: React.FC<{ handleLogin: (accessToken: string) => void }> = ({
 
     try {
       const response = await axios.post(
-        `${server_url}/users/signIn`,
+        `${server_url}/users/sign-in`,
         { email, password },
         { withCredentials: true } // 쿠키 포함
       );
-      console.log('ti,e', new Date());
+
       const data = await response.data;
 
       localStorage.setItem('accessToken', data.accessToken);

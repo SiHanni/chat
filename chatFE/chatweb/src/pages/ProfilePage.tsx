@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { server_url } from '../common/serverConfig';
@@ -295,7 +295,7 @@ const ProfilePage: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const getProfile = async () => {
+  const getProfile = useCallback(async () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       setModalMsg('로그인 만료');
@@ -303,23 +303,23 @@ const ProfilePage: React.FC = () => {
       return;
     }
 
-    const response = await fetch(`${server_url}/users/getMyProfile`, {
+    const response = await axios.get(`${server_url}/users/profile`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      setUser(data);
-      setUsername(data.username);
-      setProfileImg(data.profile_img);
-      setGender(data.gender);
-      setStatusMsg(data.status_msg);
+    if (response.status === 200) {
+      setUser(response.data);
+      setUsername(response.data.username);
+      setProfileImg(response.data.profile_img);
+      setGender(response.data.gender);
+      setStatusMsg(response.data.status_msg);
     } else {
       setModalMsg('서버 에러\n잠시 후 다시 시도해주세요');
+      navigate('/');
     }
-  };
+  }, [navigate]);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -335,7 +335,7 @@ const ProfilePage: React.FC = () => {
 
     try {
       const response = await axios.patch(
-        `${server_url}/users/updateProfile`,
+        `${server_url}/users/profile`,
         updateData,
         {
           headers: {
@@ -361,7 +361,7 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     getProfile();
-  });
+  }, [getProfile]);
 
   if (!user) {
     navigate('/');
@@ -405,7 +405,7 @@ const ProfilePage: React.FC = () => {
 
     const token = localStorage.getItem('accessToken');
     try {
-      const response = await fetch(`${server_url}/users/updateProfileImg`, {
+      const response = await fetch(`${server_url}/users/profile-img`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,

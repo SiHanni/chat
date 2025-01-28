@@ -177,12 +177,12 @@ const Home: React.FC = () => {
   localStorage.removeItem('socketState');
   localStorage.removeItem('user');
 
-  const handleLogin = () => {
-    navigate('/signin'); // 로그인 페이지로 이동
+  const handleSignIn = () => {
+    navigate('/sign-in'); // 로그인 페이지로 이동
   };
 
   const handleSignUp = () => {
-    navigate('/signup'); // 회원가입 페이지로 이동
+    navigate('/sign-up'); // 회원가입 페이지로 이동
   };
 
   const handleShowDescription = () => {
@@ -204,7 +204,7 @@ const Home: React.FC = () => {
         <ButtonStyled type='button' onClick={handleSignUp}>
           회원가입
         </ButtonStyled>
-        <ButtonStyled type='button' onClick={handleLogin}>
+        <ButtonStyled type='button' onClick={handleSignIn}>
           로그인
         </ButtonStyled>
         <ButtonStyled type='button' onClick={handleShowDescription}>

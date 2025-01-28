@@ -186,7 +186,7 @@ const SignUp: React.FC = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post(`${server_url}/users/signUp`, {
+      const response = await axios.post(`${server_url}/users/sign-up`, {
         username,
         email,
         password,

@@ -179,10 +179,10 @@ const ChatRoomsList: React.FC = () => {
   useEffect(() => {
     if (socket) {
       // 채팅방 정보(안 읽은 메시지 수, 마지막 메시지)를 받아서 UI 업데이트
-      socket.on('newMessage', data => {
+      socket.on('alert:new-message', data => {
         const { room_id, chatMemberId } = data;
         if (room_id && chatMemberId) {
-          socket.emit('unReadChatInfo', {
+          socket.emit('request:unread-chats', {
             room_id: room_id,
             chatMemberId: chatMemberId,
           });
@@ -194,7 +194,7 @@ const ChatRoomsList: React.FC = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on('newChatRoomInfo', data => {
+      socket.on('response:unread-chats', data => {
         const { room_id, messageCnt, lastMessage } = data;
         const unRead = {
           room_id: room_id,
@@ -215,7 +215,7 @@ const ChatRoomsList: React.FC = () => {
     // Cleanup on component unmount
     return () => {
       if (socket) {
-        socket.off('newChatRoomInfo');
+        socket.off('response:unread-chats');
       }
     };
   }, [socket]);
@@ -223,7 +223,7 @@ const ChatRoomsList: React.FC = () => {
   const handleRoomClick = (uid: number, room_id: number, room_type: string) => {
     //navigate(`/chat/?room_type=${room_type}&room_id=${room_id}&uid=${uid}`);
     if (socket) {
-      socket.emit('joinRoom', { room_id: room_id, room_type, uid });
+      socket.emit('join:room', { room_id: room_id, room_type, uid });
       navigate('/chat', {
         state: {
           room_type,

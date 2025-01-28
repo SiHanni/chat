@@ -9,6 +9,7 @@ import { Message } from '../type/chat';
 import FilePreviewModal from './FilePreviewModal';
 import { FiArrowLeft } from 'react-icons/fi';
 import BasicModal from './BasicModal';
+import axios from 'axios';
 
 const ChatHeader = styled.div`
   display: flex;
@@ -302,11 +303,13 @@ const ChatPage: React.FC = () => {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         setUser(JSON.parse(storedUser));
+      } else {
+        navigate('/');
       }
     } catch (error) {
       //console.error('Parsing error:', error);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -315,14 +318,14 @@ const ChatPage: React.FC = () => {
       auth: { token },
     });
 
-    socketInstance.emit('joinRoom', { uid, room_id, room_type });
+    socketInstance.emit('join:room', { uid, room_id, room_type });
 
-    socketInstance.on('broadcastMessage', data => {
+    socketInstance.on('broadcast:message', data => {
       //console.log('broadcastMessage:', data);
       setMessages(prev => [...prev, data]);
     });
 
-    socketInstance.on('broadcastFile', data => {
+    socketInstance.on('broadcast:file', data => {
       //console.log('broadcastFile data:', data);
       setMessages(prev => [
         ...prev,
@@ -334,7 +337,7 @@ const ChatPage: React.FC = () => {
     setSocket(socketInstance);
 
     return () => {
-      socketInstance.emit('leaveRoom', { uid, room_id, room_type });
+      socketInstance.emit('leave:room', { uid, room_id, room_type });
       socketInstance.disconnect();
       //console.log('DISCONNECT');
     };
@@ -368,17 +371,18 @@ const ChatPage: React.FC = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const response = await fetch(
-          `${server_url}/chat/messages?room_id=${room_id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          }
+        const response = await axios.get(`${server_url}/chat/messages`, {
+          params: {
+            room_id: room_id,
+          },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+        setRoomName(response.data.room_name);
+        setMessages(
+          Array.isArray(response.data.messages) ? response.data.messages : []
         );
-        const data = await response.json();
-        setRoomName(data.room_name);
-        setMessages(Array.isArray(data.messages) ? data.messages : []);
       } catch (error) {
         console.error('Error fetching messages:', error);
       }
@@ -389,7 +393,7 @@ const ChatPage: React.FC = () => {
 
   const sendMessage = () => {
     if (socket && input.trim()) {
-      socket.emit('sendMessage', {
+      socket.emit('send:message', {
         room_id: room_id,
         message: input,
         sender_id: user?.id,
@@ -447,7 +451,7 @@ const ChatPage: React.FC = () => {
       reader.onloadend = () => {
         const fileData = reader.result as ArrayBuffer;
 
-        socket.emit('sendFile', {
+        socket.emit('send:file', {
           room_id,
           file_name: selectedFile.name,
           file_data: fileData, // ArrayBuffer 형태로 파일 데이터를 전송
@@ -482,17 +486,17 @@ const ChatPage: React.FC = () => {
       }
     };
 
-    socket.on('fileUploadStatus', handleFileUploadStatus);
+    socket.on('alert:file-upload-status', handleFileUploadStatus);
 
     // 컴포넌트가 언마운트될 때 이벤트 리스너 정리
     return () => {
-      socket.off('fileUploadStatus', handleFileUploadStatus);
+      socket.off('alert:file-upload-status', handleFileUploadStatus);
     };
   }, [socket]);
 
   const handleFileClick = (fileUrl: string) => {
     if (socket) {
-      socket.emit('downloadFile', { file_url: fileUrl }); // 다운로드 요청
+      socket.emit('download:file', { file_url: fileUrl }); // 다운로드 요청
     }
   };
 
@@ -505,7 +509,7 @@ const ChatPage: React.FC = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on('fileDownload', data => {
+      socket.on('send:file-data', data => {
         const { file_data, file_url, original_file_name } = data;
 
         const blob = new Blob([file_data], {

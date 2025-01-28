@@ -10,7 +10,7 @@ class TokenManager {
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (accessToken) {
-        const response = await fetch(`${server_url}/auth/updatetoken`, {
+        const response = await fetch(`${server_url}/auth/update/token`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

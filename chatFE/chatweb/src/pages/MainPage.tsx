@@ -181,7 +181,7 @@ const MainPage: React.FC = () => {
     try {
       navigate('/');
       await axios.post(
-        `${server_url}/users/logOut`,
+        `${server_url}/users/logout`,
         {},
         {
           headers: {

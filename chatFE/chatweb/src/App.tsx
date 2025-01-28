@@ -27,10 +27,10 @@ const App: React.FC = () => {
       <Routes>
         <Route path='/' element={<Home />} />
         <Route
-          path='/signIn'
+          path='/sign-in'
           element={<SignIn handleLogin={refreshAuthToken} />}
         />
-        <Route path='/signUp' element={<SignUp />} />
+        <Route path='/sign-up' element={<SignUp />} />
 
         {/* PrivateRoute로 감싸서 /main 경로에 접근을 인증된 사용자로 제한 */}
 

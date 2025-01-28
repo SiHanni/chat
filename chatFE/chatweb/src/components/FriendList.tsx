@@ -239,7 +239,7 @@ const FriendsList: React.FC = () => {
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const response = await axios.get(`${server_url}/users/friends/lists`, {
+        const response = await axios.get(`${server_url}/users/friends`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
           },
@@ -259,7 +259,7 @@ const FriendsList: React.FC = () => {
   const handleChatClick = async (friend_id: number) => {
     try {
       const response = await axios.post(
-        `${server_url}/chat/create`,
+        `${server_url}/chat/room`,
         { friend_ids: [friend_id] },
         {
           headers: {
@@ -270,7 +270,7 @@ const FriendsList: React.FC = () => {
       const { id, room_type } = response.data;
       const room_id = id;
       if (socket) {
-        socket.emit('joinRoom', { room_id: room_id, room_type, uid });
+        socket.emit('join-room', { room_id: room_id, room_type, uid });
         navigate('/chat', {
           state: {
             room_type,
