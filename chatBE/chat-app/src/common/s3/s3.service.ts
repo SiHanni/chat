@@ -102,7 +102,7 @@ export class S3Service {
     content_type: string,
   ) {
     const uuid = uuidv4();
-    const s3Path = `uploads/user_profileImg/${uuid}`;
+    const s3Path = `uploads/profile-img/${uuid}`;
 
     const s3Params = {
       Key: s3Path,

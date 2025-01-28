@@ -42,12 +42,12 @@ export class UsersController {
     //private readonly logger: CustomLoggerService,
   ) {}
 
-  @Post('signUp')
+  @Post('sign-up')
   async signUp(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.signUp(createUserDto);
   }
 
-  @Post('signIn')
+  @Post('sign-in')
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async signIn(
     @Body() signInUserDto: SignInUserDto,
@@ -65,7 +65,7 @@ export class UsersController {
     return { accessToken, last_login, user };
   }
 
-  @Get('getMyProfile')
+  @Get('profile')
   @UseGuards(AuthGuard)
   async getMyProfile(@Req() request: Request) {
     const userIdFromJwt = (request as CustomRequest).user?.subject;
@@ -75,7 +75,7 @@ export class UsersController {
     return await this.usersService.getMyProfile(userIdFromJwt);
   }
 
-  @Patch('updateProfileImg')
+  @Patch('profile-img')
   @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('profile_img_data'))
   async updateProfileImage(
@@ -95,7 +95,7 @@ export class UsersController {
     });
   }
 
-  @Patch('updateProfile')
+  @Patch('profile')
   @UseGuards(AuthGuard)
   async updateProfile(
     @Body() updateUserDto: UpdateUserDto,
@@ -144,7 +144,7 @@ export class UsersController {
     return this.usersService.refuseFriendRequest(uid, friendDto);
   }
 
-  @Get('friends/lists')
+  @Get('friends')
   @UseGuards(AuthGuard)
   async getFriends(@Req() request: Request) {
     const uid = (request as CustomRequest).user?.subject;
@@ -161,7 +161,7 @@ export class UsersController {
     return this.usersService.getFriendRequests(uid);
   }
 
-  @Post('changePwd')
+  @Post('change-pwd')
   @UseGuards(AuthGuard)
   async changePassword(
     @Req() request: Request,
@@ -171,7 +171,7 @@ export class UsersController {
     return this.usersService.changePassword(uid, changePwdDto);
   }
 
-  @Post('logOut')
+  @Post('logout')
   @UseGuards(AuthGuard)
   async logOut(@Req() request: Request, @Res() response: Response) {
     const uid = (request as CustomRequest).user?.subject;

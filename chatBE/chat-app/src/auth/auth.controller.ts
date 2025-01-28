@@ -14,7 +14,7 @@ import { Request, Response } from 'express';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   // 나중에 모든 엔드포인트는 암호화하던가 하기
-  @Post('updatetoken')
+  @Post('update/token')
   @UseGuards(AuthGuard)
   async updateTokens(
     @Req() req: Request,

@@ -29,7 +29,7 @@ export class ChattingController {
   constructor(private readonly chattingService: ChattingService) {}
 
   /** 채팅방 생성 */
-  @Post('create')
+  @Post('room')
   @UseGuards(AuthGuard)
   async createChatting(
     @Req() request: Request,

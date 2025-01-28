@@ -150,7 +150,12 @@ export class ChattingService {
           where: { user: { id: uid }, chatting: { id: id } },
         });
         //console.log('TT', chattingHistory);
-        const lastExitTime = chattingHistory.last_exit;
+        let lastExitTime: Date;
+        if (chattingHistory) {
+          lastExitTime = chattingHistory.last_exit;
+        } else {
+          lastExitTime = new Date('2025-01-01T00:00:00Z');
+        }
         const messageCnt = await this.chatMessageModel.countDocuments({
           room_id: id.toString(),
           timestamp: { $gt: lastExitTime },
@@ -168,6 +173,8 @@ export class ChattingService {
           lastMessage = lastMessageQuery.message;
         } else if (lastMessageQuery.file_name) {
           lastMessage = '파일이 전송되었습니다.';
+        } else if (!lastMessageQuery) {
+          lastMessage = '';
         }
 
         unReadInfo.push({

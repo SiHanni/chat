@@ -123,7 +123,7 @@ export class ChattingGateway
     //this.logger.log('ping-pong');
   }
 
-  @SubscribeMessage('sendMessage')
+  @SubscribeMessage('send:message')
   async handleMessage(
     @MessageBody() chatMessageDto: ChatMessageDto,
     @ConnectedSocket() client: Socket,
@@ -159,7 +159,7 @@ export class ChattingGateway
       this.logger.error(`Error saving message to MongoDB:, ${error}`);
     }
     try {
-      this.server.to(`room-${room_id}`).emit('broadcastMessage', {
+      this.server.to(`room-${room_id}`).emit('broadcast:message', {
         message: message,
         sender_id: sender_id,
         sender_email: sender_email,
@@ -180,7 +180,7 @@ export class ChattingGateway
       // TODO: client.emit('newMessage', { 서버 - 서버 꼭 다시 시도하기
       if (client) {
         try {
-          this.server.emit('newMessage', {
+          this.server.emit('alert:new-message', {
             room_id,
             chatMemberId,
           });
@@ -193,7 +193,7 @@ export class ChattingGateway
     console.log(`Message from ${sender_id}: ${message}`);
   }
 
-  @SubscribeMessage('sendFile')
+  @SubscribeMessage('send:file')
   async handleFile(
     @MessageBody() chatFiledto: ChatFileDto,
     @ConnectedSocket() client: Socket,
@@ -247,7 +247,7 @@ export class ChattingGateway
         console.log('mongoose:', error);
       }
 
-      this.server.to(`room-${room_id}`).emit('broadcastFile', {
+      this.server.to(`room-${room_id}`).emit('broadcast:file', {
         sender_id: sender_id,
         sender_username: sender_username,
         sender_email: sender_email,
@@ -267,7 +267,7 @@ export class ChattingGateway
         // TODO: client.emit('newMessage', { 서버 - 서버 꼭 다시 시도하기
         if (client) {
           try {
-            this.server.emit('newMessage', {
+            this.server.emit('alert:new-message', {
               room_id,
               chatMemberId,
             });
@@ -277,7 +277,7 @@ export class ChattingGateway
         }
       }
     } else {
-      client.emit('fileUploadStatus', {
+      client.emit('alert:file-upload-status', {
         status: 'failed',
         message: `일일 파일전송 횟수 초과
         (5회)`,
@@ -285,7 +285,7 @@ export class ChattingGateway
     }
   }
 
-  @SubscribeMessage('downloadFile')
+  @SubscribeMessage('download:file')
   async handleDownloadFile(
     @MessageBody() data: any,
     @ConnectedSocket() socket: Socket,
@@ -317,7 +317,7 @@ export class ChattingGateway
 
           const fileBuffer = Buffer.concat(chunks);
 
-          socket.emit('fileDownload', {
+          socket.emit('send:file-data', {
             file_data: fileBuffer,
             file_url: file_url,
             original_file_name: metadata.original_filename,
@@ -329,7 +329,7 @@ export class ChattingGateway
     }
   }
 
-  @SubscribeMessage('joinRoom')
+  @SubscribeMessage('join:room')
   async handleJoinRoom(
     @MessageBody() authChatDto: AuthChatDto,
     @ConnectedSocket() client: Socket,
@@ -371,7 +371,7 @@ export class ChattingGateway
     console.log(`Client ${client.id} joined room ${room_id}`);
   }
 
-  @SubscribeMessage('leaveRoom')
+  @SubscribeMessage('leave:room')
   async handleLeaveRoom(
     @MessageBody() authChatDto: AuthChatDto,
     @ConnectedSocket() client: Socket,
@@ -388,16 +388,16 @@ export class ChattingGateway
       this.logger.error(error);
     }
     console.log(`Client ${client.id} left room ${room_id}`);
-    client.to(`room-${room_id}`).emit('roomLeft', { room_id });
+    client.to(`room-${room_id}`).emit('room-left', { room_id });
   }
 
-  @SubscribeMessage('unReadChatInfo')
+  @SubscribeMessage('request:unread-chats')
   async handleChatInfo(
     @MessageBody() data: { room_id: number; chatMemberId: number },
     @ConnectedSocket() client: Socket,
   ) {
     const { room_id, chatMemberId } = data;
-    console.log('qwe');
+
     const chattingHistory = await this.chattingHistory.findOne({
       where: { user: { id: chatMemberId }, chatting: { id: room_id } },
     });
@@ -421,7 +421,7 @@ export class ChattingGateway
       lastMessage = '파일이 전송되었습니다.';
     }
 
-    client.emit('newChatRoomInfo', {
+    client.emit('response:unread-chats', {
       room_id,
       messageCnt,
       lastMessage,
