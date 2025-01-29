@@ -14,6 +14,7 @@ import { BadRequestException } from '@nestjs/common';
 import { TokenHistory } from './entities/auth-history.entity';
 import { checkTimeDiff } from 'src/common/time';
 import { S3Content, S3Metadata } from 'src/common/s3/entities/s3.entity';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class AuthService {
@@ -83,7 +84,10 @@ export class AuthService {
       this.logger.error(
         `Error generating refresh token : uid:${uid}, error: ${error}`,
       );
-      throw new Error('Error generating refresh token');
+      throw new HttpException(
+        'Error generating refresh token',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   };
 

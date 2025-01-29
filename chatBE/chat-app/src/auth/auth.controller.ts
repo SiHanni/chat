@@ -9,12 +9,23 @@ import {
 import { AuthService } from './auth.service';
 import { AuthGuard } from './auth.guard';
 import { Request, Response } from 'express';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+@ApiTags('AUTH')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   // 나중에 모든 엔드포인트는 암호화하던가 하기
   @Post('update/token')
+  @ApiOperation({ summary: 'Auth 토큰 업데이트: 서버용' })
+  @ApiResponse({
+    status: 200,
+    description: '성공적으로 Auth 토큰이 생성/갱신 됌',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 에러',
+  })
   @UseGuards(AuthGuard)
   async updateTokens(
     @Req() req: Request,

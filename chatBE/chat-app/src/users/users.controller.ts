@@ -27,6 +27,13 @@ import { FriendInfoDto } from './dto/friend.dto';
 import { Request } from 'express';
 import { Response } from 'express';
 import { ChangePwdInput } from './type';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiBody,
+} from '@nestjs/swagger';
 
 interface CustomRequest extends Request {
   user?: {
@@ -35,6 +42,7 @@ interface CustomRequest extends Request {
   };
 }
 
+@ApiTags('Users')
 @Controller('users')
 export class UsersController {
   constructor(
@@ -43,6 +51,23 @@ export class UsersController {
   ) {}
 
   @Post('sign-up')
+  @ApiOperation({ summary: '회원 가입' })
+  @ApiBody({
+    description: '새로운 사용자 생성 정보',
+    type: CreateUserDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: '이미 존재하는 값',
+    schema: {
+      example: {
+        statusCode: 409,
+        message: 'Email already exists || Username already exists',
+      },
+    },
+  })
+  @ApiResponse({ status: 500, description: '서버 에러' })
+  @ApiResponse({ status: 200, description: '성공', type: CreateUserDto })
   async signUp(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.signUp(createUserDto);
   }
@@ -66,6 +91,18 @@ export class UsersController {
   }
 
   @Get('profile')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: '프로필 조회' })
+  @ApiResponse({
+    status: 404,
+    description: '찾을 수 없는 유저',
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'user not found',
+      },
+    },
+  })
   @UseGuards(AuthGuard)
   async getMyProfile(@Req() request: Request) {
     const userIdFromJwt = (request as CustomRequest).user?.subject;

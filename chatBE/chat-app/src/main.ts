@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ConfigService } from '@nestjs/config';
 import { CustomLoggerService } from './common/logger/logger.service';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
@@ -11,6 +12,17 @@ async function bootstrap() {
   const port = configService.get<number>('SERVER_PORT');
   const logger = app.get(CustomLoggerService);
   const timeZone = configService.get<string>('TZ') || 'Asia/Seoul';
+
+  const config = new DocumentBuilder()
+    .setTitle('MaruTalk')
+    .setDescription('MaruTalk API Document')
+    .setVersion('1.1.19')
+    .addBearerAuth()
+    .addTag('maru')
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, documentFactory);
+
   process.env.TZ = timeZone;
 
   app.enableCors({
