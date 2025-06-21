@@ -10,9 +10,16 @@ import { LoggerModule } from './common/logger/logger.module';
 import * as path from 'path';
 import { AuthModule } from './auth/auth.module';
 import { S3Module } from './common/s3/s3.module';
+//import { SentryModule } from '@sentry/nestjs/setup';
+import { ExceptionsFilter } from './utils/error.filter';
+import { APP_FILTER } from '@nestjs/core';
+import { SimpleTypeOrmSentryLogger } from './utils/error.query';
+import { TestModule } from './test/test.module'; // 센트리 테스트용
 
 @Module({
   imports: [
+    //SentryModule.forRoot(), 커스텀 필터 사용을 위해 주석처리
+    TestModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: path.resolve(
@@ -31,7 +38,8 @@ import { S3Module } from './common/s3/s3.module';
         database: configService.get<string>('MYSQL_DATABASE'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: configService.get<string>('NODE_ENV') === 'development', // 개발 환경에서는 true, 프로덕션에서는 false
-        logging: false, //configService.get<string>('NODE_ENV') === 'development',
+        logging: true, //configService.get<string>('NODE_ENV') === 'development',
+        logger: new SimpleTypeOrmSentryLogger(), // 커스텀 로거
         timezone: 'Z',
       }),
     }),
@@ -51,8 +59,10 @@ import { S3Module } from './common/s3/s3.module';
     AuthModule,
 
     S3Module,
+
+    TestModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, { provide: APP_FILTER, useClass: ExceptionsFilter }],
 })
 export class AppModule {}

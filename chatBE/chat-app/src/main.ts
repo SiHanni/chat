@@ -5,10 +5,16 @@ import { ConfigService } from '@nestjs/config';
 import { CustomLoggerService } from './common/logger/logger.service';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
+import * as Sentry from '@sentry/node';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  Sentry.init({
+    dsn: configService.get<string>('DNS'),
+    tracesSampleRate: 1.0,
+  });
+
   const port = configService.get<number>('SERVER_PORT');
   const logger = app.get(CustomLoggerService);
   const timeZone = configService.get<string>('TZ') || 'Asia/Seoul';
@@ -38,6 +44,8 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useWebSocketAdapter(new IoAdapter(app));
   await app.listen(port ?? 3000);
-  logger.log(`Server is starting in port ${port}:: ${process.env.TZ}`);
+  logger.log(
+    `Server is starting in port ${port}:: ${process.env.TZ}:: ${process.env.NODE_ENV}`,
+  );
 }
 bootstrap();

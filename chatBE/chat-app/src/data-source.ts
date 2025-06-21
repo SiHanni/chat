@@ -17,7 +17,7 @@ dotenv.config({ path: path.resolve(__dirname, '..', envFile) });
 const AppDataSource = new DataSource({
   type: 'mysql',
   host: process.env.MYSQL_HOST,
-  port: parseInt(process.env.MYSQL_POR),
+  port: parseInt(process.env.MYSQL_PORT),
   username: process.env.MYSQL_USERNAME,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
@@ -30,7 +30,7 @@ const AppDataSource = new DataSource({
   ],
   migrations: [migrationsDir],
   synchronize: false,
-  logging: true,
+  logging: ['query', 'error'],
   migrationsRun: true,
   migrationsTableName: 'migrations',
 });
