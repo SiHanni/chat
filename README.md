@@ -1,9 +1,11 @@
 # 🐶 마루톡
+[마루톡 사용하기](https://marutalk.com)
 
- <img width="700" height="400" alt="스크린샷 2025-07-28 11 39 17" src="https://github.com/user-attachments/assets/023e537e-dd61-4f1b-ac3a-b6659b972183" />
+
+<img width="700" height="400" alt="스크린샷 2025-07-28 11 39 17" src="https://github.com/user-attachments/assets/023e537e-dd61-4f1b-ac3a-b6659b972183" />
 <img width="700" height="400" alt="스크린샷 2025-07-28 11 40 24" src="https://github.com/user-attachments/assets/d6d436ed-15a8-4c37-a6dd-f5dc8f3fe3b4" />
 
-[마루톡 사용하기](https://marutalk.com)
+
 
 **MaruTalk**은 실시간 채팅 기능을 지원하는 웹 메신저 서비스로,  
 NestJS 기반의 백엔드와 WebSocket 기반의 양방향 통신 구조를 활용하여 사용자 간 신속하고 안정적인 메시지 전달을 제공합니다.
