@@ -1,5 +1,5 @@
 # 🐶 마루톡
-[마루톡 사용하기](https://marutalk.com)
+[마루톡 사용하기(현재 서비스 종료)](https://marutalk.com)
 
 
 <img width="700" height="400" alt="스크린샷 2025-07-28 11 39 17" src="https://github.com/user-attachments/assets/023e537e-dd61-4f1b-ac3a-b6659b972183" />
